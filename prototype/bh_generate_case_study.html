@@ -35,9 +35,9 @@
     /* SIDEBAR */
     .sidebar { width: 252px; min-height: 100vh; background: #0a1f35; display: flex; flex-direction: column; position: fixed; top: 0; left: 0; bottom: 0; z-index: 100; }
     .sidebar-logo { padding: 24px 20px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
-    .logo-img { width: 36px; height: 36px; background: #fff; border-radius: 6px; display: flex; align-items: center; justify-content: center; padding: 4px; }
+    .logo-img { width: 64px; height: 64px; background: #fff; border-radius: 6px; display: flex; align-items: center; justify-content: center; padding: 6px; }
     .logo-img img { width: 100%; height: 100%; object-fit: contain; }
-    .logo-text h1 { font-family: 'Lora', serif; font-size: 15px; font-weight: 600; color: #f8fafc; line-height: 1.2; }
+    .logo-text h1 { font-family: 'Lora', serif; font-size: 13px; font-weight: 600; color: #f8fafc; line-height: 1.2; }
     .logo-text span { display: block; font-size: 10px; color: #94a3b8; letter-spacing: 0.05em; text-transform: uppercase; margin-top: 2px; }
     
     .sidebar-section { padding: 16px 12px 4px; }
@@ -81,7 +81,9 @@
     
     /* PDF STYLING */
     .pdf-header { border-bottom: 2px solid var(--primary); padding-bottom: 15px; margin-bottom: 25px; display: flex; justify-content: space-between; align-items: flex-end; }
-    .pdf-logo { font-family: 'Lora', serif; font-size: 22px; font-weight: 600; color: var(--primary); }
+    .pdf-logo-container { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; }
+    .pdf-logo-icon { width: 80px; height: 80px; object-fit: contain; }
+    .pdf-logo { font-family: 'Lora', serif; font-size: 32px; font-weight: 600; color: var(--primary); line-height: 1; }
     .pdf-report-type { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
 
     .pdf-body { flex: 1; }
@@ -118,7 +120,7 @@
 <body>
   <nav class="sidebar">
     <div class="sidebar-logo">
-      <div class="logo-img"><img src="data:image/png;base64,..." alt="Logo"></div>
+      <div class="logo-img"><img src="Logo-hands.png" alt="Logo"></div>
       <div class="logo-text"><h1>Bangla Hope</h1><span>Sponsorship Program</span></div>
     </div>
     <div class="sidebar-section">
@@ -218,7 +220,10 @@
         <!-- PAGE 1 -->
         <div class="pdf-page" id="pdf-page-1">
           <div class="pdf-header">
-            <div class="pdf-logo">Bangla Hope</div>
+            <div class="pdf-logo-container">
+              <img src="Logo-hands.png" alt="Logo" class="pdf-logo-icon">
+              <div class="pdf-logo">Bangla Hope</div>
+            </div>
             <div class="pdf-report-type">Student Case Study</div>
           </div>
 
@@ -301,7 +306,10 @@
         <!-- PAGE 2 -->
         <div class="pdf-page" id="pdf-page-2">
           <div class="pdf-header">
-            <div class="pdf-logo">Bangla Hope</div>
+            <div class="pdf-logo-container">
+              <img src="Logo-hands.png" alt="Logo" class="pdf-logo-icon">
+              <div class="pdf-logo">Bangla Hope</div>
+            </div>
             <div class="pdf-report-type">Student Case Study (Contd.)</div>
           </div>
 
