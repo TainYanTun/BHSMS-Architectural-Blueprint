@@ -138,7 +138,8 @@ CREATE TABLE sponsorships (
     student_id UUID NOT NULL REFERENCES students(id) ON DELETE CASCADE,
     sponsor_id UUID NOT NULL REFERENCES sponsors(id) ON DELETE CASCADE,
     type TEXT CHECK (type IN ('Primary', 'Co-Sponsor')),
-    monthly_amount NUMERIC(12, 2) DEFAULT 0, -- In BDT (৳)
+    monthly_amount NUMERIC(12, 2) DEFAULT 0,
+    currency TEXT DEFAULT 'USD' CHECK (currency IN ('USD', 'BDT')),
     start_date DATE NOT NULL,
     end_date DATE,
     is_active BOOLEAN DEFAULT TRUE,
@@ -190,7 +191,12 @@ CREATE TABLE loans (
     institution_id UUID REFERENCES institutions(id),
     total_amount NUMERIC(12, 2) NOT NULL DEFAULT 0,
     refunded_amount NUMERIC(12, 2) DEFAULT 0,
+    currency TEXT DEFAULT 'USD' CHECK (currency IN ('USD', 'BDT')),
+    
+    -- PENDING CLIENT DECISION: Should status auto-flip from 'Studying' to 'Refunding' 
+    -- based on a target date, or remain a manual administrative action?
     status TEXT DEFAULT 'Studying' CHECK (status IN ('Studying', 'Refunding', 'Complete', 'Expired')),
+    
     agreement_url TEXT,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
@@ -200,6 +206,7 @@ CREATE TABLE loan_refunds (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     loan_id UUID NOT NULL REFERENCES loans(id) ON DELETE CASCADE,
     amount NUMERIC(12, 2) NOT NULL,
+    currency TEXT DEFAULT 'USD' CHECK (currency IN ('USD', 'BDT')),
     refund_date DATE DEFAULT CURRENT_DATE,
     recorded_by UUID REFERENCES users(id),
     notes TEXT,
@@ -207,7 +214,47 @@ CREATE TABLE loan_refunds (
 );
 
 -- ==========================================
--- 8. SYSTEM AUDIT & SECURITY
+-- 8. FINANCIAL ADDITIONS (Disbursements & Receipts)
+-- ==========================================
+CREATE TABLE financial_allocations (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    student_id UUID NOT NULL REFERENCES students(id) ON DELETE CASCADE,
+    type TEXT NOT NULL CHECK (type IN ('Subsidy', 'Pocket Money', 'Stipend', 'One-time Grant')),
+    amount NUMERIC(12, 2) NOT NULL,
+    currency TEXT DEFAULT 'USD' CHECK (currency IN ('USD', 'BDT')),
+    frequency TEXT DEFAULT 'Monthly' CHECK (frequency IN ('Monthly', 'Yearly', 'One-time')),
+    start_date DATE NOT NULL DEFAULT CURRENT_DATE,
+    end_date DATE,
+    is_active BOOLEAN DEFAULT TRUE,
+    notes TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE loan_disbursements (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    loan_id UUID NOT NULL REFERENCES loans(id) ON DELETE CASCADE,
+    amount NUMERIC(12, 2) NOT NULL,
+    currency TEXT DEFAULT 'USD' CHECK (currency IN ('USD', 'BDT')),
+    disbursement_date DATE DEFAULT CURRENT_DATE,
+    category TEXT NOT NULL, -- e.g., 'Tuition', 'Admission Fee', 'Books', 'Hostel'
+    notes TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE sponsorship_receipts (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    sponsorship_id UUID NOT NULL REFERENCES sponsorships(id) ON DELETE CASCADE,
+    amount NUMERIC(12, 2) NOT NULL,
+    currency TEXT DEFAULT 'USD' CHECK (currency IN ('USD', 'BDT')),
+    received_date DATE DEFAULT CURRENT_DATE,
+    period_month INT CHECK (period_month BETWEEN 1 AND 12),
+    period_year INT,
+    notes TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- ==========================================
+-- 9. SYSTEM AUDIT & SECURITY
 -- ==========================================
 CREATE TABLE audit_logs (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -221,7 +268,7 @@ CREATE TABLE audit_logs (
 );
 
 -- ==========================================
--- 9. OPTIMIZATION INDEXES
+-- 10. OPTIMIZATION INDEXES
 -- ==========================================
 CREATE INDEX idx_student_master_id ON students(master_id_number);
 CREATE INDEX idx_student_status ON students(status);
