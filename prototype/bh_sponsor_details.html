@@ -194,19 +194,63 @@
       <div class="financial-card">
         <div>
           <span class="annotate-label" style="border: none; margin-bottom: 4px;">FINANCIAL_CONTRIBUTION_SUMMARY</span>
-          <div class="fin-label">MONTHLY_TOTAL</div>
-          <div class="fin-value">৳10,500</div>
+          <div class="fin-label">RECENT_MONTHLY_AVG</div>
+          <div class="fin-value">$120.00</div>
         </div>
         <div class="fin-side">
-          <div class="fin-label">LAST_PAYMENT_REC</div>
-          <div class="field-value" style="font-size: 14px;">2024-03-01 // <strong>৳10,500</strong></div>
+          <div class="fin-label">LAST_CONTRIBUTION</div>
+          <div class="field-value" style="font-size: 14px;">2024-03-01 // <strong>$45.00</strong></div>
           <button class="btn-action">GENERATE_FINANCIAL_STMT</button>
         </div>
       </div>
 
-      <!-- TABLE (Strict Wireframe Layout) -->
+      <!-- CONTRIBUTION HISTORY TABLE -->
       <div class="card card-table">
-        <span class="annotate-label" style="padding: 16px 24px 8px; border-bottom: none;">RELATIONSHIPS: SPONSORED_STUDENTS</span>
+        <span class="annotate-label" style="padding: 16px 24px 8px; border-bottom: none;">CONTRIBUTION_HISTORY</span>
+        <table class="prog-table">
+          <thead>
+            <tr>
+              <th>DATE_RECEIVED</th>
+              <th>AMOUNT_USD</th>
+              <th>ALLOCATED_TO</th>
+              <th>METHOD / REF_#</th>
+              <th>NOTE_STRING</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>2024-03-01</strong></td>
+              <td>$45.00</td>
+              <td>RINA BEGUM (#LRC-0124)</td>
+              <td>CHECK / #1245</td>
+              <td>Standard support</td>
+            </tr>
+            <tr>
+              <td><strong>2024-03-01</strong></td>
+              <td>$40.00</td>
+              <td>S. HOSSAIN (#VLG-0512)</td>
+              <td>CHECK / #1245</td>
+              <td>Standard support</td>
+            </tr>
+            <tr>
+              <td><strong>2024-02-02</strong></td>
+              <td>$45.00</td>
+              <td>RINA BEGUM (#LRC-0124)</td>
+              <td>WIRE / WT-992</td>
+              <td>Standard support</td>
+            </tr>
+            <tr>
+              <td><strong>2023-12-15</strong></td>
+              <td>$50.00</td>
+              <td>RINA BEGUM (#LRC-0124)</td>
+              <td>CASH / --</td>
+              <td>Special Gift (Christmas)</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- RELATIONSHIPS TABLE -->
         <table class="prog-table">
           <thead>
             <tr>

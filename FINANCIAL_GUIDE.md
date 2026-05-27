@@ -10,16 +10,16 @@ The Bangla Hope SMS is designed as a **Manual Digital Ledger**.
 ---
 
 ## 1. Income Tracking: Sponsorships
-This module tracks the financial commitments made by sponsors and the acknowledgment of funds.
+This module tracks the sponsorship relationships and the acknowledgment of individual donor contributions.
 
 ### Key Components
-*   **`sponsorships` (The Agreement):** Defines the expected monthly support, currency (USD/BDT), and sponsorship type (Primary or Co-sponsor).
-*   **`sponsorship_receipts` (Record of Arrival):** Manually entered records acknowledging that funds have arrived (via bank or check). 
+*   **`sponsorships` (The Relationship):** Defines the active connection between a sponsor and a student.
+*   **`sponsorship_receipts` (Record of Support):** Manually entered records acknowledging that funds have arrived. Each receipt includes the payment method and reference number for tracking.
 
 ### Financial Logic
-1.  **Commitment Record:** Admin adds a record of the intended monthly support.
-2.  **Recording Arrival:** Once a payment is confirmed via an external bank statement or physical check, staff manually "keys in" the record to acknowledge the funds have arrived.
-3.  **Gap Analysis:** The system compares "Agreement" vs "Recorded Arrivals" to highlight overdue payments, which in turn triggers automated reminders or flags the sponsorship status.
+1.  **Relationship Record:** Admin records the sponsorship link.
+2.  **Recording Support:** When a contribution is confirmed (via bank statement or check), staff manually "keys in" the record for the specific student supported.
+3.  **Recency Analysis:** The system monitors the date of the most recent receipt. If no support is recorded within **6 months**, the student is flagged as "Action Required" on the master registry.
 
 ---
 
@@ -43,10 +43,9 @@ For ongoing assistance (e.g., boarding school fees, pocket money, staff child ai
 ## 3. Governance, Integrity, & Audit
 
 ### Currency Handling
-To maintain strict ledger integrity, the system applies these rules:
-*   **Sponsorship Income:** Tracked strictly in **USD** for reporting consistency.
-*   **Local Operations:** Disbursement and internal allocations support **USD** and **BDT** depending on the regional context of the expense.
-*   **Integrity:** Reporting tools automatically distinguish between these currencies to prevent ledger errors.
+To maintain strict ledger integrity and simplify reporting, the system applies these rules:
+*   **Unified Tracking:** All financial components—including Sponsorship Income, Subsidies, and Loans—are tracked strictly in **USD ($)**.
+*   **Integrity:** By using a single currency for the digital ledger, the system avoids exchange rate volatility in its internal reporting. Any local BDT payments are converted to USD at the time of entry based on the organization's monthly standard rate.
 
 ### The Audit Trail (`audit_logs`)
 The system follows a policy of **non-deletion**. Financial records must never be deleted. 
@@ -57,11 +56,11 @@ The system follows a policy of **non-deletion**. Financial records must never be
 
 ## 4. Summary Table
 
-| Category | Component | Repayable? | Tracking Method |
+| Category | Component | Currency | Tracking Method |
 | :--- | :--- | :--- | :--- |
-| **Income** | Sponsorships | N/A | Agreement vs. Receipt |
-| **Expenditure** | Higher Education | Yes | Disbursements vs. Refunds |
-| **Expenditure** | Subsidies/Grants | No | Fixed Allocation Entries |
+| **Income** | Sponsorships | **USD ($)** | Recency of Support |
+| **Expenditure** | Higher Education | **USD ($)** | Disbursements vs. Refunds |
+| **Expenditure** | Subsidies/Grants | **USD ($)** | Fixed Allocation Entries |
 
 ---
 *Created: 2026-05-27 | Part of the Bangla Hope SMS Technical Blueprint*

@@ -9,18 +9,18 @@ This document outlines the logic and structure of the financial tracking system 
 
 ## 1. Sponsorship System (Income Tracking)
 
-Tracks the commitments made by sponsors and the fulfillment of those commitments.
+Tracks the sponsorship relationships and the individual contribution receipts.
 
 ### Tables
 | Table | Role | Key Fields |
 | :--- | :--- | :--- |
-| `sponsorships` | **Agreement** | `monthly_amount`, `currency` (USD/BDT), `type` (Primary/Co-Sponsor) |
-| `sponsorship_receipts` | **Fulfillment** | `received_date`, `period_month`, `period_year`, `amount` |
+| `sponsorships` | **Relationship** | `type` (Primary/Co-Sponsor), `start_date`, `is_active` |
+| `sponsorship_receipts` | **Contribution Record**| `received_date`, `amount`, `payment_method`, `reference_number` |
 
 ### Logic
-- **Commitment:** Admins record the expected monthly support from a sponsor.
-- **Verification:** When a payment is manually confirmed, a record is added to `sponsorship_receipts`.
-- **Reporting:** Comparing `sponsorships` vs `sponsorship_receipts` identifies missing payments and triggers "Thank You Letter" reminders.
+- **Relationship:** Admins record the fact that a sponsor is supporting a student.
+- **Verification:** When a payment is manually confirmed for a specific student, a record is added to `sponsorship_receipts` including the payment method and reference number (e.g., Check #).
+- **Reporting:** Sponsorship health is tracked by **Recency of Support** (contributions within the last 6 months) and milestone compliance.
 
 ---
 
@@ -60,9 +60,8 @@ Used for programs that do not require repayment (Boarding Schools, Staff Childre
 ## 4. Key Business Logic & Validations
 
 ### Currency Handling
-- **Sponsorships:** All income tracking (Sponsorships and Receipts) is conducted strictly in **USD**.
-- **Local Operations:** Loan disbursements and internal allocations may support **BDT** where applicable for local tracking.
-- **Reporting:** Reports should clearly indicate the currency to maintain ledger integrity.
+- **Unified Currency:** All financial tracking—including Income (Sponsorships), Spending (Subsidies/Grants), and Recoveries (Loans)—is conducted strictly in **USD ($)**.
+- **Reporting:** Using a single currency simplifies the ledger and provides a clear, high-integrity overview for management. Local BDT costs are converted to USD at the point of entry based on monthly standard rates.
 
 ### Security & Integrity
 - **Audit Logs:** Every financial modification (Add/Edit/Delete) is captured in `audit_logs` with a timestamp and the user ID of the admin.

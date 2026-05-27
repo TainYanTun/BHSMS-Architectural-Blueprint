@@ -20,11 +20,11 @@ This document tracks pending questions and strategic decisions that need to be f
 
 ---
 
-## 3. Sponsorship Currency Handling
-**Context:** The system now supports both **USD** and **BDT**.
+## 3. Sponsorship Currency & Tracking Mandate (Standardized)
+**Context:** The system has been standardized to use **USD ($)** for all financial tracking to simplify initial implementation.
 
-- **Question:** For international sponsors paying in USD, does the client need to see the conversion to BDT in reports, or should the ledger remain purely in the currency it was received?
-- **Implication:** If conversion is needed, we may need to track exchange rates or add a "Value in BDT" field to receipt records.
+- **Status:** All Income (Sponsorships), Spending (Subsidies), and Recoveries (Loans) are recorded in USD.
+- **Clarification Needed:** Does the client agree with this "USD-first" approach for all internal ledgering, or are there specific local reports that *must* remain in BDT?
 
 ---
 
@@ -50,6 +50,14 @@ This document tracks pending questions and strategic decisions that need to be f
 - **Logic:** The "Sponsor Portal" is a read-only view of the student database, filtered for students who are **Active** and have **no Primary Sponsor**.
 - **Requirement:** The portal will display the **Validated Case Study** as the primary narrative to encourage sponsorship.
 - **Privacy:** Sensitive fields (e.g., exact village location or full guardian contact info) will be redacted in the public-facing portal.
+
+---
+
+## 7. Audit Integrity & "Truthful Ledger" Schema (Simplified)
+**Context:** Standardizing on USD simplifies the "Truthful Ledger" by removing exchange rate variables from the comparison.
+
+- **Status:** The system now compares **USD Income** vs. **USD Support Value** directly.
+- **Clarification Needed:** Is a direct USD comparison sufficient for the client's internal audit requirements, or do they still need to see the BDT conversion for local transparency?
 
 ---
 *Last Updated: 2026-05-27*

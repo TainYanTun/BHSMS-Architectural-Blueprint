@@ -429,20 +429,16 @@
       </div>
       <div class="template-list">
         <div class="template-option" onclick="selectTemplate('monthly')">
-          <div class="template-name">Monthly Support (T-01)</div>
-          <div class="template-preview">"Thank you for your recent gift of [Amount] for [Month/Year]. Your support makes a world of difference..."</div>
-        </div>
-        <div class="template-option" onclick="selectTemplate('monthly')">
-          <div class="template-name">Yearly Support (T-02)</div>
-          <div class="template-preview">"Thank you for your generous annual gift of [Amount]. This covers my sponsorship for the entire year..."</div>
-        </div>
-        <div class="template-option" onclick="selectTemplate('birthday')">
-          <div class="template-name">Birthday Note (T-03)</div>
-          <div class="template-preview">"It is my birthday! Thank you for being my sponsor. This year I am [Age] years old..."</div>
+          <div class="template-name">Contribution Acknowledgement</div>
+          <div class="template-preview">"Thank you for your recent contribution of [Amount] received on [Date]. Your support makes a world of difference..."</div>
         </div>
         <div class="template-option" onclick="selectTemplate('gift')">
-          <div class="template-name">Extra Gift Note (T-04)</div>
+          <div class="template-name">Extra Gift Note</div>
           <div class="template-preview">"I am so excited to thank you for the extra gift of [Amount]. With this, I was able to get [Item]..."</div>
+        </div>
+        <div class="template-option" onclick="selectTemplate('birthday')">
+          <div class="template-name">Birthday Note</div>
+          <div class="template-preview">"It is my birthday! Thank you for being my sponsor. This year I am [Age] years old..."</div>
         </div>
       </div>
     </div>
@@ -521,7 +517,7 @@
               </div>
               <div class="field-group">
                 <span class="field-label">Reference</span>
-                <span class="field-value">June 2026 Support</span>
+                <span class="field-value">Contribution (Received: May 15, 2026)</span>
               </div>
               <div class="field-group">
                 <span class="field-label">Trigger ID</span>
@@ -551,7 +547,7 @@
             <div class="letter-editor" id="letterEditor" contenteditable="true">
               <p>Dear John & Sarah Miller,</p>
               <p><br></p>
-              <p>Thank you so much for your recent gift of <b>$50.00</b> for the month of <b>June 2026</b>. Your continued support makes a world of difference in my life and education.</p>
+              <p>Thank you so much for your recent contribution of <b>$50.00</b> received on <b>May 15, 2026</b>. Your continued support makes a world of difference in my life and education.</p>
               <p><br></p>
               <p>This month at school, I have been studying hard for my mathematics exams. I am also enjoying my time in the gardening club where we are planting new vegetables for the monsoon season.</p>
               <p><br></p>
@@ -677,7 +673,7 @@
       let hint = "";
 
       if (type === 'monthly') {
-        content = "<p>Dear John & Sarah Miller,</p><p><br></p><p>Thank you so much for your recent gift of <b>$50.00</b> for the month of <b>June 2026</b>. Your continued support makes a world of difference in my life and education.</p><p><br></p><p>I hope you are doing well and having a blessed month. Thank you for being my sponsor!</p><p><br></p><p>Sincerely,<br><b>Abdur Rahman</b></p>";
+        content = "<p>Dear John & Sarah Miller,</p><p><br></p><p>Thank you so much for your recent contribution of <b>$50.00</b> received on <b>May 15, 2026</b>. Your continued support makes a world of difference in my life and education.</p><p><br></p><p>I hope you are doing well and having a blessed month. Thank you for being my sponsor!</p><p><br></p><p>Sincerely,<br><b>Abdur Rahman</b></p>";
         hint = "✓ Matches Template T-01 (Auto-Approve)";
         approvalHint.style.color = "var(--success-green)";
       } else if (type === 'birthday') {

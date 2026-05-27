@@ -118,8 +118,6 @@ erDiagram
         uuid student_id FK
         uuid sponsor_id FK
         text type
-        numeric monthly_amount
-        text currency
         date start_date
         date end_date
         boolean is_active
@@ -133,6 +131,8 @@ erDiagram
         numeric amount
         text currency
         date received_date
+        text payment_method
+        text reference_number
         int period_month
         int period_year
         text notes

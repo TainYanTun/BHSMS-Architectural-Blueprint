@@ -38,10 +38,10 @@ To ensure quality while maintaining efficiency, the system uses a tiered approva
 ## 4. Communication Health (The "Sponsorship Health" Metric)
 
 A student's sponsorship status is considered **"Healthy"** if:
-1.  **Receipt Compliance:** Every recorded financial receipt has a corresponding "Sent" letter.
+1.  **Recency of Support:** The student has received a financial contribution (receipt) within the last **6 months**.
 2.  **Milestone Compliance:** The current year's scheduled milestones (APR/Birthday) are "Complete" or "In-Progress" within their active window.
 
-*Note: If a student is missing a Milestone (e.g., APR was due 2 months ago and is not started), the student is flagged as "Action Required" on the Master Registry.*
+*Note: If a student has not received a contribution in over 6 months, or is missing a Milestone (e.g., APR was due 2 months ago and is not started), the student is flagged as "Action Required" on the Master Registry.*
 
 ## 5. Dynamic Templates & Variables
 
@@ -54,6 +54,7 @@ To ensure consistency and speed, supervisors manage a library of dynamic templat
 | `[SPONSOR_NAME]` | The full name of the sponsor(s). | John & Sarah Miller |
 | `[AMOUNT]` | The currency amount of the receipt. | $50.00 |
 | `[DATE]` | The effective date of the trigger. | June 2026 |
+| `[DAYS_SINCE_LAST]` | Number of days since the last contribution. | 32 days |
 | `[STUDENT_AGE]` | Current age of the student. | 10 years old |
 | `[GRADE]` | Current grade level of the student. | Class 4 |
 

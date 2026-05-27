@@ -402,8 +402,7 @@
         <div class="template-list">
           <div class="template-item active">
             <div style="display:flex; justify-content:space-between; align-items:center;">
-              <div class="template-name">Monthly Support</div>
-              <div class="id-tag" style="font-size:10px;">T-01</div>
+              <div class="template-name">Contribution Receipt</div>
             </div>
             <div class="template-meta">
               <span class="category-badge">Financial</span>
@@ -412,32 +411,20 @@
           </div>
           <div class="template-item">
             <div style="display:flex; justify-content:space-between; align-items:center;">
-              <div class="template-name">Yearly Support</div>
-              <div class="id-tag" style="font-size:10px;">T-02</div>
+              <div class="template-name">Special Gift Note</div>
             </div>
             <div class="template-meta">
               <span class="category-badge">Financial</span>
-              <span>Updated 1 month ago</span>
+              <span>Updated 5 days ago</span>
             </div>
           </div>
           <div class="template-item">
             <div style="display:flex; justify-content:space-between; align-items:center;">
               <div class="template-name">Student Birthday</div>
-              <div class="id-tag" style="font-size:10px;">B-01</div>
             </div>
             <div class="template-meta">
               <span class="category-badge">Milestone</span>
               <span>Updated 3 weeks ago</span>
-            </div>
-          </div>
-          <div class="template-item">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-              <div class="template-name">Special Extra Gift</div>
-              <div class="id-tag" style="font-size:10px;">G-01</div>
-            </div>
-            <div class="template-meta">
-              <span class="category-badge">Financial</span>
-              <span>Updated 5 days ago</span>
             </div>
           </div>
         </div>
@@ -455,22 +442,16 @@
         </div>
         <div class="editor-container">
           <!-- ARCHIVE WARNING -->
-          <div style="background: #fffbeb; border: 1px solid #fde68a; padding: 12px 16px; border-radius: 6px; font-size: 12px; color: #92400e; display: flex; align-items: flex-start; gap: 12px;">
+          <div style="background: #f1f5f9; border: 1px solid var(--border-neutral); padding: 12px 16px; border-radius: 6px; font-size: 12px; color: var(--text-muted); display: flex; align-items: flex-start; gap: 12px;">
             <span style="font-size: 16px;">ⓘ</span>
             <div>
-              <b>Archiving vs Deleting:</b> Templates cannot be "hard deleted" because they are linked to historical communications. Archiving removes this template from the active Hub while preserving records for past audits.
+              Archived templates will no longer appear in the Communication Hub but will be preserved for historical records.
             </div>
           </div>
 
-          <div style="display:grid; grid-template-columns: 120px 1fr; gap:20px;">
-            <div class="form-group">
-              <label class="form-label">Template Code</label>
-              <input type="text" class="form-input" style="font-family:monospace; font-weight:700;" value="T-01">
-            </div>
-            <div class="form-group">
-              <label class="form-label">Template Name</label>
-              <input type="text" class="form-input" value="Monthly Support Acknowledgement">
-            </div>
+          <div class="form-group">
+            <label class="form-label">Template Name</label>
+            <input type="text" class="form-input" value="General Contribution Acknowledgement">
           </div>
           <div class="form-group">
             <label class="form-label">Category</label>
@@ -488,6 +469,7 @@
               <div class="var-chip">[SPONSOR_NAME]</div>
               <div class="var-chip">[AMOUNT]</div>
               <div class="var-chip">[DATE]</div>
+              <div class="var-chip">[DAYS_SINCE_LAST]</div>
               <div class="var-chip">[STUDENT_AGE]</div>
               <div class="var-chip">[GRADE]</div>
             </div>
@@ -498,7 +480,7 @@
             <div class="template-editor" contenteditable="true">
               <p>Dear [SPONSOR_NAME],</p>
               <p><br></p>
-              <p>Thank you so much for your recent gift of <b>[AMOUNT]</b> for the month of <b>[DATE]</b>. Your continued support makes a world of difference in my life and education.</p>
+              <p>Thank you so much for your recent contribution of <b>[AMOUNT]</b> received on <b>[DATE]</b>. Your continued support makes a world of difference in my life and education.</p>
               <p><br></p>
               <p>This month at school, I have been studying hard for my [SUBJECT] exams. I am also enjoying my time in the [CLUB] where we are [ACTIVITY].</p>
               <p><br></p>

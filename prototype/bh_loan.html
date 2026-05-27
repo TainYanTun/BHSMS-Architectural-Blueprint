@@ -172,50 +172,57 @@
 
       <div class="metrics-row">
         <div class="metric-card">
-          <div class="metric-label">Active Loans</div>
-          <div class="metric-value">42 Students</div>
-          <div class="metric-meta">Total Outstanding Records</div>
+          <div class="metric-label">Total Outflow (Disbursements)</div>
+          <div class="metric-value">$36,500</div>
+          <div class="metric-meta">Investment in higher education</div>
         </div>
         <div class="metric-card">
-          <div class="metric-label">Monthly Refunds</div>
-          <div class="metric-value">৳85,000</div>
-          <div class="metric-meta">Average collection per month</div>
+          <div class="metric-label">Total Inflow (Refunds)</div>
+          <div class="metric-value">$11,200</div>
+          <div class="metric-meta">Recovered from graduates</div>
         </div>
         <div class="metric-card">
-          <div class="metric-label">Pending Actions</div>
-          <div class="metric-value" style="color: var(--danger);">08 Alerts</div>
-          <div class="metric-meta">3 Expired, 5 Overdue Refunds</div>
+          <div class="metric-label">Outstanding Balance</div>
+          <div class="metric-value" style="color: var(--accent-teal);">$25,300</div>
+          <div class="metric-meta">Active debt across 42 students</div>
         </div>
       </div>
 
       <div class="mgmt-grid">
         <div class="mgmt-card">
-          <div class="mgmt-title">Refund Management Node</div>
-          <div style="font-size: 12px; margin-bottom: 12px; color: var(--text-muted);">Record new refund entry for active student:</div>
+          <div class="mgmt-title">Ledger Entry: Post New Disbursement</div>
+          <div style="font-size: 12px; margin-bottom: 12px; color: var(--text-muted);">Record payment for tuition, books, or hostel (USD):</div>
+          <div class="form-inline">
+            <select class="input-polished" style="flex: 1;">
+              <option>Select Student UID...</option>
+              <option>#LON-0045 - S. KHATUN</option>
+            </select>
+            <select class="input-polished">
+              <option>Tuition</option>
+              <option>Books</option>
+              <option>Hostel</option>
+            </select>
+            <input type="text" class="input-polished" placeholder="Amount ($)" style="width: 100px;">
+            <button class="btn-primary">Post Outflow</button>
+          </div>
+        </div>
+        <div class="mgmt-card">
+          <div class="mgmt-title">Ledger Entry: Post New Refund</div>
+          <div style="font-size: 12px; margin-bottom: 12px; color: var(--text-muted);">Record repayment from a working graduate (USD):</div>
           <div class="form-inline">
             <select class="input-polished" style="flex: 1;">
               <option>Select Student UID...</option>
               <option>#LON-0021 - A. RAHMAN</option>
-              <option>#LON-0092 - N. ISLAM</option>
             </select>
-            <input type="text" class="input-polished" placeholder="Amount (BDT)" style="width: 120px;">
-            <button class="btn-primary">Post Entry</button>
-          </div>
-        </div>
-        <div class="mgmt-card">
-          <div class="mgmt-title">Quick Reports</div>
-          <div class="report-grid">
-            <a href="#" class="report-btn">Yearly Expense Sum</a>
-            <a href="#" class="report-btn">Refund Tracker (PDF)</a>
-            <a href="#" class="report-btn">Sponsor Loan List</a>
-            <a href="#" class="report-btn">Download CSV (All)</a>
+            <input type="text" class="input-polished" placeholder="Amount ($)" style="width: 120px;">
+            <button class="btn-primary" style="background: var(--success);">Post Inflow</button>
           </div>
         </div>
       </div>
 
       <div class="module-card">
         <div class="card-header">
-          <div class="card-title">Loan Master List</div>
+          <div class="card-title">Loan Master Registry (USD)</div>
         </div>
 
         <table class="directory-table">
@@ -223,10 +230,10 @@
             <tr>
               <th>STUDENT_ID</th>
               <th>NAME / INSTITUTION</th>
-              <th>TOTAL_LOAN</th>
+              <th>LOAN_TOTAL</th>
               <th>REFUNDED</th>
-              <th>SPONSOR(S)</th>
-              <th>DOCS</th>
+              <th>BALANCE_DUE</th>
+              <th>STATUS</th>
               <th>OP_NODES</th>
             </tr>
           </thead>
@@ -237,14 +244,13 @@
                 <span class="student-name">A. RAHMAN</span>
                 <span class="institution-name">DHAKA UNIVERSITY</span>
               </td>
-              <td>৳1,20,000</td>
-              <td>৳15,000</td>
-              <td>JAMES_O <span style="font-size: 10px; color: var(--accent-pink); font-weight: 800;">[CO]</span></td>
-              <td><span class="status-tag tag-success">AGREEMENT</span></td>
+              <td>$1,200</td>
+              <td>$150</td>
+              <td style="font-weight: 800; color: var(--danger);">$1,050</td>
+              <td><span class="status-tag tag-success" style="background: #eff6ff; color: #1e40af;">REFUNDING</span></td>
               <td>
                 <div class="op-nodes">
-                  <div class="op-btn">VIEW</div>
-                  <div class="op-btn">EDIT</div>
+                  <div class="op-btn">VIEW_LEDGER</div>
                 </div>
               </td>
             </tr>
@@ -254,31 +260,13 @@
                 <span class="student-name">S. KHATUN</span>
                 <span class="institution-name">RAJSHAHI MEDICAL COLLEGE</span>
               </td>
-              <td>৳2,50,000</td>
-              <td>৳0 <span style="font-size: 10px; color: var(--text-muted);">(STUDYING)</span></td>
-              <td>SARAH_M <span style="font-size: 10px; color: var(--accent-teal); font-weight: 800;">[PRI]</span></td>
-              <td><span class="status-tag tag-success">AGREEMENT</span></td>
+              <td>$2,500</td>
+              <td>$0</td>
+              <td style="font-weight: 800; color: var(--accent-teal);">$2,500</td>
+              <td><span class="status-tag tag-warning">STUDYING</span></td>
               <td>
                 <div class="op-nodes">
-                  <div class="op-btn">VIEW</div>
-                  <div class="op-btn">EDIT</div>
-                </div>
-              </td>
-            </tr>
-            <tr>
-              <td><span class="uid-stamp">#LON-0092</span></td>
-              <td>
-                <span class="student-name">N. ISLAM</span>
-                <span class="institution-name">JAHANGIRNAGAR UNIVERSITY</span>
-              </td>
-              <td>৳1,80,000</td>
-              <td>৳45,000</td>
-              <td style="color:var(--text-light);">--NONE--</td>
-              <td><span class="status-tag tag-warning">EXPIRED</span></td>
-              <td>
-                <div class="op-nodes">
-                  <div class="op-btn">VIEW</div>
-                  <div class="op-btn">EDIT</div>
+                  <div class="op-btn">VIEW_LEDGER</div>
                 </div>
               </td>
             </tr>
