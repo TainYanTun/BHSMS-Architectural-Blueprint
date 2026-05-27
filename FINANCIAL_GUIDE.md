@@ -45,7 +45,8 @@ For ongoing assistance (e.g., boarding school fees, pocket money, staff child ai
 ### Currency Handling
 To maintain strict ledger integrity and simplify reporting, the system applies these rules:
 *   **Unified Tracking:** All financial components—including Sponsorship Income, Subsidies, and Loans—are tracked strictly in **USD ($)**.
-*   **Integrity:** By using a single currency for the digital ledger, the system avoids exchange rate volatility in its internal reporting. Any local BDT payments are converted to USD at the time of entry based on the organization's monthly standard rate.
+*   **Integrity:** By using a single currency for the digital ledger, the system avoids exchange rate volatility. All entries must be recorded in USD.
+*   **Local Payments:** Any local payments made in BDT for operational expenses are handled outside this sponsorship ledger or converted to USD manually before entry if they impact student balances (e.g., local loan refunds).
 
 ### The Audit Trail (`audit_logs`)
 The system follows a policy of **non-deletion**. Financial records must never be deleted. 

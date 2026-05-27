@@ -16,7 +16,7 @@ Decouple the **Staff Operations System** (Internal Management) from the **Sponso
 ### B. Sponsor Portal (The "Storefront")
 *   **User Base:** External donors and potential sponsors.
 *   **UI Focus:** Emotional storytelling, mobile-friendly design, personal communication history, and tax receipt downloads.
-*   **Privacy Level:** **Redacted.** Only displays supervisor-validated case studies, photos, and general student progress. All sensitive family and location data is hidden.
+*   **Privacy Level:** **Redacted.** Only displays supervisor-approved case studies, photos, and general student progress. All sensitive family and location data is hidden.
 *   **Deployment:** Public-facing cloud environment (AWS/Vercel/DigitalOcean) for global accessibility.
 
 ## 3. Communication Strategy: Shared API

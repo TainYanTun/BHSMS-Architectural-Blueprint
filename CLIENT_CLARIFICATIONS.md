@@ -21,10 +21,10 @@ This document tracks pending questions and strategic decisions that need to be f
 ---
 
 ## 3. Sponsorship Currency & Tracking Mandate (Standardized)
-**Context:** The system has been standardized to use **USD ($)** for all financial tracking to simplify initial implementation.
+**Context:** The system has been standardized to use **USD ($)** for all financial tracking to simplify initial implementation and remove exchange rate variables.
 
-- **Status:** All Income (Sponsorships), Spending (Subsidies), and Recoveries (Loans) are recorded in USD.
-- **Clarification Needed:** Does the client agree with this "USD-first" approach for all internal ledgering, or are there specific local reports that *must* remain in BDT?
+- **Status:** **FINALIZED.** All Income (Sponsorships), Spending (Subsidies), and Recoveries (Loans) are recorded strictly in USD.
+- **Decision:** Direct USD comparison is the primary audit method. Local BDT conversions for operational transparency are handled externally.
 
 ---
 
@@ -36,11 +36,11 @@ This document tracks pending questions and strategic decisions that need to be f
 
 ---
 
-## 5. Mandatory Supervisor Validation
+## 5. Mandatory Supervisor Approval
 **Context:** All documents sent to or viewed by sponsors (Case Study, ARP, Thank You Letters).
 
 - **Rule:** No document can be "Published" or "Sent" without a digital sign-off from a **Supervisor** or **SPD**.
-- **Impact:** Case Studies for "Needy Students" will only appear in the Sponsor Portal once they transition from `Draft` to `Validated`.
+- **Impact:** Case Studies for "Needy Students" will only appear in the Sponsor Portal once they transition from `Draft` to `Approved`.
 
 ---
 
@@ -48,16 +48,16 @@ This document tracks pending questions and strategic decisions that need to be f
 **Context:** Potential sponsors browsing for children to support.
 
 - **Logic:** The "Sponsor Portal" is a read-only view of the student database, filtered for students who are **Active** and have **no Primary Sponsor**.
-- **Requirement:** The portal will display the **Validated Case Study** as the primary narrative to encourage sponsorship.
+- **Requirement:** The portal will display the **Approved Case Study** as the primary narrative to encourage sponsorship.
 - **Privacy:** Sensitive fields (e.g., exact village location or full guardian contact info) will be redacted in the public-facing portal.
 
 ---
 
-## 7. Audit Integrity & "Truthful Ledger" Schema (Simplified)
+## 7. Audit Integrity & "Truthful Ledger" Schema (Standardized)
 **Context:** Standardizing on USD simplifies the "Truthful Ledger" by removing exchange rate variables from the comparison.
 
-- **Status:** The system now compares **USD Income** vs. **USD Support Value** directly.
-- **Clarification Needed:** Is a direct USD comparison sufficient for the client's internal audit requirements, or do they still need to see the BDT conversion for local transparency?
+- **Status:** **FINALIZED.** The system now compares **USD Income** vs. **USD Support Value** directly.
+- **Decision:** A direct USD comparison is sufficient for the internal audit requirements.
 
 ---
 *Last Updated: 2026-05-27*

@@ -32,7 +32,7 @@ To ensure quality while maintaining efficiency, the system uses a tiered approva
 
 ### B. Required Review (Milestones & Special Gifts)
 *   **Applicable to:** Birthdays, APRs, and Special Gift responses.
-*   **Logic:** These require a "Submit for Review" step. A Supervisor must validate the content (and photo if applicable) before it is finalized.
+*   **Logic:** These require a "Submit for Review" step. A Supervisor must approve the content (and photo if applicable) before it is finalized.
 *   **Goal:** Maintain high quality for the "High Impact" communications that sponsors value most.
 
 ## 4. Communication Health (The "Sponsorship Health" Metric)

@@ -18,7 +18,7 @@ This document serves as the "Visual DNA" and single source of truth for the syst
 | `sidebar-active` | `#1e293b` | Background for selected navigation nodes. |
 | `action-teal` | `#2B7A9E` | Primary call-to-action, icons, active tab underlines, and links. |
 | `signal-pink` | `#d17a8e` | Secondary accents, soft alerts, and distinct categorization tags. |
-| `success-green` | `#10b981` | Validation markers and positive state indicators. |
+| `success-green` | `#10b981` | Approval markers and positive state indicators. |
 | `bg-app` | `#f8fafc` | Global application background. |
 | `surface-white` | `#ffffff` | Primary content areas, cards, and topbar background. |
 | `surface-subtle`| `#f1f5f9` | Table headers, sub-sections, and hover highlights. |

@@ -57,7 +57,7 @@ Used for programs that do not require repayment (Boarding Schools, Staff Childre
 
 ---
 
-## 4. Key Business Logic & Validations
+## 4. Key Business Logic & Controls
 
 ### Currency Handling
 - **Unified Currency:** All financial tracking—including Income (Sponsorships), Spending (Subsidies/Grants), and Recoveries (Loans)—is conducted strictly in **USD ($)**.

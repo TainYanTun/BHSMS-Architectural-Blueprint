@@ -7,12 +7,14 @@
 -- ==========================================
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS "pg_trgm"; -- For high-performance text search
+CREATE EXTENSION IF NOT EXISTS "pgcrypto"; -- For data encryption at rest (Proposal 3.6.1)
 
 -- Trigger function to automatically update 'updated_at' timestamps
 CREATE OR REPLACE FUNCTION fn_update_timestamp()
 RETURNS TRIGGER AS $$
 BEGIN
     NEW.updated_at = NOW();
+    NEW.row_version = NEW.row_version + 1; -- Auto-increment version for offline sync
     RETURN NEW;   
 END;
 $$ LANGUAGE plpgsql;
@@ -20,13 +22,27 @@ $$ LANGUAGE plpgsql;
 -- ==========================================
 -- 1. REFERENCE TABLES
 -- ==========================================
+CREATE TABLE sites (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name TEXT NOT NULL,
+    code TEXT UNIQUE NOT NULL, -- e.g., 'HILI_MAIN', 'VILLAGE_01'
+    location_details TEXT,
+    is_remote_office BOOLEAN DEFAULT FALSE,
+    is_active BOOLEAN DEFAULT TRUE,
+    last_sync_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    row_version INT DEFAULT 1
+);
+
 CREATE TABLE programs (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     name TEXT NOT NULL,
     code TEXT UNIQUE NOT NULL,
     description TEXT,
     created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW()
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    row_version INT DEFAULT 1
 );
 
 CREATE TABLE institutions (
@@ -35,12 +51,23 @@ CREATE TABLE institutions (
     type TEXT,
     location TEXT,
     created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW()
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    row_version INT DEFAULT 1
 );
 
 -- ==========================================
--- 2. USER MANAGEMENT (RBAC)
+-- 2. USER MANAGEMENT & RBAC
 -- ==========================================
+CREATE TABLE permissions (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    code TEXT UNIQUE NOT NULL, -- e.g., 'STUDENT_CREATE', 'FINANCE_APPROVE'
+    name TEXT NOT NULL,
+    module TEXT NOT NULL,
+    description TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    row_version INT DEFAULT 1
+);
+
 CREATE TABLE users (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     username TEXT UNIQUE NOT NULL,
@@ -48,12 +75,20 @@ CREATE TABLE users (
     password_hash TEXT NOT NULL,
     full_name TEXT NOT NULL,
     role TEXT NOT NULL CHECK (role IN ('Admin', 'Supervisor', 'Coordinator', 'Secretary','Sponsor')),
-    office_location TEXT,
+    site_id UUID REFERENCES sites(id), -- Link to physical location/office
+    office_location TEXT, -- Denormalized or specific room/desk info
     is_active BOOLEAN DEFAULT TRUE,
     last_login TIMESTAMPTZ,
     deleted_at TIMESTAMPTZ, -- Soft delete support
     created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW()
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    row_version INT DEFAULT 1
+);
+
+CREATE TABLE role_permissions (
+    role TEXT NOT NULL,
+    permission_id UUID REFERENCES permissions(id) ON DELETE CASCADE,
+    PRIMARY KEY (role, permission_id)
 );
 
 -- ==========================================
@@ -62,6 +97,7 @@ CREATE TABLE users (
 CREATE TABLE students (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     master_id_number BIGINT UNIQUE NOT NULL, 
+    legacy_id TEXT, -- For tracking original MS Access / Paper ID
     
     first_name TEXT NOT NULL,
     last_name TEXT NOT NULL,
@@ -74,6 +110,7 @@ CREATE TABLE students (
     father_name TEXT,
     mother_name TEXT,
     primary_guardian TEXT,
+    staff_parent_id UUID REFERENCES users(id), -- For Employee Worker Children Program
     siblings_count INT DEFAULT 0 CHECK (siblings_count >= 0),
     contact_number TEXT,
     situation_overview TEXT,
@@ -82,7 +119,9 @@ CREATE TABLE students (
     current_program_id UUID REFERENCES programs(id),
     deleted_at TIMESTAMPTZ,
     created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW()
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    row_version INT DEFAULT 1,
+    last_synced_at TIMESTAMPTZ -- For offline remote operation tracking
 );
 
 -- Master ID Generation Logic
@@ -116,7 +155,8 @@ CREATE TABLE student_identifiers (
     program_id UUID REFERENCES programs(id),
     is_current BOOLEAN DEFAULT TRUE,
     assigned_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW()
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    row_version INT DEFAULT 1
 );
 
 -- ==========================================
@@ -138,7 +178,8 @@ CREATE TABLE sponsors (
     status TEXT DEFAULT 'Active' CHECK (status IN ('Active', 'Inactive')),
     deleted_at TIMESTAMPTZ,
     created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW()
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    row_version INT DEFAULT 1
 );
 
 CREATE TABLE sponsorships (
@@ -151,6 +192,7 @@ CREATE TABLE sponsorships (
     is_active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW(),
+    row_version INT DEFAULT 1,
     CONSTRAINT chk_dates CHECK (end_date IS NULL OR end_date >= start_date)
 );
 
@@ -166,6 +208,7 @@ CREATE TABLE sponsorship_receipts (
     period_year INT NOT NULL,
     notes TEXT,
     created_at TIMESTAMPTZ DEFAULT NOW(),
+    row_version INT DEFAULT 1,
     UNIQUE(sponsorship_id, period_month, period_year)
 );
 
@@ -179,8 +222,37 @@ CREATE TABLE academic_records (
     year INT NOT NULL CHECK (year > 1900),
     grade_level TEXT,
     result_summary TEXT,
+    attendance_percentage NUMERIC(5, 2) CHECK (attendance_percentage >= 0 AND attendance_percentage <= 100),
     created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW()
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    row_version INT DEFAULT 1
+);
+
+CREATE TABLE attendance_records (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    student_id UUID NOT NULL REFERENCES students(id) ON DELETE CASCADE,
+    year INT NOT NULL CHECK (year > 1900),
+    days_present INT NOT NULL CHECK (days_present >= 0),
+    total_school_days INT NOT NULL CHECK (total_school_days > 0),
+    remarks TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    row_version INT DEFAULT 1,
+    UNIQUE(student_id, year)
+);
+
+CREATE TABLE documents (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    student_id UUID REFERENCES students(id) ON DELETE CASCADE,
+    sponsor_id UUID REFERENCES sponsors(id) ON DELETE CASCADE,
+    name TEXT NOT NULL,
+    type TEXT NOT NULL, -- e.g., 'Birth Certificate', 'Agreement', 'ID Scan'
+    file_url TEXT NOT NULL,
+    metadata JSONB,
+    created_by UUID REFERENCES users(id),
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    row_version INT DEFAULT 1
 );
 
 CREATE TABLE reports (
@@ -188,14 +260,15 @@ CREATE TABLE reports (
     student_id UUID NOT NULL REFERENCES students(id) ON DELETE CASCADE,
     year INT NOT NULL CHECK (year > 1900),
     type TEXT NOT NULL DEFAULT 'APR',
-    status TEXT NOT NULL DEFAULT 'Not Started' CHECK (status IN ('Not Started', 'Draft', 'Pending Validation', 'Validated', 'Returned', 'Complete')),
+    status TEXT NOT NULL DEFAULT 'Not Started' CHECK (status IN ('Not Started', 'Draft', 'Pending', 'Approved', 'Returned', 'Complete')),
     supervisor_comments TEXT,
-    validated_by UUID REFERENCES users(id),
-    validated_at TIMESTAMPTZ,
+    approved_by UUID REFERENCES users(id),
+    approved_at TIMESTAMPTZ,
     completion_date DATE,
     pdf_url TEXT,
     created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW()
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    row_version INT DEFAULT 1
 );
 
 CREATE TABLE student_history (
@@ -206,7 +279,8 @@ CREATE TABLE student_history (
     description TEXT,
     is_milestone BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW()
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    row_version INT DEFAULT 1
 );
 
 CREATE TABLE financial_allocations (
@@ -222,7 +296,39 @@ CREATE TABLE financial_allocations (
     notes TEXT,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW(),
+    row_version INT DEFAULT 1,
     CONSTRAINT chk_alloc_dates CHECK (end_date IS NULL OR end_date >= start_date)
+);
+
+CREATE TABLE allocation_payouts (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    allocation_id UUID NOT NULL REFERENCES financial_allocations(id) ON DELETE CASCADE,
+    amount NUMERIC(12, 2) NOT NULL CHECK (amount > 0),
+    currency TEXT DEFAULT 'USD' CHECK (currency = 'USD'),
+    payout_date DATE DEFAULT CURRENT_DATE,
+    recorded_by UUID REFERENCES users(id),
+    status TEXT DEFAULT 'Paid' CHECK (status IN ('Paid', 'Pending', 'Cancelled')),
+    notes TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    row_version INT DEFAULT 1
+);
+
+CREATE TABLE migration_metadata (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    table_name TEXT NOT NULL,
+    source_id TEXT NOT NULL,
+    target_uuid UUID NOT NULL,
+    migration_batch TEXT,
+    migrated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Migration Staging for Bulk Imports (Proposal 3.6.1)
+CREATE TABLE migration_staging_students (
+    id SERIAL PRIMARY KEY,
+    raw_data JSONB NOT NULL,
+    validation_errors TEXT[],
+    status TEXT DEFAULT 'Pending' CHECK (status IN ('Pending', 'Validated', 'Imported', 'Failed')),
+    created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 CREATE TABLE communication_templates (
@@ -236,7 +342,8 @@ CREATE TABLE communication_templates (
     deleted_at TIMESTAMPTZ, -- Soft delete support
     created_by UUID REFERENCES users(id),
     created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW()
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    row_version INT DEFAULT 1
 );
 
 CREATE TABLE communications (
@@ -257,7 +364,55 @@ CREATE TABLE communications (
     pdf_url TEXT,
     sent_at TIMESTAMPTZ,
     created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW()
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    row_version INT DEFAULT 1
+);
+
+-- Email Queue for Delivery (Proposal 3.6.1)
+CREATE TABLE email_outbox (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    communication_id UUID REFERENCES communications(id) ON DELETE SET NULL,
+    recipient_email TEXT NOT NULL,
+    subject TEXT NOT NULL,
+    body_html TEXT NOT NULL,
+    status TEXT DEFAULT 'Pending' CHECK (status IN ('Pending', 'Processing', 'Sent', 'Failed')),
+    retry_count INT DEFAULT 0,
+    last_error TEXT,
+    scheduled_at TIMESTAMPTZ DEFAULT NOW(),
+    sent_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE smtp_logs (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    outbox_id UUID REFERENCES email_outbox(id) ON DELETE CASCADE,
+    response_code TEXT,
+    response_message TEXT,
+    sent_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- System Health & Backup Logs (Proposal 3.6.1)
+CREATE TABLE system_health_logs (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    event_type TEXT NOT NULL, -- e.g., 'Backup', 'Sync', 'DB_Vacuum'
+    status TEXT NOT NULL, -- e.g., 'Success', 'Failure'
+    details TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Sync Conflict Queue for Manual Resolution (Offline Remote Operation)
+CREATE TABLE sync_conflicts (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    table_name TEXT NOT NULL,
+    record_id UUID NOT NULL,
+    conflicting_site_id UUID REFERENCES sites(id),
+    central_server_data JSONB NOT NULL, -- Current state on the HQ on-premise server
+    remote_data JSONB NOT NULL, -- Conflicting state from the field/site
+    overlap_columns TEXT[], -- Specific fields that clash
+    resolved_by UUID REFERENCES users(id),
+    resolved_at TIMESTAMPTZ,
+    status TEXT DEFAULT 'Pending' CHECK (status IN ('Pending', 'Resolved', 'Ignored')),
+    created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- ==========================================
@@ -271,7 +426,8 @@ CREATE TABLE loans (
     status TEXT DEFAULT 'Studying' CHECK (status IN ('Studying', 'Refunding', 'Complete', 'Expired')),
     agreement_url TEXT,
     created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW()
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    row_version INT DEFAULT 1
 );
 
 CREATE TABLE loan_disbursements (
@@ -282,7 +438,8 @@ CREATE TABLE loan_disbursements (
     disbursement_date DATE DEFAULT CURRENT_DATE,
     category TEXT NOT NULL,
     notes TEXT,
-    created_at TIMESTAMPTZ DEFAULT NOW()
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    row_version INT DEFAULT 1
 );
 
 CREATE TABLE loan_refunds (
@@ -293,7 +450,8 @@ CREATE TABLE loan_refunds (
     refund_date DATE DEFAULT CURRENT_DATE,
     recorded_by UUID REFERENCES users(id),
     notes TEXT,
-    created_at TIMESTAMPTZ DEFAULT NOW()
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    row_version INT DEFAULT 1
 );
 
 -- ==========================================
@@ -338,16 +496,23 @@ CREATE INDEX idx_student_master_id ON students(master_id_number);
 
 CREATE TRIGGER trg_upd_programs BEFORE UPDATE ON programs FOR EACH ROW EXECUTE FUNCTION fn_update_timestamp();
 CREATE TRIGGER trg_upd_institutions BEFORE UPDATE ON institutions FOR EACH ROW EXECUTE FUNCTION fn_update_timestamp();
+CREATE TRIGGER trg_upd_sites BEFORE UPDATE ON sites FOR EACH ROW EXECUTE FUNCTION fn_update_timestamp();
 CREATE TRIGGER trg_upd_users BEFORE UPDATE ON users FOR EACH ROW EXECUTE FUNCTION fn_update_timestamp();
 CREATE TRIGGER trg_upd_students BEFORE UPDATE ON students FOR EACH ROW EXECUTE FUNCTION fn_update_timestamp();
 CREATE TRIGGER trg_upd_student_identifiers BEFORE UPDATE ON student_identifiers FOR EACH ROW EXECUTE FUNCTION fn_update_timestamp();
 CREATE TRIGGER trg_upd_sponsors BEFORE UPDATE ON sponsors FOR EACH ROW EXECUTE FUNCTION fn_update_timestamp();
 CREATE TRIGGER trg_upd_sponsorships BEFORE UPDATE ON sponsorships FOR EACH ROW EXECUTE FUNCTION fn_update_timestamp();
 CREATE TRIGGER trg_upd_academic_records BEFORE UPDATE ON academic_records FOR EACH ROW EXECUTE FUNCTION fn_update_timestamp();
+CREATE TRIGGER trg_upd_attendance_records BEFORE UPDATE ON attendance_records FOR EACH ROW EXECUTE FUNCTION fn_update_timestamp();
+CREATE TRIGGER trg_upd_documents BEFORE UPDATE ON documents FOR EACH ROW EXECUTE FUNCTION fn_update_timestamp();
 CREATE TRIGGER trg_upd_reports BEFORE UPDATE ON reports FOR EACH ROW EXECUTE FUNCTION fn_update_timestamp();
 CREATE TRIGGER trg_upd_student_history BEFORE UPDATE ON student_history FOR EACH ROW EXECUTE FUNCTION fn_update_timestamp();
 CREATE TRIGGER trg_upd_financial_allocations BEFORE UPDATE ON financial_allocations FOR EACH ROW EXECUTE FUNCTION fn_update_timestamp();
+CREATE TRIGGER trg_upd_allocation_payouts BEFORE UPDATE ON allocation_payouts FOR EACH ROW EXECUTE FUNCTION fn_update_timestamp();
 CREATE TRIGGER trg_upd_communication_templates BEFORE UPDATE ON communication_templates FOR EACH ROW EXECUTE FUNCTION fn_update_timestamp();
 CREATE TRIGGER trg_upd_communications BEFORE UPDATE ON communications FOR EACH ROW EXECUTE FUNCTION fn_update_timestamp();
 CREATE TRIGGER trg_upd_loans BEFORE UPDATE ON loans FOR EACH ROW EXECUTE FUNCTION fn_update_timestamp();
+CREATE TRIGGER trg_upd_loan_disbursements BEFORE UPDATE ON loan_disbursements FOR EACH ROW EXECUTE FUNCTION fn_update_timestamp();
+CREATE TRIGGER trg_upd_loan_refunds BEFORE UPDATE ON loan_refunds FOR EACH ROW EXECUTE FUNCTION fn_update_timestamp();
+CREATE TRIGGER trg_upd_permissions BEFORE UPDATE ON permissions FOR EACH ROW EXECUTE FUNCTION fn_update_timestamp();
 
