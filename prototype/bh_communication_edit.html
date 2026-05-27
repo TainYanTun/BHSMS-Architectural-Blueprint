@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bangla Hope – Edit Communication</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Lora:ital,wght@0,400;0,600;1,400&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --primary-navy: #1e3a4a;
+      --sidebar-bg: #0a1f35;
+      --sidebar-active: #1e293b;
+      --action-teal: #2B7A9E;
+      --signal-pink: #d17a8e;
+      --success-green: #10b981;
+      --bg-app: #f8fafc;
+      --surface-white: #ffffff;
+      --surface-subtle: #f1f5f9;
+      --border-neutral: #e2e8f0;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --radius: 8px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Nunito', sans-serif;
+      background: var(--bg-app);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+    }
+
+    /* SIDEBAR */
+    .sidebar {
+      width: 252px;
+      min-height: 100vh;
+      background: var(--sidebar-bg);
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      z-index: 100;
+    }
+
+    .sidebar-logo {
+      padding: 24px 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .logo-img {
+      width: 36px;
+      height: 36px;
+      background: #fff;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 4px;
+      font-weight: 800;
+      color: var(--primary-navy);
+    }
+
+    .logo-text h1 {
+      font-family: 'Lora', serif;
+      font-size: 15px;
+      font-weight: 600;
+      color: #f8fafc;
+    }
+
+    .logo-text span {
+      display: block;
+      font-size: 10px;
+      color: #94a3b8;
+      text-transform: uppercase;
+    }
+
+    .nav-section {
+      padding: 20px 12px;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 12px;
+      border-radius: 6px;
+      color: #94a3b8;
+      font-size: 13px;
+      text-decoration: none;
+      margin-bottom: 4px;
+    }
+
+    .nav-item:hover {
+      background: rgba(255, 255, 255, 0.05);
+      color: #fff;
+    }
+
+    .nav-item.active {
+      background: var(--sidebar-active);
+      color: #fff;
+      font-weight: 600;
+    }
+
+    /* MAIN CONTENT */
+    .main {
+      margin-left: 252px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .topbar {
+      height: 64px;
+      background: var(--surface-white);
+      border-bottom: 1px solid var(--border-neutral);
+      padding: 0 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .breadcrumb {
+      font-family: 'Courier New', monospace;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--action-teal);
+      text-transform: uppercase;
+    }
+
+    .content {
+      padding: 32px;
+      display: grid;
+      grid-template-columns: 1fr 320px;
+      gap: 24px;
+    }
+
+    .header-row {
+      grid-column: span 2;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      margin-bottom: 8px;
+    }
+
+    .page-title h2 {
+      font-family: 'Lora', serif;
+      font-size: 28px;
+      color: var(--primary-navy);
+    }
+
+    .page-title p {
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+
+    /* CARDS */
+    .module-card {
+      background: var(--surface-white);
+      border-radius: var(--radius);
+      border: 1px solid var(--border-neutral);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+      overflow: hidden;
+      margin-bottom: 24px;
+    }
+
+    .card-header {
+      padding: 16px 24px;
+      background: linear-gradient(90deg, var(--surface-white) 0%, var(--surface-subtle) 100%);
+      border-bottom: 1px solid var(--border-neutral);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .card-label {
+      font-family: 'Courier New', monospace;
+      font-size: 10px;
+      font-weight: 800;
+      color: var(--action-teal);
+      text-transform: uppercase;
+    }
+
+    .card-body {
+      padding: 24px;
+    }
+
+    /* FORM & DATA DISPLAY */
+    .field-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+    }
+
+    .field-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .field-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+
+    .field-value {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    .id-tag {
+      font-family: 'Courier New', monospace;
+      font-weight: 700;
+      background: var(--surface-subtle);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 12px;
+    }
+
+    /* EDITOR AREA */
+    .letter-editor {
+      min-height: 400px;
+      border: 1px solid var(--border-neutral);
+      border-radius: 6px;
+      padding: 20px;
+      font-family: 'Nunito', sans-serif;
+      font-size: 15px;
+      line-height: 1.6;
+      outline: none;
+      background: #fff;
+    }
+
+    .editor-toolbar {
+      padding: 8px;
+      background: var(--surface-subtle);
+      border: 1px solid var(--border-neutral);
+      border-bottom: none;
+      border-radius: 6px 6px 0 0;
+      display: flex;
+      gap: 8px;
+    }
+
+    .toolbar-btn {
+      padding: 4px 8px;
+      background: #fff;
+      border: 1px solid var(--border-neutral);
+      border-radius: 4px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    /* RIGHT SIDEBAR ACTIONS */
+    .action-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .btn-block {
+      width: 100%;
+      padding: 12px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background: var(--action-teal);
+      color: #fff;
+      border: none;
+    }
+
+    .btn-secondary {
+      background: #fff;
+      border: 1.5px solid var(--action-teal);
+      color: var(--action-teal);
+    }
+
+    .btn-outline {
+      background: transparent;
+      border: 1px solid var(--border-neutral);
+      color: var(--text-muted);
+    }
+
+    /* CONTEXT CARDS */
+    .context-card {
+      padding: 16px;
+      border-bottom: 1px solid var(--border-neutral);
+    }
+
+    .context-card:last-child {
+      border-bottom: none;
+    }
+
+    .context-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .avatar {
+      width: 40px;
+      height: 40px;
+      background: var(--surface-subtle);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      color: var(--action-teal);
+    }
+
+    .status-pill {
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .status-draft { background: #f1f5f9; color: #475569; }
+
+    /* SIMPLE MODAL FOR TEMPLATES */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      display: none; /* Hidden by default */
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    .template-modal {
+      background: white;
+      width: 500px;
+      border-radius: 8px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+      overflow: hidden;
+    }
+
+    .modal-header {
+      padding: 16px 20px;
+      background: var(--surface-subtle);
+      border-bottom: 1px solid var(--border-neutral);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--primary-navy);
+      text-transform: uppercase;
+    }
+
+    .template-list {
+      padding: 10px;
+    }
+
+    .template-option {
+      padding: 16px;
+      border: 1px solid var(--border-neutral);
+      border-radius: 6px;
+      margin-bottom: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .template-option:hover {
+      border-color: var(--action-teal);
+      background: #f0f9ff;
+    }
+
+    .template-name {
+      font-weight: 700;
+      font-size: 13px;
+      color: var(--action-teal);
+      margin-bottom: 4px;
+    }
+
+    .template-preview {
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- TEMPLATE SELECTION MODAL (Hidden by default) -->
+  <div class="modal-overlay" id="templateModal">
+    <div class="template-modal">
+      <div class="modal-header">
+        <span class="modal-title">Select a Managed Template</span>
+        <button onclick="closeModal()" style="border:none; background:none; cursor:pointer; font-size:20px;">&times;</button>
+      </div>
+      <div style="padding: 12px 20px; background: #fffbeb; border-bottom: 1px solid var(--border-neutral); font-size: 11px; color: #92400e;">
+        <b>Note:</b> These templates are managed by Supervisors and contain dynamic variables like <code>[STUDENT_NAME]</code> and <code>[AMOUNT]</code>.
+      </div>
+      <div class="template-list">
+        <div class="template-option" onclick="selectTemplate('monthly')">
+          <div class="template-name">Monthly Support (T-01)</div>
+          <div class="template-preview">"Thank you for your recent gift of [Amount] for [Month/Year]. Your support makes a world of difference..."</div>
+        </div>
+        <div class="template-option" onclick="selectTemplate('monthly')">
+          <div class="template-name">Yearly Support (T-02)</div>
+          <div class="template-preview">"Thank you for your generous annual gift of [Amount]. This covers my sponsorship for the entire year..."</div>
+        </div>
+        <div class="template-option" onclick="selectTemplate('birthday')">
+          <div class="template-name">Birthday Note (T-03)</div>
+          <div class="template-preview">"It is my birthday! Thank you for being my sponsor. This year I am [Age] years old..."</div>
+        </div>
+        <div class="template-option" onclick="selectTemplate('gift')">
+          <div class="template-name">Extra Gift Note (T-04)</div>
+          <div class="template-preview">"I am so excited to thank you for the extra gift of [Amount]. With this, I was able to get [Item]..."</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-img">BH</div>
+      <div class="logo-text">
+        <h1>Bangla Hope</h1>
+        <span>Sponsorship SMS</span>
+      </div>
+    </div>
+    <nav class="nav-section">
+      <a href="bh_dashboard.html" class="nav-item">Dashboard</a>
+      <a href="bh_students.html" class="nav-item">Student Master</a>
+      <a href="bh_sponsors.html" class="nav-item">Sponsor Registry</a>
+      <a href="bh_communication_hub.html" class="nav-item active">Communication Hub</a>
+      <a href="bh_communication_templates.html" class="nav-item">Template Manager</a>
+      <a href="bh_reports_apr.html" class="nav-item">Reports & APR</a>
+      <a href="bh_loan.html" class="nav-item">Loan Program</a>
+      <a href="bh_audit_log.html" class="nav-item">Audit Logs</a>
+    </nav>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+    <header class="topbar">
+      <div class="breadcrumb">SYSTEM_CORE / COMMUNICATIONS / HUB_WORKBENCH / EDIT</div>
+      <div class="user-info" style="display:flex; align-items:center; gap:12px;">
+        <span style="font-size:12px; font-weight:600; color:var(--text-muted);">Admin User</span>
+        <div style="width:32px; height:32px; background:#e2e8f0; border-radius:50%;"></div>
+      </div>
+    </header>
+
+    <div class="content">
+      <div class="header-row">
+        <div class="page-title">
+          <h2>Edit Sponsor Communication</h2>
+          <p>Drafting acknowledgement for Trigger <span class="id-tag">#REC-9921</span></p>
+        </div>
+        <div style="display:flex; gap:12px;">
+           <span class="status-pill" style="background: #fef2f2; color: #991b1b; border: 1px solid #fee2e2;">Status: Returned for Correction</span>
+        </div>
+      </div>
+
+      <!-- SUPERVISOR FEEDBACK ALERT -->
+      <div class="module-card" style="grid-column: span 2; border: 1.5px solid var(--signal-pink); background: #fffafb; margin-bottom: 0;">
+        <div class="card-body" style="display: flex; gap: 16px; align-items: flex-start; padding: 16px 24px;">
+          <div style="background: var(--signal-pink); color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-weight: 800;">!</div>
+          <div>
+            <div style="font-size: 11px; font-weight: 800; color: var(--signal-pink); text-transform: uppercase; margin-bottom: 4px;">Supervisor Feedback - May 27, 2026</div>
+            <div style="font-size: 14px; font-weight: 600; color: #881337;">"The letter content mentions a gardening club, but the student's program (LRC Primary) currently focuses on the music initiative this semester. Please update the narrative to reflect the correct school activities."</div>
+            <div style="font-size: 12px; color: #be123c; margin-top: 8px; font-style: italic;">— Reviewed by: Sponsorship Director (SPD)</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- LEFT COLUMN: EDITING -->
+      <div class="editing-area">
+        <!-- TRIGGER DATA -->
+        <div class="module-card">
+          <div class="card-header">
+            <div class="card-label">[SEC_09: COMMUNICATION_METADATA]</div>
+          </div>
+          <div class="card-body">
+            <div class="field-grid">
+              <div class="field-group">
+                <span class="field-label">Trigger Date</span>
+                <span class="field-value">May 25, 2026</span>
+              </div>
+              <div class="field-group">
+                <span class="field-label">Category / Type</span>
+                <span class="field-value">Financial / Thank You Letter</span>
+              </div>
+              <div class="field-group">
+                <span class="field-label">Reference</span>
+                <span class="field-value">June 2026 Support</span>
+              </div>
+              <div class="field-group">
+                <span class="field-label">Trigger ID</span>
+                <span class="field-value id-tag">#REC-9921</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- LETTER EDITOR -->
+        <div class="module-card">
+          <div class="card-header">
+            <div class="card-label">[SEC_10: LETTER_COMPOSITION]</div>
+            <div style="font-size:11px; color:var(--text-muted);">Last autosaved: 2 mins ago</div>
+          </div>
+          <div class="card-body" style="padding: 12px 24px 24px 24px;">
+            <div class="editor-toolbar">
+              <button class="toolbar-btn"><b>B</b></button>
+              <button class="toolbar-btn"><i>I</i></button>
+              <button class="toolbar-btn"><u>U</u></button>
+              <div style="width:1px; background:var(--border-neutral); margin:0 4px;"></div>
+              <button class="toolbar-btn">Insert Student Photo</button>
+              <button class="toolbar-btn">Insert Grade Report</button>
+              <div style="flex:1;"></div>
+              <button class="toolbar-btn" style="color: var(--action-teal);" onclick="openModal()">Load Template...</button>
+            </div>
+            <div class="letter-editor" id="letterEditor" contenteditable="true">
+              <p>Dear John & Sarah Miller,</p>
+              <p><br></p>
+              <p>Thank you so much for your recent gift of <b>$50.00</b> for the month of <b>June 2026</b>. Your continued support makes a world of difference in my life and education.</p>
+              <p><br></p>
+              <p>This month at school, I have been studying hard for my mathematics exams. I am also enjoying my time in the gardening club where we are planting new vegetables for the monsoon season.</p>
+              <p><br></p>
+              <p>I hope you are doing well and having a blessed month. Thank you for being my sponsor!</p>
+              <p><br></p>
+              <p>Sincerely,</p>
+              <p><b>Abdur Rahman</b></p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT COLUMN: CONTEXT & ACTIONS -->
+      <div class="action-panel">
+        <div class="module-card">
+          <div class="card-header">
+            <div class="card-label">[SEC_11: PARTICIPANTS]</div>
+          </div>
+          <div class="context-card">
+            <div class="context-header">
+              <div class="avatar">JM</div>
+              <div>
+                <div style="font-size:13px; font-weight:700;">John & Sarah Miller</div>
+                <div style="font-size:11px; color:var(--text-muted);">Sponsor #SP-1002</div>
+              </div>
+            </div>
+            <div style="font-size:11px; color:var(--text-muted);">
+              Pref: <b>Email Only</b><br>
+              Country: <b>USA</b>
+            </div>
+          </div>
+          <div class="context-card">
+            <div class="context-header">
+              <div class="avatar" style="background: #fdf2f8; color: var(--signal-pink);">AR</div>
+              <div>
+                <div style="font-size:13px; font-weight:700;">Abdur Rahman</div>
+                <div style="font-size:11px; color:var(--text-muted);">Student #202600124</div>
+              </div>
+            </div>
+            <div style="font-size:11px; color:var(--text-muted);">
+              Program: <b>LRC Primary</b><br>
+              Grade: <b>Class 4</b>
+            </div>
+          </div>
+        </div>
+
+        <div class="module-card">
+          <div class="card-header">
+            <div class="card-label">[SEC_12: WORKFLOW_ACTIONS]</div>
+          </div>
+          <div class="card-body">
+            <!-- SECRETARY VIEW (The Drafter) -->
+            <div id="secretary-actions">
+              <div style="font-size: 11px; font-weight: 700; color: var(--text-muted); margin-bottom: 12px; text-transform: uppercase;">Secretary Actions</div>
+              <div style="display:flex; flex-direction:column; gap:12px;">
+                <!-- Primary Action for Tier A (Receipts) -->
+                <button class="btn-block btn-primary" onclick="alert('Communication Sent to Sponsor')">Finalize & Send</button>
+                <div id="approvalHint" style="font-size: 10px; color: var(--success-green); text-align: center; font-weight: 700;">✓ Matches Template T-01 (Auto-Approve)</div>
+                
+                <div style="height: 8px;"></div>
+                
+                <button class="btn-block btn-secondary" onclick="window.location.href='bh_thank_you_pdf_preview.html'">Preview PDF Preview</button>
+                <button class="btn-block btn-outline" style="border-color: #fee2e2; color: #b91c1c;">Discard Draft</button>
+              </div>
+            </div>
+
+            <div style="height: 1px; background: var(--border-neutral); margin: 24px 0;"></div>
+
+            <!-- SUPERVISOR VIEW (The Validator) -->
+            <div id="supervisor-actions">
+              <div style="font-size: 11px; font-weight: 700; color: var(--accent-teal); margin-bottom: 12px; text-transform: uppercase;">Supervisor Validation</div>
+              <div style="display:flex; flex-direction:column; gap:12px;">
+                <button class="btn-block btn-primary" style="background: var(--success-green);">Approve & Digital Sign</button>
+                <button class="btn-block btn-outline" style="border-color: var(--signal-pink); color: var(--signal-pink);">Return for Correction</button>
+                <div style="height: 4px;"></div>
+                <a href="bh_communication_templates.html" style="font-size: 11px; color: var(--text-muted); text-align: center; text-decoration: none;">⚙ Manage Global Templates</a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="module-card">
+          <div class="card-header">
+            <div class="card-label">[SEC_13: HISTORY]</div>
+          </div>
+          <div class="card-body" style="padding: 16px;">
+            <div style="font-size:11px; display:flex; flex-direction:column; gap:10px;">
+              <div style="display:flex; gap:8px;">
+                <div style="width:2px; background:var(--success-green); margin:2px 0;"></div>
+                <div>
+                  <div style="font-weight:700;">Trigger Recorded</div>
+                  <div style="color:var(--text-muted);">May 25, 2026 - by Admin</div>
+                </div>
+              </div>
+              <div style="display:flex; gap:8px;">
+                <div style="width:2px; background:var(--action-teal); margin:2px 0;"></div>
+                <div>
+                  <div style="font-weight:700;">Draft Created</div>
+                  <div style="color:var(--text-muted);">May 26, 2026 - by System</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const editor = document.getElementById('letterEditor');
+    const approvalHint = document.getElementById('approvalHint');
+
+    function openModal() {
+      document.getElementById('templateModal').style.display = 'flex';
+    }
+    
+    function closeModal() {
+      document.getElementById('templateModal').style.display = 'none';
+    }
+
+    function selectTemplate(type) {
+      let content = "";
+      let hint = "";
+
+      if (type === 'monthly') {
+        content = "<p>Dear John & Sarah Miller,</p><p><br></p><p>Thank you so much for your recent gift of <b>$50.00</b> for the month of <b>June 2026</b>. Your continued support makes a world of difference in my life and education.</p><p><br></p><p>I hope you are doing well and having a blessed month. Thank you for being my sponsor!</p><p><br></p><p>Sincerely,<br><b>Abdur Rahman</b></p>";
+        hint = "✓ Matches Template T-01 (Auto-Approve)";
+        approvalHint.style.color = "var(--success-green)";
+      } else if (type === 'birthday') {
+        content = "<p>Dear John & Sarah Miller,</p><p><br></p><p>It is my birthday! Thank you so much for being my sponsor. This year I am <b>10 years old</b> and my favorite subject at school is <b>Mathematics</b>.</p><p><br></p><p>I am so happy to celebrate another year with your support. Thank you for your kindness!</p><p><br></p><p>Sincerely,<br><b>Abdur Rahman</b></p>";
+        hint = "⚠ Custom Content (Supervisor Review Required)";
+        approvalHint.style.color = "var(--signal-pink)";
+      } else if (type === 'gift') {
+        content = "<p>Dear John & Sarah Miller,</p><p><br></p><p>I am so excited to thank you for the extra gift of <b>$25.00</b>. With this gift, I was able to get <b>a new school bag</b> which I really needed. Thank you so much!</p><p><br></p><p>Sincerely,<br><b>Abdur Rahman</b></p>";
+        hint = "⚠ Custom Content (Supervisor Review Required)";
+        approvalHint.style.color = "var(--signal-pink)";
+      }
+
+      editor.innerHTML = content;
+      approvalHint.innerText = hint;
+      closeModal();
+    }
+  </script>
+</body>
+
+</html>

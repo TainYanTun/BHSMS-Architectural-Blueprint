@@ -138,16 +138,24 @@
         <span>Generate Case Study</span>
       </div>
       <div style="display: flex; gap: 12px;">
-        <button class="btn-secondary" onclick="window.location.href='bh_student_details.html'">Cancel</button>
-        <button class="btn-primary" id="download-btn">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
-          Download PDF
+        <button class="btn-secondary" onclick="window.location.href='bh_student_details.html'">Discard Draft</button>
+        <button class="btn-primary" id="validate-btn" style="background: var(--primary); border-color: var(--primary);">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          Submit for Validation
         </button>
       </div>
     </header>
 
     <div class="content-layout">
       <div class="config-panel">
+        <div class="card" style="border-left: 4px solid var(--accent-pink);">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 12px;">
+             <h3 class="card-title" style="margin-bottom:0; border:none; padding:0;">Current Status</h3>
+             <span style="font-size:10px; font-weight:800; color:var(--accent-pink); text-transform:uppercase;">Draft Mode</span>
+          </div>
+          <p style="font-size:12px; color:var(--text-muted); line-height:1.4;">This case study is not yet visible to sponsors. It requires Supervisor validation before publishing to the Sponsor Portal.</p>
+        </div>
+
         <div class="card">
           <h3 class="card-title">Case Study Content</h3>
           

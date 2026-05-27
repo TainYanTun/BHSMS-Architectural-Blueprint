@@ -35,4 +35,21 @@ This document tracks pending questions and strategic decisions that need to be f
 - **Current Plan:** Records are linked via a Universal UUID (Master ID), keeping the history accessible but marking the old ID as "Transferred/Archived."
 
 ---
-*Last Updated: 2026-05-26*
+
+## 5. Mandatory Supervisor Validation
+**Context:** All documents sent to or viewed by sponsors (Case Study, ARP, Thank You Letters).
+
+- **Rule:** No document can be "Published" or "Sent" without a digital sign-off from a **Supervisor** or **SPD**.
+- **Impact:** Case Studies for "Needy Students" will only appear in the Sponsor Portal once they transition from `Draft` to `Validated`.
+
+---
+
+## 6. Sponsor Portal: "Needy Students" Visibility
+**Context:** Potential sponsors browsing for children to support.
+
+- **Logic:** The "Sponsor Portal" is a read-only view of the student database, filtered for students who are **Active** and have **no Primary Sponsor**.
+- **Requirement:** The portal will display the **Validated Case Study** as the primary narrative to encourage sponsorship.
+- **Privacy:** Sensitive fields (e.g., exact village location or full guardian contact info) will be redacted in the public-facing portal.
+
+---
+*Last Updated: 2026-05-27*

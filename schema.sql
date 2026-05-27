@@ -1,27 +1,41 @@
 -- Bangla Hope Sponsorship Management System (Bangla Hope SMS)
--- PostgreSQL Database Schema
--- Generated: 2026-05-17
-
--- Setup: Enable UUID support for technical primary keys
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+-- PostgreSQL Database Schema (Improved Version)
+-- Generated: 2026-05-27
 
 -- ==========================================
--- 1. REFERENCE TABLES (Programs & Places)
+-- 0. EXTENSIONS & GLOBAL UTILITIES
+-- ==========================================
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS "pg_trgm"; -- For high-performance text search
+
+-- Trigger function to automatically update 'updated_at' timestamps
+CREATE OR REPLACE FUNCTION fn_update_timestamp()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = NOW();
+    RETURN NEW;   
+END;
+$$ LANGUAGE plpgsql;
+
+-- ==========================================
+-- 1. REFERENCE TABLES
 -- ==========================================
 CREATE TABLE programs (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    name TEXT NOT NULL, -- e.g., 'Love Receiving Center', 'Village Schools'
-    code TEXT UNIQUE NOT NULL, -- e.g., 'LRC', 'VLG', 'LON', 'BRD'
+    name TEXT NOT NULL,
+    code TEXT UNIQUE NOT NULL,
     description TEXT,
-    created_at TIMESTAMPTZ DEFAULT NOW()
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 CREATE TABLE institutions (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    name TEXT NOT NULL, -- e.g., 'Dhaka University', 'Hili Village School'
-    type TEXT, -- e.g., 'University', 'Boarding School', 'Village School'
+    name TEXT NOT NULL,
+    type TEXT,
     location TEXT,
-    created_at TIMESTAMPTZ DEFAULT NOW()
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- ==========================================
@@ -33,10 +47,11 @@ CREATE TABLE users (
     email TEXT UNIQUE NOT NULL,
     password_hash TEXT NOT NULL,
     full_name TEXT NOT NULL,
-    role TEXT NOT NULL CHECK (role IN ('Admin', 'Supervisor', 'Coordinator', 'Secetary','Sponsor')),
+    role TEXT NOT NULL CHECK (role IN ('Admin', 'Supervisor', 'Coordinator', 'Secretary','Sponsor')),
     office_location TEXT,
     is_active BOOLEAN DEFAULT TRUE,
     last_login TIMESTAMPTZ,
+    deleted_at TIMESTAMPTZ, -- Soft delete support
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -45,10 +60,7 @@ CREATE TABLE users (
 -- 3. STUDENT MASTER RECORD
 -- ==========================================
 CREATE TABLE students (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(), -- Technical DB ID
-    
-    -- BUSINESS ID: Numeric 9-digits (e.g., 202600134)
-    -- Format: [YEAR(4)][SEQUENCE(5)]
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     master_id_number BIGINT UNIQUE NOT NULL, 
     
     first_name TEXT NOT NULL,
@@ -59,32 +71,28 @@ CREATE TABLE students (
     admission_date DATE DEFAULT CURRENT_DATE,
     status TEXT NOT NULL DEFAULT 'Active' CHECK (status IN ('Active', 'Archived', 'Dropped', 'Graduated')),
     
-    -- Background Info
     father_name TEXT,
     mother_name TEXT,
     primary_guardian TEXT,
-    siblings_count INT DEFAULT 0,
+    siblings_count INT DEFAULT 0 CHECK (siblings_count >= 0),
     contact_number TEXT,
-    situation_overview TEXT, -- For Case History Narrative
+    situation_overview TEXT,
     photo_url TEXT,
     
     current_program_id UUID REFERENCES programs(id),
+    deleted_at TIMESTAMPTZ,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- AUTO-GENERATION LOGIC FOR MASTER_ID_NUMBER
+-- Master ID Generation Logic
 CREATE OR REPLACE FUNCTION generate_student_master_id()
 RETURNS TRIGGER AS $$
 DECLARE
     year_prefix BIGINT;
     next_seq INT;
 BEGIN
-    -- 1. Get the current year
     year_prefix := EXTRACT(YEAR FROM CURRENT_DATE);
-    
-    -- 2. Calculate next sequence for this year (Year * 100000 + next)
-    -- Only auto-generate if the field is NULL (allows manual migration IDs)
     IF NEW.master_id_number IS NULL THEN
         SELECT COALESCE(MAX(master_id_number % 100000), 0) + 1 
         INTO next_seq 
@@ -93,42 +101,42 @@ BEGIN
         
         NEW.master_id_number := (year_prefix * 100000) + next_seq;
     END IF;
-    
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
 CREATE TRIGGER trg_assign_student_id
 BEFORE INSERT ON students
-FOR EACH ROW
-EXECUTE FUNCTION generate_student_master_id();
+FOR EACH ROW EXECUTE FUNCTION generate_student_master_id();
 
--- ==========================================
--- 4. ALIASES (Program-Specific IDs like #LRC-0124)
--- ==========================================
 CREATE TABLE student_identifiers (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     student_id UUID NOT NULL REFERENCES students(id) ON DELETE CASCADE,
-    id_value TEXT NOT NULL, -- Alphanumeric string e.g., #LRC-0124
+    id_value TEXT NOT NULL, -- e.g., #LRC-0124
     program_id UUID REFERENCES programs(id),
     is_current BOOLEAN DEFAULT TRUE,
-    assigned_at TIMESTAMPTZ DEFAULT NOW()
+    assigned_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- ==========================================
--- 5. SPONSORSHIP SYSTEM
+-- 4. SPONSORSHIP SYSTEM
 -- ==========================================
 CREATE TABLE sponsors (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    sponsor_id_code TEXT UNIQUE NOT NULL, -- e.g., #SP-001
-    user_id UUID REFERENCES users(id), -- Link to account if they log in
+    sponsor_id_code TEXT UNIQUE NOT NULL,
+    user_id UUID REFERENCES users(id),
     full_name TEXT NOT NULL,
     email TEXT UNIQUE,
     phone TEXT,
-    address TEXT,
+    address_line1 TEXT,
+    city TEXT,
+    postal_code TEXT,
+    country TEXT DEFAULT 'USA',
     preferred_communication TEXT DEFAULT 'Email' CHECK (preferred_communication IN ('Email', 'Postal Mail', 'Both')),
     internal_notes TEXT,
     status TEXT DEFAULT 'Active' CHECK (status IN ('Active', 'Inactive')),
+    deleted_at TIMESTAMPTZ,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -138,34 +146,52 @@ CREATE TABLE sponsorships (
     student_id UUID NOT NULL REFERENCES students(id) ON DELETE CASCADE,
     sponsor_id UUID NOT NULL REFERENCES sponsors(id) ON DELETE CASCADE,
     type TEXT CHECK (type IN ('Primary', 'Co-Sponsor')),
-    monthly_amount NUMERIC(12, 2) DEFAULT 0,
-    currency TEXT DEFAULT 'USD' CHECK (currency IN ('USD', 'BDT')),
+    monthly_amount NUMERIC(12, 2) NOT NULL DEFAULT 0 CHECK (monthly_amount >= 0),
+    currency TEXT DEFAULT 'USD' CHECK (currency = 'USD'),
     start_date DATE NOT NULL,
     end_date DATE,
     is_active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW()
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    CONSTRAINT chk_dates CHECK (end_date IS NULL OR end_date >= start_date)
+);
+
+CREATE TABLE sponsorship_receipts (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    sponsorship_id UUID NOT NULL REFERENCES sponsorships(id) ON DELETE CASCADE,
+    amount NUMERIC(12, 2) NOT NULL CHECK (amount > 0),
+    currency TEXT DEFAULT 'USD' CHECK (currency = 'USD'),
+    received_date DATE DEFAULT CURRENT_DATE,
+    period_month INT NOT NULL CHECK (period_month BETWEEN 1 AND 12),
+    period_year INT NOT NULL,
+    notes TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE(sponsorship_id, period_month, period_year)
 );
 
 -- ==========================================
--- 6. PROGRESS, RECORDS & HISTORY
+-- 5. PROGRESS, RECORDS & HISTORY
 -- ==========================================
 CREATE TABLE academic_records (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     student_id UUID NOT NULL REFERENCES students(id) ON DELETE CASCADE,
     institution_id UUID REFERENCES institutions(id),
-    year INT NOT NULL,
+    year INT NOT NULL CHECK (year > 1900),
     grade_level TEXT,
-    result_summary TEXT, -- e.g., '82%'
-    created_at TIMESTAMPTZ DEFAULT NOW()
+    result_summary TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 CREATE TABLE reports (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     student_id UUID NOT NULL REFERENCES students(id) ON DELETE CASCADE,
-    year INT NOT NULL,
-    type TEXT NOT NULL DEFAULT 'APR', -- Annual Progress Report
-    status TEXT NOT NULL DEFAULT 'Not Started' CHECK (status IN ('Not Started', 'Draft', 'Pending', 'Complete')),
+    year INT NOT NULL CHECK (year > 1900),
+    type TEXT NOT NULL DEFAULT 'APR',
+    status TEXT NOT NULL DEFAULT 'Not Started' CHECK (status IN ('Not Started', 'Draft', 'Pending Validation', 'Validated', 'Returned', 'Complete')),
+    supervisor_comments TEXT,
+    validated_by UUID REFERENCES users(id),
+    validated_at TIMESTAMPTZ,
     completion_date DATE,
     pdf_url TEXT,
     created_at TIMESTAMPTZ DEFAULT NOW(),
@@ -176,36 +202,93 @@ CREATE TABLE student_history (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     student_id UUID NOT NULL REFERENCES students(id) ON DELETE CASCADE,
     event_date DATE DEFAULT CURRENT_DATE,
-    title TEXT NOT NULL, -- e.g., 'Transitioned to LRC', 'Admission'
+    title TEXT NOT NULL,
     description TEXT,
     is_milestone BOOLEAN DEFAULT FALSE,
-    created_at TIMESTAMPTZ DEFAULT NOW()
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE financial_allocations (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    student_id UUID NOT NULL REFERENCES students(id) ON DELETE CASCADE,
+    type TEXT NOT NULL CHECK (type IN ('Subsidy', 'Pocket Money', 'Stipend', 'One-time Grant')),
+    amount NUMERIC(12, 2) NOT NULL CHECK (amount >= 0),
+    currency TEXT DEFAULT 'USD' CHECK (currency IN ('USD', 'BDT')),
+    frequency TEXT DEFAULT 'Monthly' CHECK (frequency IN ('Monthly', 'Yearly', 'One-time')),
+    start_date DATE NOT NULL DEFAULT CURRENT_DATE,
+    end_date DATE,
+    is_active BOOLEAN DEFAULT TRUE,
+    notes TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    CONSTRAINT chk_alloc_dates CHECK (end_date IS NULL OR end_date >= start_date)
+);
+
+CREATE TABLE communication_templates (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    code TEXT UNIQUE NOT NULL, -- e.g., 'T-01', 'B-02'
+    name TEXT NOT NULL,
+    category TEXT NOT NULL CHECK (category IN ('Financial', 'Milestone', 'Academic')),
+    subject_line TEXT,
+    body_content TEXT NOT NULL,
+    is_active BOOLEAN DEFAULT TRUE,
+    deleted_at TIMESTAMPTZ, -- Soft delete support
+    created_by UUID REFERENCES users(id),
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE communications (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    student_id UUID NOT NULL REFERENCES students(id) ON DELETE CASCADE,
+    sponsor_id UUID NOT NULL REFERENCES sponsors(id) ON DELETE CASCADE,
+    template_id UUID REFERENCES communication_templates(id), -- Historical reference
+    category TEXT NOT NULL CHECK (category IN ('Financial', 'Milestone', 'Academic')),
+    type TEXT NOT NULL, -- e.g., 'Thank You', 'Birthday', 'APR'
+    status TEXT NOT NULL DEFAULT 'Pending' CHECK (status IN ('Pending', 'Draft', 'In Review', 'Sent', 'Returned')),
+    
+    trigger_type TEXT CHECK (trigger_type IN ('Receipt', 'Calendar', 'Report', 'Manual')),
+    trigger_id UUID, -- Links to sponsorship_receipts.id or reports.id
+    
+    message_body TEXT,      -- The final rendered/edited text
+    message_metadata JSONB, -- Snapshot: {amount, student_grade, sponsor_address, etc.}
+    
+    pdf_url TEXT,
+    sent_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- ==========================================
--- 7. LOAN PROGRAM (Higher Education)
+-- 6. LOAN SYSTEM (Higher Education)
 -- ==========================================
 CREATE TABLE loans (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     student_id UUID NOT NULL REFERENCES students(id) ON DELETE CASCADE,
     institution_id UUID REFERENCES institutions(id),
-    total_amount NUMERIC(12, 2) NOT NULL DEFAULT 0,
-    refunded_amount NUMERIC(12, 2) DEFAULT 0,
     currency TEXT DEFAULT 'USD' CHECK (currency IN ('USD', 'BDT')),
-    
-    -- PENDING CLIENT DECISION: Should status auto-flip from 'Studying' to 'Refunding' 
-    -- based on a target date, or remain a manual administrative action?
     status TEXT DEFAULT 'Studying' CHECK (status IN ('Studying', 'Refunding', 'Complete', 'Expired')),
-    
     agreement_url TEXT,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+CREATE TABLE loan_disbursements (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    loan_id UUID NOT NULL REFERENCES loans(id) ON DELETE CASCADE,
+    amount NUMERIC(12, 2) NOT NULL CHECK (amount > 0),
+    currency TEXT DEFAULT 'USD' CHECK (currency IN ('USD', 'BDT')),
+    disbursement_date DATE DEFAULT CURRENT_DATE,
+    category TEXT NOT NULL,
+    notes TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
 CREATE TABLE loan_refunds (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     loan_id UUID NOT NULL REFERENCES loans(id) ON DELETE CASCADE,
-    amount NUMERIC(12, 2) NOT NULL,
+    amount NUMERIC(12, 2) NOT NULL CHECK (amount > 0),
     currency TEXT DEFAULT 'USD' CHECK (currency IN ('USD', 'BDT')),
     refund_date DATE DEFAULT CURRENT_DATE,
     recorded_by UUID REFERENCES users(id),
@@ -214,64 +297,57 @@ CREATE TABLE loan_refunds (
 );
 
 -- ==========================================
--- 8. FINANCIAL ADDITIONS (Disbursements & Receipts)
--- ==========================================
-CREATE TABLE financial_allocations (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    student_id UUID NOT NULL REFERENCES students(id) ON DELETE CASCADE,
-    type TEXT NOT NULL CHECK (type IN ('Subsidy', 'Pocket Money', 'Stipend', 'One-time Grant')),
-    amount NUMERIC(12, 2) NOT NULL,
-    currency TEXT DEFAULT 'USD' CHECK (currency IN ('USD', 'BDT')),
-    frequency TEXT DEFAULT 'Monthly' CHECK (frequency IN ('Monthly', 'Yearly', 'One-time')),
-    start_date DATE NOT NULL DEFAULT CURRENT_DATE,
-    end_date DATE,
-    is_active BOOLEAN DEFAULT TRUE,
-    notes TEXT,
-    created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
-CREATE TABLE loan_disbursements (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    loan_id UUID NOT NULL REFERENCES loans(id) ON DELETE CASCADE,
-    amount NUMERIC(12, 2) NOT NULL,
-    currency TEXT DEFAULT 'USD' CHECK (currency IN ('USD', 'BDT')),
-    disbursement_date DATE DEFAULT CURRENT_DATE,
-    category TEXT NOT NULL, -- e.g., 'Tuition', 'Admission Fee', 'Books', 'Hostel'
-    notes TEXT,
-    created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
-CREATE TABLE sponsorship_receipts (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    sponsorship_id UUID NOT NULL REFERENCES sponsorships(id) ON DELETE CASCADE,
-    amount NUMERIC(12, 2) NOT NULL,
-    currency TEXT DEFAULT 'USD' CHECK (currency IN ('USD', 'BDT')),
-    received_date DATE DEFAULT CURRENT_DATE,
-    period_month INT CHECK (period_month BETWEEN 1 AND 12),
-    period_year INT,
-    notes TEXT,
-    created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- ==========================================
--- 9. SYSTEM AUDIT & SECURITY
+-- 7. AUDIT & LOGGING
 -- ==========================================
 CREATE TABLE audit_logs (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID REFERENCES users(id),
-    module TEXT NOT NULL, -- e.g., 'STUDENT', 'LOAN', 'SPONSOR'
-    action TEXT NOT NULL, -- e.g., 'ADD_REC', 'EDIT_VAL', 'ARCHIVE'
-    target_ref TEXT, -- The master_id_number or Code affected
-    mutation_detail TEXT, -- JSON or Text description of changes
-    ip_address TEXT,
+    module TEXT NOT NULL,
+    action TEXT NOT NULL,
+    target_id UUID,
+    target_type TEXT,
+    mutation_detail JSONB,
+    ip_address INET,
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- ==========================================
--- 10. OPTIMIZATION INDEXES
+-- 8. VIEWS FOR REPORTING
 -- ==========================================
+CREATE VIEW view_loan_balances AS
+SELECT 
+    l.id AS loan_id,
+    l.student_id,
+    l.status,
+    COALESCE(SUM(d.amount), 0) AS total_disbursed,
+    COALESCE(SUM(r.amount), 0) AS total_refunded,
+    COALESCE(SUM(d.amount), 0) - COALESCE(SUM(r.amount), 0) AS outstanding_balance,
+    l.currency
+FROM loans l
+LEFT JOIN loan_disbursements d ON l.id = d.loan_id
+LEFT JOIN loan_refunds r ON l.id = r.loan_id
+GROUP BY l.id, l.student_id, l.status, l.currency;
+
+-- ==========================================
+-- 9. INDEXES & TRIGGERS
+-- ==========================================
+CREATE INDEX idx_student_names ON students USING gin (first_name gin_trgm_ops, last_name gin_trgm_ops);
+CREATE INDEX idx_sponsor_names ON sponsors USING gin (full_name gin_trgm_ops);
+CREATE INDEX idx_audit_details ON audit_logs USING gin (mutation_detail);
 CREATE INDEX idx_student_master_id ON students(master_id_number);
-CREATE INDEX idx_student_status ON students(status);
-CREATE INDEX idx_sponsorships_active ON sponsorships(is_active) WHERE is_active IS TRUE;
-CREATE INDEX idx_audit_log_time ON audit_logs(created_at DESC);
-CREATE INDEX idx_identifiers_value ON student_identifiers(id_value);
+
+CREATE TRIGGER trg_upd_programs BEFORE UPDATE ON programs FOR EACH ROW EXECUTE FUNCTION fn_update_timestamp();
+CREATE TRIGGER trg_upd_institutions BEFORE UPDATE ON institutions FOR EACH ROW EXECUTE FUNCTION fn_update_timestamp();
+CREATE TRIGGER trg_upd_users BEFORE UPDATE ON users FOR EACH ROW EXECUTE FUNCTION fn_update_timestamp();
+CREATE TRIGGER trg_upd_students BEFORE UPDATE ON students FOR EACH ROW EXECUTE FUNCTION fn_update_timestamp();
+CREATE TRIGGER trg_upd_student_identifiers BEFORE UPDATE ON student_identifiers FOR EACH ROW EXECUTE FUNCTION fn_update_timestamp();
+CREATE TRIGGER trg_upd_sponsors BEFORE UPDATE ON sponsors FOR EACH ROW EXECUTE FUNCTION fn_update_timestamp();
+CREATE TRIGGER trg_upd_sponsorships BEFORE UPDATE ON sponsorships FOR EACH ROW EXECUTE FUNCTION fn_update_timestamp();
+CREATE TRIGGER trg_upd_academic_records BEFORE UPDATE ON academic_records FOR EACH ROW EXECUTE FUNCTION fn_update_timestamp();
+CREATE TRIGGER trg_upd_reports BEFORE UPDATE ON reports FOR EACH ROW EXECUTE FUNCTION fn_update_timestamp();
+CREATE TRIGGER trg_upd_student_history BEFORE UPDATE ON student_history FOR EACH ROW EXECUTE FUNCTION fn_update_timestamp();
+CREATE TRIGGER trg_upd_financial_allocations BEFORE UPDATE ON financial_allocations FOR EACH ROW EXECUTE FUNCTION fn_update_timestamp();
+CREATE TRIGGER trg_upd_communication_templates BEFORE UPDATE ON communication_templates FOR EACH ROW EXECUTE FUNCTION fn_update_timestamp();
+CREATE TRIGGER trg_upd_communications BEFORE UPDATE ON communications FOR EACH ROW EXECUTE FUNCTION fn_update_timestamp();
+CREATE TRIGGER trg_upd_loans BEFORE UPDATE ON loans FOR EACH ROW EXECUTE FUNCTION fn_update_timestamp();
+

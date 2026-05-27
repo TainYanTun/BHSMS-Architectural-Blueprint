@@ -1,6 +1,9 @@
 # Financial Workflow Specification
 
-This document outlines the logic and structure of the financial tracking system in the Bangla Hope SMS. The system is designed as a **Reliable Ledger** for tracking commitments, disbursements, and refunds, with no real-world transaction processing.
+This document outlines the logic and structure of the financial tracking system in the Bangla Hope SMS. 
+
+> [!IMPORTANT]
+> **STORAGE-ONLY ARCHITECTURE:** This system is designed strictly as a **Manual Digital Ledger** for record-keeping and storage purposes. It **does not** perform real-world financial transactions, payment gateway integrations, or bank transfers. All financial data (receipts, disbursements) must be manually verified and entered by authorized personnel.
 
 ---
 
@@ -57,8 +60,9 @@ Used for programs that do not require repayment (Boarding Schools, Staff Childre
 ## 4. Key Business Logic & Validations
 
 ### Currency Handling
-- **Multi-Currency:** All financial tables support both **USD** and **BDT**.
-- **Reporting:** Reports should indicate the currency of the record to avoid mixed-sum errors.
+- **Sponsorships:** All income tracking (Sponsorships and Receipts) is conducted strictly in **USD**.
+- **Local Operations:** Loan disbursements and internal allocations may support **BDT** where applicable for local tracking.
+- **Reporting:** Reports should clearly indicate the currency to maintain ledger integrity.
 
 ### Security & Integrity
 - **Audit Logs:** Every financial modification (Add/Edit/Delete) is captured in `audit_logs` with a timestamp and the user ID of the admin.

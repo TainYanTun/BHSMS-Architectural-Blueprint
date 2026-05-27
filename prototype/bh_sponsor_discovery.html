@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bangla Hope – Sponsor Portal: Needy Students</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Lora:ital,wght@0,400;0,600;1,400&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --primary-navy: #1e3a4a;
+      --accent-teal: #2B7A9E;
+      --accent-pink: #d17a8e;
+      --bg-portal: #f1f5f9;
+      --surface-white: #ffffff;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --radius: 12px;
+      --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Nunito', sans-serif; background: var(--bg-portal); color: var(--text-main); }
+
+    /* HEADER */
+    .portal-header { background: var(--primary-navy); padding: 40px 20px 100px 20px; color: white; text-align: center; }
+    .portal-header h1 { font-family: 'Lora', serif; font-size: 32px; margin-bottom: 8px; }
+    .portal-header p { font-size: 16px; opacity: 0.9; max-width: 600px; margin: 0 auto; }
+
+    /* CONTENT CONTAINER */
+    .portal-content { max-width: 1200px; margin: -60px auto 60px; padding: 0 20px; display: grid; grid-template-columns: 280px 1fr; gap: 32px; }
+
+    /* FILTERS */
+    .filter-card { background: var(--surface-white); border-radius: var(--radius); padding: 24px; box-shadow: var(--shadow); position: sticky; top: 20px; height: fit-content; }
+    .filter-title { font-size: 11px; font-weight: 800; color: var(--accent-teal); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 16px; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; }
+    .filter-group { margin-bottom: 20px; }
+    .filter-label { display: block; font-size: 13px; font-weight: 700; margin-bottom: 8px; }
+    .filter-option { display: flex; align-items: center; gap: 8px; font-size: 13px; margin-bottom: 6px; cursor: pointer; color: var(--text-muted); }
+    .filter-option:hover { color: var(--primary-navy); }
+
+    /* STUDENT GRID */
+    .student-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 24px; }
+    
+    .student-card { background: var(--surface-white); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); transition: transform 0.2s; cursor: pointer; display: flex; flex-direction: column; }
+    .student-card:hover { transform: translateY(-4px); }
+    
+    .student-image { height: 200px; background: #e2e8f0; display: flex; align-items: center; justify-content: center; font-weight: 700; color: #94a3b8; font-size: 12px; }
+    
+    .student-info { padding: 20px; flex: 1; display: flex; flex-direction: column; }
+    .student-name { font-family: 'Lora', serif; font-size: 20px; font-weight: 600; margin-bottom: 4px; color: var(--primary-navy); }
+    .student-meta { font-size: 12px; font-weight: 700; color: var(--accent-teal); text-transform: uppercase; margin-bottom: 12px; }
+    .student-snippet { font-size: 14px; color: var(--text-muted); line-height: 1.5; margin-bottom: 20px; flex: 1; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+    
+    .btn-sponsor { background: var(--accent-teal); color: white; border: none; padding: 10px; border-radius: 6px; font-weight: 700; text-transform: uppercase; font-size: 12px; letter-spacing: 0.05em; text-align: center; }
+
+    /* VALIDATION TAG */
+    .validation-tag { background: #f0fdf4; color: #166534; font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 4px; text-transform: uppercase; margin-bottom: 8px; display: inline-block; }
+
+    /* TOP NAV */
+    .top-nav { background: white; height: 64px; display: flex; align-items: center; justify-content: space-between; padding: 0 40px; border-bottom: 1px solid #e2e8f0; }
+    .nav-logo { font-family: 'Lora', serif; font-size: 20px; font-weight: 600; color: var(--primary-navy); text-decoration: none; }
+    .nav-links { display: flex; gap: 32px; font-size: 14px; font-weight: 600; }
+    .nav-link { color: var(--text-muted); text-decoration: none; }
+    .nav-link.active { color: var(--accent-teal); }
+    .user-actions { display: flex; align-items: center; gap: 12px; }
+
+    /* MOBILE OPTIMIZATION */
+    @media (max-width: 1024px) {
+      .portal-content { grid-template-columns: 1fr; margin-top: -40px; }
+      .filter-card { position: relative; top: 0; width: 100%; margin-bottom: 24px; }
+      .nav-links { display: none; } /* Simplified for mobile */
+      .top-nav { padding: 0 20px; }
+    }
+
+    @media (max-width: 640px) {
+      .portal-header { padding: 40px 20px 80px 20px; }
+      .portal-header h1 { font-size: 24px; }
+      .portal-header p { font-size: 14px; }
+      .student-grid { grid-template-columns: 1fr; }
+      .user-actions span { display: none; }
+      .nav-logo { font-size: 18px; }
+    }
+  </style>
+</head>
+
+<body>
+  <nav class="top-nav">
+    <a href="#" class="nav-logo">Bangla Hope</a>
+    <div class="nav-links">
+      <a href="#" class="nav-link">Home</a>
+      <a href="#" class="nav-link active">Sponsor a Child</a>
+      <a href="#" class="nav-link">About Us</a>
+      <a href="#" class="nav-link">My Sponsorships</a>
+    </div>
+    <div class="user-actions">
+      <div style="font-size: 13px; font-weight: 700;"><span>John Miller</span></div>
+      <div style="width: 32px; height: 32px; background: #e2e8f0; border-radius: 50%;"></div>
+    </div>
+  </nav>
+
+  <header class="portal-header">
+    <h1>Change a Life Today</h1>
+    <p>Every child on this list has a <b>Validated Case Study</b> reviewed by our supervisors to ensure your support goes where it's needed most.</p>
+  </header>
+
+  <div class="portal-content">
+    <aside class="filter-card">
+      <div class="filter-title">Filter Children</div>
+      
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+        <div class="filter-group">
+          <span class="filter-label">Program Type</span>
+          <label class="filter-option"><input type="checkbox" checked> LRC Residential</label>
+          <label class="filter-option"><input type="checkbox"> Boarding School</label>
+          <label class="filter-option"><input type="checkbox"> Village Day School</label>
+        </div>
+
+        <div class="filter-group">
+          <span class="filter-label">Gender</span>
+          <label class="filter-option"><input type="checkbox"> Female</label>
+          <label class="filter-option"><input type="checkbox"> Male</label>
+        </div>
+
+        <div class="filter-group">
+          <span class="filter-label">Age Group</span>
+          <label class="filter-option"><input type="checkbox"> 5 - 8 Years</label>
+          <label class="filter-option"><input type="checkbox"> 9 - 12 Years</label>
+          <label class="filter-option"><input type="checkbox"> 13+ Years</label>
+        </div>
+      </div>
+    </aside>
+
+    <main class="student-grid">
+      <!-- STUDENT 1 -->
+      <div class="student-card">
+        <div class="student-image">[ PHOTO: Rina Begum ]</div>
+        <div class="student-info">
+          <span class="validation-tag">Validated Case Study</span>
+          <h3 class="student-name">Rina Begum</h3>
+          <p class="student-meta">LRC Residential • Age 7 • Female</p>
+          <p class="student-snippet">Rina is a bright 7-year-old who transitioned to our residential care after her father passed away. She loves Bengali literature and gardening...</p>
+          <button class="btn-sponsor" onclick="window.location.href='bh_thank_you_receipt_detail.html'">View Case Study</button>
+        </div>
+      </div>
+
+      <!-- STUDENT 2 -->
+      <div class="student-card">
+        <div class="student-image">[ PHOTO: Arif Hossain ]</div>
+        <div class="student-info">
+          <span class="validation-tag">Validated Case Study</span>
+          <h3 class="student-name">Arif Hossain</h3>
+          <p class="student-meta">Village Day School • Age 9 • Male</p>
+          <p class="student-snippet">Arif lives with his mother in a small village. He walks 3 miles every day to attend school and hopes to become a nurse assistant one day...</p>
+          <button class="btn-sponsor">View Case Study</button>
+        </div>
+      </div>
+
+      <!-- STUDENT 3 -->
+      <div class="student-card">
+        <div class="student-image">[ PHOTO: Salma Begum ]</div>
+        <div class="student-info">
+          <span class="validation-tag">Validated Case Study</span>
+          <h3 class="student-name">Salma Begum</h3>
+          <p class="student-meta">Boarding School • Age 12 • Female</p>
+          <p class="student-snippet">Salma is entering Class 6 and needs support for hostel fees and books. She is the first in her family to attend a boarding school...</p>
+          <button class="btn-sponsor">View Case Study</button>
+        </div>
+      </div>
+
+      <!-- STUDENT 4 -->
+      <div class="student-card">
+        <div class="student-image">[ PHOTO: Abdur Rahman ]</div>
+        <div class="student-info">
+          <span class="validation-tag">Validated Case Study</span>
+          <h3 class="student-name">Abdur Rahman</h3>
+          <p class="student-meta">LRC Residential • Age 8 • Male</p>
+          <p class="student-snippet">Abdur enjoys mathematics and is a quick learner. He recently joined our LRC family and is adjusting well to his new environment...</p>
+          <button class="btn-sponsor">View Case Study</button>
+        </div>
+      </div>
+    </main>
+  </div>
+</body>
+
+</html>

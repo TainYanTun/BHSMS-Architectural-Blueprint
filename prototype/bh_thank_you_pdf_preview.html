@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PDF Preview – Thank You Receipt: #REC-9921</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Lora:ital,wght@0,400;0,600;1,400&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --primary: #1e3a4a;
+      --accent-teal: #2B7A9E; 
+      --bg-pdf-viewer: #525659;
+      --shadow-pdf: 0 0 20px rgba(0,0,0,0.4);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Nunito', sans-serif; background: var(--bg-pdf-viewer); display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 40px 0; }
+
+    /* PDF VIEWER TOOLBAR */
+    .viewer-toolbar { width: 100%; height: 48px; background: #323639; color: white; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; position: fixed; top: 0; z-index: 100; box-shadow: 0 2px 5px rgba(0,0,0,0.3); }
+    .toolbar-title { font-size: 13px; font-weight: 400; }
+    .toolbar-actions { display: flex; gap: 15px; align-items: center; }
+    .toolbar-btn { cursor: pointer; opacity: 0.8; transition: opacity 0.2s; display: flex; align-items: center; }
+    .toolbar-btn:hover { opacity: 1; }
+    
+    .view-selector {
+      background: #4a4e51;
+      border: 1px solid #5f6368;
+      color: white;
+      padding: 4px 8px;
+      font-size: 12px;
+      border-radius: 4px;
+      outline: none;
+    }
+
+    /* PDF PAGE */
+    .pdf-page { background: white; width: 793px; min-height: 1122px; box-shadow: var(--shadow-pdf); margin-top: 20px; padding: 60px 80px; display: flex; flex-direction: column; color: #000; position: relative; }
+    
+    .pdf-header { border-bottom: 2px solid var(--primary); padding-bottom: 20px; margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center; }
+    .pdf-branding h1 { font-family: 'Lora', serif; font-size: 28px; color: var(--primary); }
+    .pdf-branding p { font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--accent-teal); font-weight: 700; margin-top: 4px; }
+    
+    .receipt-meta { text-align: right; }
+    .receipt-meta h2 { font-size: 18px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--primary); margin-bottom: 4px; }
+    .receipt-id { font-family: 'Courier New', monospace; font-weight: 700; color: var(--accent-teal); }
+
+    /* RECEIPT DETAILS BOX */
+    .receipt-details-box { border: 1px solid #e2e8f0; border-radius: 4px; margin-bottom: 40px; display: flex; overflow: hidden; }
+    .details-side { flex: 1; padding: 20px; }
+    .details-side:first-child { border-right: 1px solid #e2e8f0; background: #f8fafc; }
+    .details-label { font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase; margin-bottom: 4px; }
+    .details-value { font-size: 14px; font-weight: 700; color: #1e293b; margin-bottom: 12px; }
+
+    /* THE LETTER */
+    .letter-body { flex: 1; font-family: 'Nunito', sans-serif; font-size: 15px; line-height: 1.8; color: #334155; margin-bottom: 60px; }
+    .letter-date { margin-bottom: 20px; font-weight: 600; }
+    .letter-salutation { margin-bottom: 20px; font-weight: 700; }
+    .letter-content p { margin-bottom: 15px; text-align: justify; }
+    .letter-closing { margin-top: 40px; }
+
+    /* STUDENT SECTION */
+    .student-footer-box { display: flex; gap: 20px; align-items: center; background: #f1f5f9; padding: 20px; border-radius: 4px; margin-top: auto; }
+    .student-photo-small { width: 70px; height: 90px; background: #cbd5e1; border: 1px solid #94a3b8; display: flex; align-items: center; justify-content: center; font-size: 9px; color: #64748b; font-weight: 700; }
+    .student-mini-meta { flex: 1; }
+    .student-mini-name { font-family: 'Lora', serif; font-size: 18px; font-weight: 600; color: var(--primary); }
+    .student-mini-id { font-family: 'Courier New', monospace; font-size: 11px; font-weight: 700; color: var(--accent-teal); }
+
+    .pdf-footer { border-top: 1px solid #eee; padding-top: 20px; margin-top: 20px; display: flex; justify-content: space-between; font-size: 11px; color: #94a3b8; }
+
+    .back-btn { position: fixed; bottom: 30px; left: 30px; background: var(--primary); color: white; border: none; padding: 12px 24px; border-radius: 30px; cursor: pointer; font-size: 14px; font-weight: 600; text-decoration: none; box-shadow: 0 4px 10px rgba(0,0,0,0.3); z-index: 101; }
+    .back-btn:hover { background: #152b37; }
+
+    @media print {
+      body { background: white; padding: 0; }
+      .viewer-toolbar, .back-btn { display: none; }
+      .pdf-page { box-shadow: none; margin: 0; border: none; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="viewer-toolbar">
+    <div class="toolbar-title">PREVIEW MODE / <select class="view-selector" onchange="changeView(this.value)">
+      <option value="monthly">Monthly Support Letter</option>
+      <option value="birthday">Birthday Greeting</option>
+      <option value="gift">Special Gift Letter</option>
+    </select></div>
+    <div class="toolbar-actions">
+      <div class="toolbar-btn">1 / 1</div>
+      <div style="width: 1px; height: 20px; background: #525659;"></div>
+      <div class="toolbar-btn" title="Download">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+      </div>
+      <div class="toolbar-btn" title="Print" onclick="window.print()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+      </div>
+      <div style="width: 1px; height: 20px; background: #525659;"></div>
+      <div class="toolbar-btn" style="font-size: 12px; font-weight: 700;" onclick="window.location.href='bh_thank_you_receipt_detail.html'">CLOSE</div>
+    </div>
+  </div>
+
+  <a href="bh_thank_you_receipt_detail.html" class="back-btn">← Back to Editor</a>
+
+  <div class="pdf-page">
+    <div class="pdf-header">
+      <div class="pdf-branding">
+        <h1>Bangla Hope</h1>
+        <p>Official Sponsorship Receipt</p>
+      </div>
+      <div class="receipt-meta">
+        <h2 id="pdfTitle">Donation Receipt</h2>
+        <p class="receipt-id" id="pdfReceiptId">#REC-9921</p>
+        <p style="font-size: 12px; color: #666; margin-top: 5px;">Date: <span id="pdfDate">May 25, 2026</span></p>
+      </div>
+    </div>
+
+    <div class="receipt-details-box">
+      <div class="details-side">
+        <div class="details-label">Received From:</div>
+        <div class="details-value" style="font-size: 16px;">John & Sarah Miller</div>
+        <div class="details-label">Address:</div>
+        <div class="details-value">123 Pinecrest Ave, Seattle, WA 98101, USA</div>
+      </div>
+      <div class="details-side">
+        <div id="amountSection">
+          <div class="details-label">Payment Amount:</div>
+          <div class="details-value" id="pdfAmount" style="font-size: 20px; color: var(--primary);">$50.00 USD</div>
+        </div>
+        <div class="details-label">Designated For:</div>
+        <div class="details-value">Sponsorship of Abdur Rahman (#202600124)</div>
+        <div id="periodSection">
+          <div class="details-label">For Period:</div>
+          <div class="details-value" id="pdfPeriod">June 2026</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="letter-body">
+      <div class="letter-salutation">Dear John & Sarah Miller,</div>
+      <div class="letter-content" id="pdfContent">
+        <p>Thank you so much for your recent gift of <b>$50.00</b> for the month of <b>June 2026</b>. Your continued support makes a world of difference in my life and education.</p>
+        <p>This month at school, I have been studying hard for my mathematics exams. I am also enjoying my time in the gardening club where we are planting new vegetables for the monsoon season.</p>
+        <p>I hope you are doing well and having a blessed month. Thank you for being my sponsor!</p>
+      </div>
+      <div class="letter-closing">
+        <p>Sincerely,</p>
+        <p style="font-family: 'Lora', serif; font-size: 20px; font-weight: 600; margin-top: 10px;">Abdur Rahman</p>
+      </div>
+    </div>
+
+    <div class="student-footer-box">
+      <div class="student-photo-small">[PHOTO]</div>
+      <div class="student-mini-meta">
+        <div class="student-mini-name">Abdur Rahman</div>
+        <div class="student-mini-id">ID: #202600124 / LRC Primary</div>
+        <p style="font-size: 11px; color: #64748b; margin-top: 5px;">Bangla Hope provides housing, education, and medical care through your support.</p>
+      </div>
+    </div>
+
+    <div class="pdf-footer">
+      <div>
+        <strong>Bangla Hope Sponsorship Office</strong><br>
+        Post Box 612, Hili, Dinajpur, Bangladesh
+      </div>
+      <div style="text-align: right;">
+        www.banglahope.org<br>
+        Non-Profit Identification: #501(c)(3)
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function changeView(type) {
+      const title = document.getElementById('pdfTitle');
+      const receiptId = document.getElementById('pdfReceiptId');
+      const amount = document.getElementById('pdfAmount');
+      const period = document.getElementById('pdfPeriod');
+      const content = document.getElementById('pdfContent');
+      const date = document.getElementById('pdfDate');
+      const amountSection = document.getElementById('amountSection');
+      const periodSection = document.getElementById('periodSection');
+
+      // Reset visibility
+      amountSection.style.display = 'block';
+      periodSection.style.display = 'block';
+
+      if (type === 'monthly') {
+        title.innerText = "Donation Receipt";
+        receiptId.innerText = "#REC-9921";
+        amount.innerText = "$50.00 USD";
+        period.innerText = "June 2026";
+        date.innerText = "May 25, 2026";
+        content.innerHTML = `<p>Thank you so much for your recent gift of <b>$50.00</b> for the month of <b>June 2026</b>. Your continued support makes a world of difference in my life and education.</p>
+        <p>This month at school, I have been studying hard for my mathematics exams. I am also enjoying my time in the gardening club where we are planting new vegetables for the monsoon season.</p>
+        <p>I hope you are doing well and having a blessed month. Thank you for being my sponsor!</p>`;
+      } else if (type === 'birthday') {
+        title.innerText = "Birthday Acknowledgement";
+        receiptId.innerText = "#BDAY-2026";
+        date.innerText = "May 12, 2026";
+        amountSection.style.display = 'none';
+        periodSection.style.display = 'none';
+        content.innerHTML = `<p>It is my birthday! Thank you so much for being my sponsor. This year I am <b>10 years old</b> and my favorite subject at school is <b>Mathematics</b>.</p>
+        <p>I am so happy to celebrate another year with your support. Thank you for your kindness and for remembering my special day!</p>`;
+      } else if (type === 'gift') {
+        title.innerText = "Special Gift Receipt";
+        receiptId.innerText = "#SPEC-4401";
+        amount.innerText = "$25.00 USD";
+        period.innerText = "May 2026";
+        date.innerText = "May 20, 2026";
+        content.innerHTML = `<p>I am so excited to thank you for the extra gift of <b>$25.00</b>. With this gift, I was able to get <b>a new school bag</b> which I really needed for the new semester.</p>
+        <p>Your extra generosity means so much to me. Thank you for thinking of my needs!</p>`;
+      }
+    }
+  </script>
+</body>
+
+</html>

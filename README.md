@@ -45,6 +45,7 @@ The project currently includes several wireframe variants, ranging from high-fid
 - **Typography:** 
     - *System Fonts:* Courier New (Blueprints), Nunito/Lora (High-Fidelity)
 - **Methodology:** Component-based UI design focusing on administrative efficiency.
+- **Financial Architecture:** **Record-Keeping Only.** The system functions as a manual digital ledger for storage and tracking; it contains no logic for real-world payment processing or financial transactions.
 
 ## Directory Structure
 
