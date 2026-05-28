@@ -12,7 +12,7 @@ This document visualizes the database structure, organized by logical functional
 | **Student Core** | `STUDENTS`, `PROGRAMS`, `IDENTIFIERS` | The "Single Source of Truth" for child bio-data and history. |
 | **Education** | `ACADEMIC_RECORDS`, `ATTENDANCE` | Yearly progress tracking and school-specific metrics. |
 | **Sponsorship** | `SPONSORS`, `SPONSORSHIPS`, `COMMS` | Managing relationships and donor communication pipelines. |
-| **Financial** | `CONTRIBUTIONS`, `ALLOCATIONS`, `LOANS` | Tracking USD-only income (flexible gifts) vs. grant/loan expenditures. |
+| **Financial** | `CONTRIBUTIONS`, `PAYOUTS`, `LOANS` | Tracking USD-only income (flexible gifts) vs. payout/loan expenditures. |
 | **Data Migration** | `MIGRATION_STAGING`, `METADATA` | High-integrity staging for legacy data import. |
 
 ---
@@ -190,17 +190,9 @@ erDiagram
         int period_year
     }
 
-    FINANCIAL_ALLOCATIONS {
-        uuid id PK
-        uuid student_id FK
-        text type
-        numeric amount
-        boolean is_active
-    }
-
     ALLOCATION_PAYOUTS {
         uuid id PK
-        uuid allocation_id FK
+        uuid student_id FK
         numeric amount
         text status
     }
@@ -211,16 +203,11 @@ erDiagram
         text status
     }
 
-    LOAN_DISBURSEMENTS {
+    LOAN_TRANSACTIONS {
         uuid id PK
         uuid loan_id FK
         numeric amount
-    }
-
-    LOAN_REFUNDS {
-        uuid id PK
-        uuid loan_id FK
-        numeric amount
+        text type
     }
 
     %% ==========================================
@@ -261,12 +248,10 @@ erDiagram
     SPONSORS ||--o{ CONTRIBUTIONS : "makes"
     STUDENTS ||--o{ CONTRIBUTIONS : "receives"
     SPONSORSHIPS ||--o{ CONTRIBUTIONS : "fulfills (optional)"
-    STUDENTS ||--o{ FINANCIAL_ALLOCATIONS : "receives"
-    FINANCIAL_ALLOCATIONS ||--o{ ALLOCATION_PAYOUTS : "payouts for"
+    STUDENTS ||--o{ ALLOCATION_PAYOUTS : "receives"
     
     STUDENTS ||--o{ LOANS : "holds"
-    LOANS ||--o{ LOAN_DISBURSEMENTS : "pays out"
-    LOANS ||--o{ LOAN_REFUNDS : "recovers"
+    LOANS ||--o{ LOAN_TRANSACTIONS : "tracks"
 
 ```
 
@@ -324,4 +309,4 @@ If the exact same field is modified (e.g., both sites update `situation_overview
 3.  **Alerts** the Admin to perform a "Side-by-Side" visual resolution.
 
 ### C. Financial Lockdown
-For tables in the **Financial Ledger** domain (`RECEIPTS`, `PAYOUTS`, `LOAN_DISBURSEMENTS`), automatic merging is **DISABLED**. All financial collisions require manual review to ensure strict digital ledger integrity.
+For tables in the **Financial Ledger** domain (`CONTRIBUTIONS`, `ALLOCATION_PAYOUTS`, `LOAN_TRANSACTIONS`), automatic merging is **DISABLED**. All financial collisions require manual review to ensure strict digital ledger integrity.

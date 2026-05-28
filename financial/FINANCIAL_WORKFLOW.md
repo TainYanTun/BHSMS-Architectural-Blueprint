@@ -24,36 +24,37 @@ Tracks the sponsorship relationships and the individual contribution receipts.
 
 ---
 
-## 2. Higher Education Loan Program (Education Tracking)
+## 2. Higher Education Loan Program (Simple Loan 2.0)
 
-Supports students in higher education via a "Spend now, Refund later" model.
+Supports students in higher education via a **Unified Ledger** model. It tracks debt and recovery in a single stream.
 
 ### Tables
 | Table | Role | Key Fields |
 | :--- | :--- | :--- |
-| `loans` | **Header** | `total_amount`, `refunded_amount`, `status`, `currency` |
-| `loan_disbursements` | **Spending** | `category` (Tuition/Books/Hostel), `amount`, `date` |
-| `loan_refunds` | **Recovery** | `amount`, `refund_date`, `recorded_by` |
+| `loans` | **Agreement Record** | `status` (Studying/Refunding/Complete), `agreement_url` |
+| `loan_transactions` | **The Unified Ledger** | `amount` (+ for debt, - for repayment), `type`, `date` |
 
 ### Logic
-- **Accumulation:** As Bangla Hope pays for student expenses, each payment is logged in `loan_disbursements`. The `loans.total_amount` is the sum of these entries.
-- **Recovery Phase:** Once a student graduates and begins working, they pay back the organization. Each entry is logged in `loan_refunds`.
-- **Balance:** `Outstanding = total_amount - refunded_amount`.
+- **Single Source of Truth:** Every penny moving in or out is recorded in `loan_transactions`. 
+- **Debt Creation (+):** When Bangla Hope pays for student expenses, a **Positive** amount is logged (Type: 'Disbursement'). This increases the student's debt.
+- **Debt Recovery (-):** When a repayment is received (Sponsor/Student sends money), a **Negative** amount is logged (Type: 'Repayment'). 
+- **The Balance:** Outstanding Debt = `SUM(amount)` of all transactions for that loan.
 
 ---
 
-## 3. Internal Support (Subsidies & Pocket Money)
+## 3. Internal Support (Direct Payouts)
 
-Used for programs that do not require repayment (Boarding Schools, Staff Children).
+Used for programs that do not require repayment (Boarding Schools, Subsidies, Pocket Money).
 
 ### Tables
 | Table | Role | Key Fields |
 | :--- | :--- | :--- |
-| `financial_allocations` | **Grant** | `type` (Subsidy/Pocket Money), `frequency`, `amount` |
+| `allocation_payouts` | **Direct Impact Log** | `type` (Subsidy/Pocket Money), `amount`, `payout_date` |
 
 ### Logic
-- **Recurring Costs:** Tracks ongoing internal financial commitments for specific students.
-- **Separation:** Keeps "Grants" separate from "Loans" to ensure they are never incorrectly flagged for refunding.
+- **Direct Recording:** Instead of complex budgeting rules, admins simply record the actual payout when it occurs.
+- **The "Jar" Principle:** For sponsored students, these payouts "draw" from the student's available balance in the `contributions` table.
+- **Separation:** Keeps "Gifts" (Payouts) separate from "Debt" (Loans) to ensure they are never incorrectly flagged for repayment.
 
 ---
 

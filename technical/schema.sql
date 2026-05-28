@@ -77,7 +77,8 @@ CREATE TABLE users (
     deleted_at TIMESTAMPTZ, -- Soft delete support
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW(),
-    row_version INT DEFAULT 1
+    row_version INT DEFAULT 1,
+    CONSTRAINT chk_user_email_format CHECK (email ~* '^[A-Za-z0-9._%-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,4}$')
 );
 
 CREATE TABLE role_permissions (
@@ -104,15 +105,40 @@ CREATE TABLE students (
     
     father_name TEXT,
     mother_name TEXT,
-    primary_guardian TEXT,
     staff_parent_id UUID REFERENCES users(id), -- For Employee Worker Children Program
     siblings_count INT DEFAULT 0 CHECK (siblings_count >= 0),
-    contact_number TEXT,
+    contact_number TEXT CHECK (contact_number IS NULL OR length(contact_number) >= 7),
     situation_overview TEXT,
     photo_url TEXT,
     
     current_program_id UUID REFERENCES programs(id),
     deleted_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    row_version INT DEFAULT 1
+);
+
+CREATE TABLE guardians (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    student_id UUID NOT NULL REFERENCES students(id) ON DELETE CASCADE,
+    full_name TEXT NOT NULL,
+    relationship TEXT NOT NULL, -- e.g., 'Father', 'Mother', 'Uncle', 'Aunt'
+    phone TEXT,
+    email TEXT,
+    photo_url TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    row_version INT DEFAULT 1
+);
+
+CREATE TABLE enrollments (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    student_id UUID NOT NULL REFERENCES students(id) ON DELETE CASCADE,
+    site_id UUID REFERENCES sites(id) ON DELETE SET NULL,
+    program_id UUID REFERENCES programs(id) ON DELETE SET NULL,
+    start_date DATE NOT NULL DEFAULT CURRENT_DATE,
+    end_date DATE,
+    is_active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW(),
     row_version INT DEFAULT 1
@@ -156,6 +182,17 @@ CREATE TABLE student_identifiers (
 -- ==========================================
 -- 4. SPONSORSHIP SYSTEM
 -- ==========================================
+CREATE TABLE invitations (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    email TEXT UNIQUE NOT NULL,
+    token TEXT UNIQUE NOT NULL, -- Used in the registration URL
+    role TEXT NOT NULL DEFAULT 'Sponsor',
+    expires_at TIMESTAMPTZ NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    row_version INT DEFAULT 1
+);
+
 CREATE TABLE sponsors (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     sponsor_id_code TEXT UNIQUE NOT NULL,
@@ -173,7 +210,8 @@ CREATE TABLE sponsors (
     deleted_at TIMESTAMPTZ,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW(),
-    row_version INT DEFAULT 1
+    row_version INT DEFAULT 1,
+    CONSTRAINT chk_sponsor_email_format CHECK (email IS NULL OR email ~* '^[A-Za-z0-9._%-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,4}$')
 );
 
 CREATE TABLE sponsorships (
@@ -196,6 +234,7 @@ CREATE TABLE contributions (
     student_id UUID REFERENCES students(id) ON DELETE SET NULL, -- Optional: Can be a general donation
     sponsorship_id UUID REFERENCES sponsorships(id) ON DELETE SET NULL, -- Optional: Link to a specific agreement if it exists
     
+    type TEXT NOT NULL DEFAULT 'Subsidy' CHECK (type IN ('Repayment', 'Subsidy', 'Grant', 'General')),
     amount NUMERIC(12, 2) NOT NULL CHECK (amount > 0),
     currency TEXT DEFAULT 'USD' CHECK (currency = 'USD'),
     received_date DATE DEFAULT CURRENT_DATE,
@@ -284,26 +323,10 @@ CREATE TABLE student_history (
     row_version INT DEFAULT 1
 );
 
-CREATE TABLE financial_allocations (
+CREATE TABLE allocation_payouts (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     student_id UUID NOT NULL REFERENCES students(id) ON DELETE CASCADE,
     type TEXT NOT NULL CHECK (type IN ('Subsidy', 'Pocket Money', 'Stipend', 'One-time Grant')),
-    amount NUMERIC(12, 2) NOT NULL CHECK (amount >= 0),
-    currency TEXT DEFAULT 'USD' CHECK (currency = 'USD'),
-    frequency TEXT DEFAULT 'Monthly' CHECK (frequency IN ('Monthly', 'Yearly', 'One-time')),
-    start_date DATE NOT NULL DEFAULT CURRENT_DATE,
-    end_date DATE,
-    is_active BOOLEAN DEFAULT TRUE,
-    notes TEXT,
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW(),
-    row_version INT DEFAULT 1,
-    CONSTRAINT chk_alloc_dates CHECK (end_date IS NULL OR end_date >= start_date)
-);
-
-CREATE TABLE allocation_payouts (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    allocation_id UUID NOT NULL REFERENCES financial_allocations(id) ON DELETE CASCADE,
     amount NUMERIC(12, 2) NOT NULL CHECK (amount > 0),
     currency TEXT DEFAULT 'USD' CHECK (currency = 'USD'),
     payout_date DATE DEFAULT CURRENT_DATE,
@@ -311,6 +334,7 @@ CREATE TABLE allocation_payouts (
     status TEXT DEFAULT 'Paid' CHECK (status IN ('Paid', 'Pending', 'Cancelled')),
     notes TEXT,
     created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
     row_version INT DEFAULT 1
 );
 
@@ -325,6 +349,22 @@ CREATE TABLE migration_metadata (
 
 -- Migration Staging for Bulk Imports (Proposal 3.6.1)
 CREATE TABLE migration_staging_students (
+    id SERIAL PRIMARY KEY,
+    raw_data JSONB NOT NULL,
+    validation_errors TEXT[],
+    status TEXT DEFAULT 'Pending' CHECK (status IN ('Pending', 'Validated', 'Imported', 'Failed')),
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE migration_staging_sponsors (
+    id SERIAL PRIMARY KEY,
+    raw_data JSONB NOT NULL,
+    validation_errors TEXT[],
+    status TEXT DEFAULT 'Pending' CHECK (status IN ('Pending', 'Validated', 'Imported', 'Failed')),
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE migration_staging_contributions (
     id SERIAL PRIMARY KEY,
     raw_data JSONB NOT NULL,
     validation_errors TEXT[],
@@ -384,27 +424,16 @@ CREATE TABLE loans (
     row_version INT DEFAULT 1
 );
 
-CREATE TABLE loan_disbursements (
+CREATE TABLE loan_transactions (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     loan_id UUID NOT NULL REFERENCES loans(id) ON DELETE CASCADE,
-    amount NUMERIC(12, 2) NOT NULL CHECK (amount > 0),
-    currency TEXT DEFAULT 'USD' CHECK (currency = 'USD'),
-    disbursement_date DATE DEFAULT CURRENT_DATE,
-    category TEXT NOT NULL,
-    notes TEXT,
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    row_version INT DEFAULT 1
-);
-
-CREATE TABLE loan_refunds (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    loan_id UUID NOT NULL REFERENCES loans(id) ON DELETE CASCADE,
-    amount NUMERIC(12, 2) NOT NULL CHECK (amount > 0),
-    currency TEXT DEFAULT 'USD' CHECK (currency = 'USD'),
-    refund_date DATE DEFAULT CURRENT_DATE,
+    transaction_date DATE DEFAULT CURRENT_DATE,
+    amount NUMERIC(12, 2) NOT NULL, -- Positive for disbursement (Debt), Negative for repayment (Refund)
+    type TEXT NOT NULL CHECK (type IN ('Disbursement', 'Repayment', 'Adjustment')),
     recorded_by UUID REFERENCES users(id),
     notes TEXT,
     created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
     row_version INT DEFAULT 1
 );
 
@@ -454,13 +483,12 @@ SELECT
     l.id AS loan_id,
     l.student_id,
     l.status,
-    COALESCE(SUM(d.amount), 0) AS total_disbursed,
-    COALESCE(SUM(r.amount), 0) AS total_refunded,
-    COALESCE(SUM(d.amount), 0) - COALESCE(SUM(r.amount), 0) AS outstanding_balance,
+    COALESCE(SUM(CASE WHEN t.amount > 0 THEN t.amount ELSE 0 END), 0) AS total_disbursed,
+    COALESCE(SUM(CASE WHEN t.amount < 0 THEN ABS(t.amount) ELSE 0 END), 0) AS total_refunded,
+    COALESCE(SUM(t.amount), 0) AS outstanding_balance,
     l.currency
 FROM loans l
-LEFT JOIN loan_disbursements d ON l.id = d.loan_id
-LEFT JOIN loan_refunds r ON l.id = r.loan_id
+LEFT JOIN loan_transactions t ON l.id = t.loan_id
 GROUP BY l.id, l.student_id, l.status, l.currency;
 
 -- ==========================================
@@ -472,6 +500,12 @@ CREATE INDEX idx_audit_details ON audit_logs USING gin (mutation_detail);
 CREATE INDEX idx_student_master_id ON students(master_id_number);
 CREATE INDEX idx_contribution_sponsor ON contributions(sponsor_id);
 CREATE INDEX idx_contribution_student ON contributions(student_id);
+
+-- Performance Indexes (Added)
+CREATE INDEX idx_sponsorships_student_id ON sponsorships(student_id);
+CREATE INDEX idx_sponsorships_sponsor_id ON sponsorships(sponsor_id);
+CREATE INDEX idx_academic_records_site_id ON academic_records(site_id);
+CREATE INDEX idx_loans_student_id ON loans(student_id);
 
 CREATE TRIGGER trg_upd_programs BEFORE UPDATE ON programs FOR EACH ROW EXECUTE FUNCTION fn_update_timestamp();
 CREATE TRIGGER trg_upd_sites BEFORE UPDATE ON sites FOR EACH ROW EXECUTE FUNCTION fn_update_timestamp();
@@ -486,13 +520,13 @@ CREATE TRIGGER trg_upd_attendance_records BEFORE UPDATE ON attendance_records FO
 CREATE TRIGGER trg_upd_documents BEFORE UPDATE ON documents FOR EACH ROW EXECUTE FUNCTION fn_update_timestamp();
 CREATE TRIGGER trg_upd_reports BEFORE UPDATE ON reports FOR EACH ROW EXECUTE FUNCTION fn_update_timestamp();
 CREATE TRIGGER trg_upd_student_history BEFORE UPDATE ON student_history FOR EACH ROW EXECUTE FUNCTION fn_update_timestamp();
-CREATE TRIGGER trg_upd_financial_allocations BEFORE UPDATE ON financial_allocations FOR EACH ROW EXECUTE FUNCTION fn_update_timestamp();
 CREATE TRIGGER trg_upd_allocation_payouts BEFORE UPDATE ON allocation_payouts FOR EACH ROW EXECUTE FUNCTION fn_update_timestamp();
 CREATE TRIGGER trg_upd_communication_templates BEFORE UPDATE ON communication_templates FOR EACH ROW EXECUTE FUNCTION fn_update_timestamp();
 CREATE TRIGGER trg_upd_communications BEFORE UPDATE ON communications FOR EACH ROW EXECUTE FUNCTION fn_update_timestamp();
 CREATE TRIGGER trg_upd_loans BEFORE UPDATE ON loans FOR EACH ROW EXECUTE FUNCTION fn_update_timestamp();
-CREATE TRIGGER trg_upd_loan_disbursements BEFORE UPDATE ON loan_disbursements FOR EACH ROW EXECUTE FUNCTION fn_update_timestamp();
-CREATE TRIGGER trg_upd_loan_refunds BEFORE UPDATE ON loan_refunds FOR EACH ROW EXECUTE FUNCTION fn_update_timestamp();
+CREATE TRIGGER trg_upd_loan_transactions BEFORE UPDATE ON loan_transactions FOR EACH ROW EXECUTE FUNCTION fn_update_timestamp();
 CREATE TRIGGER trg_upd_backups BEFORE UPDATE ON backups FOR EACH ROW EXECUTE FUNCTION fn_update_timestamp();
 CREATE TRIGGER trg_upd_teachers BEFORE UPDATE ON teachers FOR EACH ROW EXECUTE FUNCTION fn_update_timestamp();
+CREATE TRIGGER trg_upd_guardians BEFORE UPDATE ON guardians FOR EACH ROW EXECUTE FUNCTION fn_update_timestamp();
+CREATE TRIGGER trg_upd_invitations BEFORE UPDATE ON invitations FOR EACH ROW EXECUTE FUNCTION fn_update_timestamp();
 CREATE TRIGGER trg_upd_permissions BEFORE UPDATE ON permissions FOR EACH ROW EXECUTE FUNCTION fn_update_timestamp();

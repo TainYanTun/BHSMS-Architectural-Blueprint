@@ -101,7 +101,6 @@ erDiagram
         text status
         text father_name
         text mother_name
-        text primary_guardian
         uuid staff_parent_id FK
         int siblings_count
         text contact_number
@@ -109,6 +108,32 @@ erDiagram
         text photo_url
         uuid current_program_id FK
         timestamptz deleted_at
+        timestamptz created_at
+        timestamptz updated_at
+        int row_version
+    }
+
+    GUARDIANS {
+        uuid id PK
+        uuid student_id FK
+        text full_name
+        text relationship
+        text phone
+        text email
+        text photo_url
+        timestamptz created_at
+        timestamptz updated_at
+        int row_version
+    }
+
+    ENROLLMENTS {
+        uuid id PK
+        uuid student_id FK
+        uuid site_id FK
+        uuid program_id FK
+        date start_date
+        date end_date
+        boolean is_active
         timestamptz created_at
         timestamptz updated_at
         int row_version
@@ -156,9 +181,36 @@ erDiagram
         timestamptz created_at
     }
 
+    MIGRATION_STAGING_SPONSORS {
+        int id PK
+        jsonb raw_data
+        text validation_errors
+        text status
+        timestamptz created_at
+    }
+
+    MIGRATION_STAGING_CONTRIBUTIONS {
+        int id PK
+        jsonb raw_data
+        text validation_errors
+        text status
+        timestamptz created_at
+    }
+
     %% ==========================================
     %% SPONSORSHIP SYSTEM
     %% ==========================================
+    INVITATIONS {
+        uuid id PK
+        text email UK
+        text token UK
+        text role
+        timestamptz expires_at
+        timestamptz created_at
+        timestamptz updated_at
+        int row_version
+    }
+
     SPONSORS {
         uuid id PK
         text sponsor_id_code UK
@@ -197,6 +249,7 @@ erDiagram
         uuid sponsor_id FK
         uuid student_id FK
         uuid sponsorship_id FK
+        text type
         numeric amount
         text currency
         date received_date
@@ -265,25 +318,10 @@ erDiagram
         int row_version
     }
 
-    FINANCIAL_ALLOCATIONS {
+    ALLOCATION_PAYOUTS {
         uuid id PK
         uuid student_id FK
         text type
-        numeric amount
-        text currency
-        text frequency
-        date start_date
-        date end_date
-        boolean is_active
-        text notes
-        timestamptz created_at
-        timestamptz updated_at
-        int row_version
-    }
-
-    ALLOCATION_PAYOUTS {
-        uuid id PK
-        uuid allocation_id FK
         numeric amount
         text currency
         date payout_date
@@ -291,6 +329,7 @@ erDiagram
         text status
         text notes
         timestamptz created_at
+        timestamptz updated_at
         int row_version
     }
 
@@ -329,27 +368,16 @@ erDiagram
         int row_version
     }
 
-    LOAN_DISBURSEMENTS {
+    LOAN_TRANSACTIONS {
         uuid id PK
         uuid loan_id FK
+        date transaction_date
         numeric amount
-        text currency
-        date disbursement_date
-        text category
-        text notes
-        timestamptz created_at
-        int row_version
-    }
-
-    LOAN_REFUNDS {
-        uuid id PK
-        uuid loan_id FK
-        numeric amount
-        text currency
-        date refund_date
+        text type
         uuid recorded_by FK
         text notes
         timestamptz created_at
+        timestamptz updated_at
         int row_version
     }
 
@@ -394,7 +422,7 @@ erDiagram
     %% RELATIONSHIPS
     %% ==========================================
     USERS ||--o{ AUDIT_LOGS : "generates"
-    USERS ||--o{ LOAN_REFUNDS : "records"
+    USERS ||--o{ LOAN_TRANSACTIONS : "records"
     USERS ||--o{ COMMUNICATION_TEMPLATES : "manages"
     USERS ||--o{ DOCUMENTS : "uploads"
     USERS ||--o{ ALLOCATION_PAYOUTS : "records"
@@ -408,19 +436,24 @@ erDiagram
     
     SITES ||--o{ TEACHERS : "employs"
     
+    STUDENTS ||--o{ GUARDIANS : "has"
+    STUDENTS ||--o{ ENROLLMENTS : "enrolled in"
     STUDENTS ||--o{ STUDENT_IDENTIFIERS : "possesses"
     STUDENTS ||--o{ ACADEMIC_RECORDS : "earns"
     STUDENTS ||--o{ ATTENDANCE_RECORDS : "tracks"
     STUDENTS ||--o{ REPORTS : "generates"
     STUDENTS ||--o{ STUDENT_HISTORY : "undergoes"
-    STUDENTS ||--o{ FINANCIAL_ALLOCATIONS : "receives"
+    STUDENTS ||--o{ ALLOCATION_PAYOUTS : "receives"
     STUDENTS ||--o{ SPONSORSHIPS : "benefits from"
     STUDENTS ||--o{ LOANS : "holds"
     STUDENTS ||--o{ COMMUNICATIONS : "subject of"
     STUDENTS ||--o{ DOCUMENTS : "linked to"
 
+    SITES ||--o{ ENROLLMENTS : "hosts"
     SITES ||--o{ ACADEMIC_RECORDS : "hosts"
     SITES ||--o{ LOANS : "receives funds at"
+
+    PROGRAMS ||--o{ ENROLLMENTS : "manages"
 
     SPONSORS ||--o{ SPONSORSHIPS : "funds"
     SPONSORS ||--o{ COMMUNICATIONS : "receives"
@@ -433,11 +466,8 @@ erDiagram
     REPORTS ||--o| COMMUNICATIONS : "linked to"
     COMMUNICATION_TEMPLATES ||--o{ COMMUNICATIONS : "defines"
 
-    FINANCIAL_ALLOCATIONS ||--o{ ALLOCATION_PAYOUTS : "payouts for"
-
     CONTRIBUTIONS ||--o{ RECONCILIATIONS : "reconciled by"
     ALLOCATION_PAYOUTS ||--o{ RECONCILIATIONS : "reconciled by"
     USERS ||--o{ RECONCILIATIONS : "performs"
 
-    LOANS ||--o{ LOAN_DISBURSEMENTS : "pays out"
-    LOANS ||--o{ LOAN_REFUNDS : "recovers"
+    LOANS ||--o{ LOAN_TRANSACTIONS : "tracks"
