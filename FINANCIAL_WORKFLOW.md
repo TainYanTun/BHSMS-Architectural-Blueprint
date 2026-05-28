@@ -14,13 +14,13 @@ Tracks the sponsorship relationships and the individual contribution receipts.
 ### Tables
 | Table | Role | Key Fields |
 | :--- | :--- | :--- |
-| `sponsorships` | **Relationship** | `type` (Primary/Co-Sponsor), `start_date`, `is_active` |
-| `sponsorship_receipts` | **Contribution Record**| `received_date`, `amount`, `payment_method`, `reference_number` |
+| `sponsorships` | **Relationship Registry** | `type` (Primary/Co-Sponsor), `start_date`, `is_active` |
+| `contributions` | **Flexible Gift Log**| `received_date`, `amount`, `payment_method`, `reference_number` |
 
 ### Logic
-- **Relationship:** Admins record the fact that a sponsor is supporting a student.
-- **Verification:** When a payment is manually confirmed for a specific student, a record is added to `sponsorship_receipts` including the payment method and reference number (e.g., Check #).
-- **Reporting:** Sponsorship health is tracked by **Recency of Support** (contributions within the last 6 months) and milestone compliance.
+- **Relationship Registry:** Admins record the fact that a sponsor is supporting a student. This is used for status tracking and portal visibility.
+- **Verification:** When a gift is manually confirmed, a record is added to `contributions`. It can be linked to a specific `sponsorship` agreement, or directly to a `student` (for one-time gifts), or left as a general donation.
+- **Reporting:** Sponsorship health is tracked by **Recency of Support** (contributions within the last 6 months). The rigid monthly "subscription" model is replaced by a flexible gift history.
 
 ---
 

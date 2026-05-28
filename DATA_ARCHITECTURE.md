@@ -12,7 +12,7 @@ This document visualizes the database structure, organized by logical functional
 | **Student Core** | `STUDENTS`, `PROGRAMS`, `IDENTIFIERS` | The "Single Source of Truth" for child bio-data and history. |
 | **Education** | `ACADEMIC_RECORDS`, `ATTENDANCE` | Yearly progress tracking and school-specific metrics. |
 | **Sponsorship** | `SPONSORS`, `SPONSORSHIPS`, `COMMS` | Managing relationships and donor communication pipelines. |
-| **Financial** | `RECEIPTS`, `ALLOCATIONS`, `LOANS` | Tracking USD-only income vs. grant/loan expenditures. |
+| **Financial** | `CONTRIBUTIONS`, `ALLOCATIONS`, `LOANS` | Tracking USD-only income (flexible gifts) vs. grant/loan expenditures. |
 | **Data Migration** | `MIGRATION_STAGING`, `METADATA` | High-integrity staging for legacy data import. |
 
 ---
@@ -180,8 +180,10 @@ erDiagram
     %% ==========================================
     %% 5. FINANCIAL LEDGER (Bottom Right)
     %% ==========================================
-    SPONSORSHIP_RECEIPTS {
+    CONTRIBUTIONS {
         uuid id PK
+        uuid sponsor_id FK
+        uuid student_id FK
         uuid sponsorship_id FK
         numeric amount
         int period_month
@@ -256,7 +258,9 @@ erDiagram
     COMMUNICATIONS ||--o{ EMAIL_OUTBOX : "triggers"
 
     %% Financial Ledger
-    SPONSORSHIPS ||--o{ SPONSORSHIP_RECEIPTS : "collects"
+    SPONSORS ||--o{ CONTRIBUTIONS : "makes"
+    STUDENTS ||--o{ CONTRIBUTIONS : "receives"
+    SPONSORSHIPS ||--o{ CONTRIBUTIONS : "fulfills (optional)"
     STUDENTS ||--o{ FINANCIAL_ALLOCATIONS : "receives"
     FINANCIAL_ALLOCATIONS ||--o{ ALLOCATION_PAYOUTS : "payouts for"
     

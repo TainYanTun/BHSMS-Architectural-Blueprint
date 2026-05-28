@@ -195,8 +195,10 @@ erDiagram
         int row_version
     }
 
-    SPONSORSHIP_RECEIPTS {
+    CONTRIBUTIONS {
         uuid id PK
+        uuid sponsor_id FK
+        uuid student_id FK
         uuid sponsorship_id FK
         numeric amount
         text currency
@@ -207,6 +209,7 @@ erDiagram
         int period_year
         text notes
         timestamptz created_at
+        timestamptz updated_at
         int row_version
     }
 
@@ -446,8 +449,10 @@ erDiagram
     SPONSORS ||--o{ COMMUNICATIONS : "receives"
     SPONSORS ||--o{ DOCUMENTS : "linked to"
 
-    SPONSORSHIPS ||--o{ SPONSORSHIP_RECEIPTS : "collects"
-    SPONSORSHIP_RECEIPTS ||--o| COMMUNICATIONS : "triggers"
+    SPONSORS ||--o{ CONTRIBUTIONS : "makes"
+    STUDENTS ||--o{ CONTRIBUTIONS : "receives"
+    SPONSORSHIPS ||--o{ CONTRIBUTIONS : "fulfills (optional)"
+    CONTRIBUTIONS ||--o| COMMUNICATIONS : "triggers"
     REPORTS ||--o| COMMUNICATIONS : "linked to"
     COMMUNICATION_TEMPLATES ||--o{ COMMUNICATIONS : "defines"
 

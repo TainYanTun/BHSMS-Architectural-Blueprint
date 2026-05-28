@@ -13,13 +13,13 @@ The Bangla Hope SMS is designed as a **Manual Digital Ledger**.
 This module tracks the sponsorship relationships and the acknowledgment of individual donor contributions.
 
 ### Key Components
-*   **`sponsorships` (The Relationship):** Defines the active connection between a sponsor and a student.
-*   **`sponsorship_receipts` (Record of Support):** Manually entered records acknowledging that funds have arrived. Each receipt includes the payment method and reference number for tracking.
+*   **`sponsorships` (Relationship Registry):** Defines the connection between a sponsor and a student for status tracking and portal visibility.
+*   **`contributions` (Flexible Gift Log):** Manually entered records acknowledging that funds have arrived. These can be linked to a specific sponsorship agreement or recorded as direct one-time student gifts. Each record includes the payment method and reference number for tracking.
 
 ### Financial Logic
-1.  **Relationship Record:** Admin records the sponsorship link.
-2.  **Recording Support:** When a contribution is confirmed (via bank statement or check), staff manually "keys in" the record for the specific student supported.
-3.  **Recency Analysis:** The system monitors the date of the most recent receipt. If no support is recorded within **6 months**, the student is flagged as "Action Required" on the master registry.
+1.  **Registry Entry:** Admin records the sponsorship link for relationship management.
+2.  **Recording Gifts:** When a contribution is confirmed (via bank statement or check), staff manually "keys in" the record. This can fulfill a monthly commitment or be a flexible, one-time donation.
+3.  **Recency Analysis:** The system monitors the date of the most recent gift. If no support is recorded within **6 months**, the student is flagged as "Action Required" on the master registry.
 
 ---
 

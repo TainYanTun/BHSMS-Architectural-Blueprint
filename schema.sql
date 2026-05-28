@@ -196,20 +196,26 @@ CREATE TABLE sponsorships (
     CONSTRAINT chk_dates CHECK (end_date IS NULL OR end_date >= start_date)
 );
 
-CREATE TABLE sponsorship_receipts (
+CREATE TABLE contributions (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    sponsorship_id UUID NOT NULL REFERENCES sponsorships(id) ON DELETE CASCADE,
+    sponsor_id UUID NOT NULL REFERENCES sponsors(id) ON DELETE CASCADE,
+    student_id UUID REFERENCES students(id) ON DELETE SET NULL, -- Optional: Can be a general donation
+    sponsorship_id UUID REFERENCES sponsorships(id) ON DELETE SET NULL, -- Optional: Link to a specific agreement if it exists
+    
     amount NUMERIC(12, 2) NOT NULL CHECK (amount > 0),
     currency TEXT DEFAULT 'USD' CHECK (currency = 'USD'),
     received_date DATE DEFAULT CURRENT_DATE,
     payment_method TEXT CHECK (payment_method IN ('Check', 'Wire', 'Cash', 'Online')),
     reference_number TEXT,
-    period_month INT NOT NULL CHECK (period_month BETWEEN 1 AND 12),
-    period_year INT NOT NULL,
+    
+    -- Optional fields for when a gift is intended for a specific billing period
+    period_month INT CHECK (period_month BETWEEN 1 AND 12),
+    period_year INT,
+    
     notes TEXT,
     created_at TIMESTAMPTZ DEFAULT NOW(),
-    row_version INT DEFAULT 1,
-    UNIQUE(sponsorship_id, period_month, period_year)
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    row_version INT DEFAULT 1
 );
 
 -- ==========================================
@@ -356,7 +362,7 @@ CREATE TABLE communications (
     status TEXT NOT NULL DEFAULT 'Pending' CHECK (status IN ('Pending', 'Draft', 'In Review', 'Sent', 'Returned')),
     
     trigger_type TEXT CHECK (trigger_type IN ('Receipt', 'Calendar', 'Report', 'Manual')),
-    trigger_id UUID, -- Links to sponsorship_receipts.id or reports.id
+    trigger_id UUID, -- Links to contributions.id or reports.id
     
     message_body TEXT,      -- The final rendered/edited text
     message_metadata JSONB, -- Snapshot: {amount, student_grade, sponsor_address, etc.}
@@ -493,6 +499,8 @@ CREATE INDEX idx_student_names ON students USING gin (first_name gin_trgm_ops, l
 CREATE INDEX idx_sponsor_names ON sponsors USING gin (full_name gin_trgm_ops);
 CREATE INDEX idx_audit_details ON audit_logs USING gin (mutation_detail);
 CREATE INDEX idx_student_master_id ON students(master_id_number);
+CREATE INDEX idx_contribution_sponsor ON contributions(sponsor_id);
+CREATE INDEX idx_contribution_student ON contributions(student_id);
 
 CREATE TRIGGER trg_upd_programs BEFORE UPDATE ON programs FOR EACH ROW EXECUTE FUNCTION fn_update_timestamp();
 CREATE TRIGGER trg_upd_institutions BEFORE UPDATE ON institutions FOR EACH ROW EXECUTE FUNCTION fn_update_timestamp();
@@ -502,6 +510,7 @@ CREATE TRIGGER trg_upd_students BEFORE UPDATE ON students FOR EACH ROW EXECUTE F
 CREATE TRIGGER trg_upd_student_identifiers BEFORE UPDATE ON student_identifiers FOR EACH ROW EXECUTE FUNCTION fn_update_timestamp();
 CREATE TRIGGER trg_upd_sponsors BEFORE UPDATE ON sponsors FOR EACH ROW EXECUTE FUNCTION fn_update_timestamp();
 CREATE TRIGGER trg_upd_sponsorships BEFORE UPDATE ON sponsorships FOR EACH ROW EXECUTE FUNCTION fn_update_timestamp();
+CREATE TRIGGER trg_upd_contributions BEFORE UPDATE ON contributions FOR EACH ROW EXECUTE FUNCTION fn_update_timestamp();
 CREATE TRIGGER trg_upd_academic_records BEFORE UPDATE ON academic_records FOR EACH ROW EXECUTE FUNCTION fn_update_timestamp();
 CREATE TRIGGER trg_upd_attendance_records BEFORE UPDATE ON attendance_records FOR EACH ROW EXECUTE FUNCTION fn_update_timestamp();
 CREATE TRIGGER trg_upd_documents BEFORE UPDATE ON documents FOR EACH ROW EXECUTE FUNCTION fn_update_timestamp();
