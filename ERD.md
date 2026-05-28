@@ -1,25 +1,12 @@
 # Bangla Hope SMS - Overall ER Diagram
 
-Below is the comprehensive technical Entity Relationship Diagram (ERD) for the Bangla Hope Sponsorship Management System. This diagram includes all specialized tables for offline sync, data migration, and advanced communication tracking.
+Below is the comprehensive technical Entity Relationship Diagram (ERD) for the Bangla Hope Sponsorship Management System.
 
 ```mermaid
 erDiagram
     %% ==========================================
     %% REFERENCE & INFRASTRUCTURE
     %% ==========================================
-    SITES {
-        uuid id PK
-        text name
-        text code UK
-        text location_details
-        boolean is_remote_office
-        boolean is_active
-        timestamptz last_sync_at
-        timestamptz created_at
-        timestamptz updated_at
-        int row_version
-    }
-
     PROGRAMS {
         uuid id PK
         text name
@@ -30,11 +17,23 @@ erDiagram
         int row_version
     }
 
-    INSTITUTIONS {
+    SITES {
         uuid id PK
+        uuid program_id FK
         text name
         text type
         text location
+        timestamptz created_at
+        timestamptz updated_at
+        int row_version
+    }
+
+    TEACHERS {
+        uuid id PK
+        uuid site_id FK
+        text full_name
+        text contact_number
+        text email
         timestamptz created_at
         timestamptz updated_at
         int row_version
@@ -60,7 +59,6 @@ erDiagram
         text password_hash
         text full_name
         text role
-        uuid site_id FK
         text office_location
         boolean is_active
         timestamptz last_login
@@ -114,7 +112,6 @@ erDiagram
         timestamptz created_at
         timestamptz updated_at
         int row_version
-        timestamptz last_synced_at
     }
 
     STUDENT_IDENTIFIERS {
@@ -219,7 +216,7 @@ erDiagram
     ACADEMIC_RECORDS {
         uuid id PK
         uuid student_id FK
-        uuid institution_id FK
+        uuid site_id FK
         int year
         text grade_level
         text result_summary
@@ -297,13 +294,33 @@ erDiagram
         int row_version
     }
 
+    BACKUPS {
+        uuid id PK
+        text filename
+        text storage_path
+        bigint size_bytes
+        text status
+        timestamptz created_at
+        timestamptz updated_at
+        timestamptz completed_at
+    }
+
+    RECONCILIATIONS {
+        uuid id PK
+        uuid contribution_id FK
+        uuid allocation_payout_id FK
+        timestamptz reconciled_at
+        uuid reconciled_by FK
+        text notes
+    }
+
     %% ==========================================
     %% LOAN SYSTEM
     %% ==========================================
     LOANS {
         uuid id PK
         uuid student_id FK
-        uuid institution_id FK
+        uuid site_id FK
         text currency
         text status
         text agreement_url
@@ -373,52 +390,9 @@ erDiagram
         int row_version
     }
 
-    EMAIL_OUTBOX {
-        uuid id PK
-        uuid communication_id FK
-        text recipient_email
-        text subject
-        text body_html
-        text status
-        int retry_count
-        text last_error
-        timestamptz scheduled_at
-        timestamptz sent_at
-        timestamptz created_at
-    }
-
-    SMTP_LOGS {
-        uuid id PK
-        uuid outbox_id FK
-        text response_code
-        text response_message
-        timestamptz sent_at
-    }
-
-    SYSTEM_HEALTH_LOGS {
-        uuid id PK
-        text event_type
-        text status
-        text details
-        timestamptz created_at
-    }
-
-    SYNC_CONFLICTS {
-        uuid id PK
-        text table_name
-        uuid record_id
-        uuid conflicting_site_id FK
-        jsonb central_server_data
-        jsonb remote_data
-        text overlap_columns
-        text status
-        timestamptz created_at
-    }
-
     %% ==========================================
     %% RELATIONSHIPS
     %% ==========================================
-    SITES ||--o{ USERS : "hosts"
     USERS ||--o{ AUDIT_LOGS : "generates"
     USERS ||--o{ LOAN_REFUNDS : "records"
     USERS ||--o{ COMMUNICATION_TEMPLATES : "manages"
@@ -430,6 +404,9 @@ erDiagram
     
     PROGRAMS ||--o{ STUDENTS : "tracks current"
     PROGRAMS ||--o{ STUDENT_IDENTIFIERS : "categorizes"
+    PROGRAMS ||--o{ SITES : "manages"
+    
+    SITES ||--o{ TEACHERS : "employs"
     
     STUDENTS ||--o{ STUDENT_IDENTIFIERS : "possesses"
     STUDENTS ||--o{ ACADEMIC_RECORDS : "earns"
@@ -442,8 +419,8 @@ erDiagram
     STUDENTS ||--o{ COMMUNICATIONS : "subject of"
     STUDENTS ||--o{ DOCUMENTS : "linked to"
 
-    INSTITUTIONS ||--o{ ACADEMIC_RECORDS : "hosts"
-    INSTITUTIONS ||--o{ LOANS : "receives funds at"
+    SITES ||--o{ ACADEMIC_RECORDS : "hosts"
+    SITES ||--o{ LOANS : "receives funds at"
 
     SPONSORS ||--o{ SPONSORSHIPS : "funds"
     SPONSORS ||--o{ COMMUNICATIONS : "receives"
@@ -458,9 +435,9 @@ erDiagram
 
     FINANCIAL_ALLOCATIONS ||--o{ ALLOCATION_PAYOUTS : "payouts for"
 
-    COMMUNICATIONS ||--o{ EMAIL_OUTBOX : "triggers"
-    EMAIL_OUTBOX ||--o{ SMTP_LOGS : "generates"
+    CONTRIBUTIONS ||--o{ RECONCILIATIONS : "reconciled by"
+    ALLOCATION_PAYOUTS ||--o{ RECONCILIATIONS : "reconciled by"
+    USERS ||--o{ RECONCILIATIONS : "performs"
 
     LOANS ||--o{ LOAN_DISBURSEMENTS : "pays out"
     LOANS ||--o{ LOAN_REFUNDS : "recovers"
-```

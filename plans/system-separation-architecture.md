@@ -31,5 +31,11 @@ Both applications will communicate with the same **PostgreSQL database** through
 *   **Performance Optimization:** The internal system can be optimized for raw data processing speed, while the portal is optimized for media delivery (photos/videos).
 *   **Independent Updates:** Features for sponsors (like new payment methods) can be updated without interrupting critical internal staff workflows.
 
----
-*Created: 2026-05-27 | Part of the Bangla Hope SMS Technical Blueprint*
+## 5. Offline Resilience Strategy
+
+To handle the requirement for "Offline remote operation" within our centralized architecture, the **Staff Operations System** will be implemented as a **Progressive Web App (PWA)**:
+
+*   **Client-Side Resilience:** Data entry actions during intermittent network connectivity will be queued locally in the browser (using `IndexedDB` or `localStorage`).
+*   **Automatic Synchronization:** Once network connectivity is restored, the application will automatically attempt to synchronize queued operations with the central server.
+*   **No Site-Level Synchronization:** We have explicitly rejected site-level "heartbeat" or machine state tracking, as all data persistence is handled via the central server's transaction rules, ensuring simplicity and maintainability.
+

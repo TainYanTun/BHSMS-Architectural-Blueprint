@@ -14,7 +14,7 @@ CREATE OR REPLACE FUNCTION fn_update_timestamp()
 RETURNS TRIGGER AS $$
 BEGIN
     NEW.updated_at = NOW();
-    NEW.row_version = NEW.row_version + 1; -- Auto-increment version for offline sync
+    NEW.row_version = NEW.row_version + 1; -- Auto-increment version
     RETURN NEW;   
 END;
 $$ LANGUAGE plpgsql;
@@ -22,19 +22,6 @@ $$ LANGUAGE plpgsql;
 -- ==========================================
 -- 1. REFERENCE TABLES
 -- ==========================================
-CREATE TABLE sites (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    name TEXT NOT NULL,
-    code TEXT UNIQUE NOT NULL, -- e.g., 'HILI_MAIN', 'VILLAGE_01'
-    location_details TEXT,
-    is_remote_office BOOLEAN DEFAULT FALSE,
-    is_active BOOLEAN DEFAULT TRUE,
-    last_sync_at TIMESTAMPTZ,
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW(),
-    row_version INT DEFAULT 1
-);
-
 CREATE TABLE programs (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     name TEXT NOT NULL,
@@ -45,8 +32,9 @@ CREATE TABLE programs (
     row_version INT DEFAULT 1
 );
 
-CREATE TABLE institutions (
+CREATE TABLE sites (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    program_id UUID REFERENCES programs(id) ON DELETE SET NULL,
     name TEXT NOT NULL,
     type TEXT,
     location TEXT,
@@ -55,9 +43,17 @@ CREATE TABLE institutions (
     row_version INT DEFAULT 1
 );
 
--- ==========================================
--- 2. USER MANAGEMENT & RBAC
--- ==========================================
+CREATE TABLE teachers (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    site_id UUID REFERENCES sites(id) ON DELETE SET NULL,
+    full_name TEXT NOT NULL,
+    contact_number TEXT,
+    email TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    row_version INT DEFAULT 1
+);
+
 CREATE TABLE permissions (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     code TEXT UNIQUE NOT NULL, -- e.g., 'STUDENT_CREATE', 'FINANCE_APPROVE'
@@ -75,8 +71,7 @@ CREATE TABLE users (
     password_hash TEXT NOT NULL,
     full_name TEXT NOT NULL,
     role TEXT NOT NULL CHECK (role IN ('Admin', 'Supervisor', 'Coordinator', 'Secretary','Sponsor')),
-    site_id UUID REFERENCES sites(id), -- Link to physical location/office
-    office_location TEXT, -- Denormalized or specific room/desk info
+    office_location TEXT, -- Specific room/desk info
     is_active BOOLEAN DEFAULT TRUE,
     last_login TIMESTAMPTZ,
     deleted_at TIMESTAMPTZ, -- Soft delete support
@@ -120,8 +115,7 @@ CREATE TABLE students (
     deleted_at TIMESTAMPTZ,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW(),
-    row_version INT DEFAULT 1,
-    last_synced_at TIMESTAMPTZ -- For offline remote operation tracking
+    row_version INT DEFAULT 1
 );
 
 -- Master ID Generation Logic
@@ -224,7 +218,7 @@ CREATE TABLE contributions (
 CREATE TABLE academic_records (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     student_id UUID NOT NULL REFERENCES students(id) ON DELETE CASCADE,
-    institution_id UUID REFERENCES institutions(id),
+    site_id UUID REFERENCES sites(id),
     year INT NOT NULL CHECK (year > 1900),
     grade_level TEXT,
     result_summary TEXT,
@@ -251,6 +245,7 @@ CREATE TABLE documents (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     student_id UUID REFERENCES students(id) ON DELETE CASCADE,
     sponsor_id UUID REFERENCES sponsors(id) ON DELETE CASCADE,
+    CONSTRAINT chk_document_owner CHECK (student_id IS NOT NULL OR sponsor_id IS NOT NULL),
     name TEXT NOT NULL,
     type TEXT NOT NULL, -- e.g., 'Birth Certificate', 'Agreement', 'ID Scan'
     file_url TEXT NOT NULL,
@@ -374,60 +369,13 @@ CREATE TABLE communications (
     row_version INT DEFAULT 1
 );
 
--- Email Queue for Delivery (Proposal 3.6.1)
-CREATE TABLE email_outbox (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    communication_id UUID REFERENCES communications(id) ON DELETE SET NULL,
-    recipient_email TEXT NOT NULL,
-    subject TEXT NOT NULL,
-    body_html TEXT NOT NULL,
-    status TEXT DEFAULT 'Pending' CHECK (status IN ('Pending', 'Processing', 'Sent', 'Failed')),
-    retry_count INT DEFAULT 0,
-    last_error TEXT,
-    scheduled_at TIMESTAMPTZ DEFAULT NOW(),
-    sent_at TIMESTAMPTZ,
-    created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
-CREATE TABLE smtp_logs (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    outbox_id UUID REFERENCES email_outbox(id) ON DELETE CASCADE,
-    response_code TEXT,
-    response_message TEXT,
-    sent_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- System Health & Backup Logs (Proposal 3.6.1)
-CREATE TABLE system_health_logs (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    event_type TEXT NOT NULL, -- e.g., 'Backup', 'Sync', 'DB_Vacuum'
-    status TEXT NOT NULL, -- e.g., 'Success', 'Failure'
-    details TEXT,
-    created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- Sync Conflict Queue for Manual Resolution (Offline Remote Operation)
-CREATE TABLE sync_conflicts (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    table_name TEXT NOT NULL,
-    record_id UUID NOT NULL,
-    conflicting_site_id UUID REFERENCES sites(id),
-    central_server_data JSONB NOT NULL, -- Current state on the HQ on-premise server
-    remote_data JSONB NOT NULL, -- Conflicting state from the field/site
-    overlap_columns TEXT[], -- Specific fields that clash
-    resolved_by UUID REFERENCES users(id),
-    resolved_at TIMESTAMPTZ,
-    status TEXT DEFAULT 'Pending' CHECK (status IN ('Pending', 'Resolved', 'Ignored')),
-    created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
 -- ==========================================
 -- 6. LOAN SYSTEM (Higher Education)
 -- ==========================================
 CREATE TABLE loans (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     student_id UUID NOT NULL REFERENCES students(id) ON DELETE CASCADE,
-    institution_id UUID REFERENCES institutions(id),
+    site_id UUID REFERENCES sites(id),
     currency TEXT DEFAULT 'USD' CHECK (currency = 'USD'),
     status TEXT DEFAULT 'Studying' CHECK (status IN ('Studying', 'Refunding', 'Complete', 'Expired')),
     agreement_url TEXT,
@@ -461,7 +409,30 @@ CREATE TABLE loan_refunds (
 );
 
 -- ==========================================
--- 7. AUDIT & LOGGING
+-- 7. BACKUP & FINANCIAL RECONCILIATION
+-- ==========================================
+CREATE TABLE backups (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    filename TEXT NOT NULL,
+    storage_path TEXT NOT NULL,
+    size_bytes BIGINT,
+    status TEXT NOT NULL DEFAULT 'Started' CHECK (status IN ('Started', 'Completed', 'Failed')),
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    completed_at TIMESTAMPTZ
+);
+
+CREATE TABLE reconciliations (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    contribution_id UUID NOT NULL REFERENCES contributions(id) ON DELETE CASCADE,
+    allocation_payout_id UUID NOT NULL REFERENCES allocation_payouts(id) ON DELETE CASCADE,
+    reconciled_at TIMESTAMPTZ DEFAULT NOW(),
+    reconciled_by UUID REFERENCES users(id),
+    notes TEXT
+);
+
+-- ==========================================
+-- 8. AUDIT & LOGGING
 -- ==========================================
 CREATE TABLE audit_logs (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -503,7 +474,6 @@ CREATE INDEX idx_contribution_sponsor ON contributions(sponsor_id);
 CREATE INDEX idx_contribution_student ON contributions(student_id);
 
 CREATE TRIGGER trg_upd_programs BEFORE UPDATE ON programs FOR EACH ROW EXECUTE FUNCTION fn_update_timestamp();
-CREATE TRIGGER trg_upd_institutions BEFORE UPDATE ON institutions FOR EACH ROW EXECUTE FUNCTION fn_update_timestamp();
 CREATE TRIGGER trg_upd_sites BEFORE UPDATE ON sites FOR EACH ROW EXECUTE FUNCTION fn_update_timestamp();
 CREATE TRIGGER trg_upd_users BEFORE UPDATE ON users FOR EACH ROW EXECUTE FUNCTION fn_update_timestamp();
 CREATE TRIGGER trg_upd_students BEFORE UPDATE ON students FOR EACH ROW EXECUTE FUNCTION fn_update_timestamp();
@@ -523,5 +493,6 @@ CREATE TRIGGER trg_upd_communications BEFORE UPDATE ON communications FOR EACH R
 CREATE TRIGGER trg_upd_loans BEFORE UPDATE ON loans FOR EACH ROW EXECUTE FUNCTION fn_update_timestamp();
 CREATE TRIGGER trg_upd_loan_disbursements BEFORE UPDATE ON loan_disbursements FOR EACH ROW EXECUTE FUNCTION fn_update_timestamp();
 CREATE TRIGGER trg_upd_loan_refunds BEFORE UPDATE ON loan_refunds FOR EACH ROW EXECUTE FUNCTION fn_update_timestamp();
+CREATE TRIGGER trg_upd_backups BEFORE UPDATE ON backups FOR EACH ROW EXECUTE FUNCTION fn_update_timestamp();
+CREATE TRIGGER trg_upd_teachers BEFORE UPDATE ON teachers FOR EACH ROW EXECUTE FUNCTION fn_update_timestamp();
 CREATE TRIGGER trg_upd_permissions BEFORE UPDATE ON permissions FOR EACH ROW EXECUTE FUNCTION fn_update_timestamp();
-
