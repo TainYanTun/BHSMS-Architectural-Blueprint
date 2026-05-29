@@ -19,6 +19,9 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- Native sequence for student master IDs to prevent race conditions
+CREATE SEQUENCE student_master_id_seq START WITH 1;
+
 -- ==========================================
 -- 1. REFERENCE TABLES
 -- ==========================================
@@ -61,7 +64,8 @@ CREATE TABLE permissions (
     module TEXT NOT NULL,
     description TEXT,
     created_at TIMESTAMPTZ DEFAULT NOW(),
-    row_version INT DEFAULT 1
+    updated_at TIMESTAMPTZ DEFAULT NOW(), -- Fix: Added for trigger support
+    row_version INT DEFAULT 1 -- Fix: Added for trigger support
 );
 
 CREATE TABLE users (
@@ -78,7 +82,7 @@ CREATE TABLE users (
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW(),
     row_version INT DEFAULT 1,
-    CONSTRAINT chk_user_email_format CHECK (email ~* '^[A-Za-z0-9._%-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,4}$')
+    CONSTRAINT chk_user_email_format CHECK (email LIKE '%@%.%') -- Fix: More inclusive regex
 );
 
 CREATE TABLE role_permissions (
@@ -105,11 +109,13 @@ CREATE TABLE students (
     
     father_name TEXT,
     mother_name TEXT,
-    staff_parent_id UUID REFERENCES users(id), -- For Employee Worker Children Program
+    staff_parent_id UUID REFERENCES users(id) ON DELETE SET NULL, -- Fix: Handle user deletion
     siblings_count INT DEFAULT 0 CHECK (siblings_count >= 0),
     contact_number TEXT CHECK (contact_number IS NULL OR length(contact_number) >= 7),
-    situation_overview TEXT,
-    photo_url TEXT,
+    
+    -- Exit / Archive Tracking
+    status_change_reason TEXT, -- e.g., 'Returned to family', 'Ineligible due to age'
+    exit_destination TEXT,     -- e.g., 'Local Village', 'Govt Training Center'
     
     current_program_id UUID REFERENCES programs(id),
     deleted_at TIMESTAMPTZ,
@@ -144,21 +150,15 @@ CREATE TABLE enrollments (
     row_version INT DEFAULT 1
 );
 
--- Master ID Generation Logic
+-- Master ID Generation Logic (Improved with Sequence)
 CREATE OR REPLACE FUNCTION generate_student_master_id()
 RETURNS TRIGGER AS $$
 DECLARE
     year_prefix BIGINT;
-    next_seq INT;
 BEGIN
     year_prefix := EXTRACT(YEAR FROM CURRENT_DATE);
     IF NEW.master_id_number IS NULL THEN
-        SELECT COALESCE(MAX(master_id_number % 100000), 0) + 1 
-        INTO next_seq 
-        FROM students 
-        WHERE master_id_number / 100000 = year_prefix;
-        
-        NEW.master_id_number := (year_prefix * 100000) + next_seq;
+        NEW.master_id_number := (year_prefix * 100000) + nextval('student_master_id_seq');
     END IF;
     RETURN NEW;
 END;
@@ -167,6 +167,42 @@ $$ LANGUAGE plpgsql;
 CREATE TRIGGER trg_assign_student_id
 BEFORE INSERT ON students
 FOR EACH ROW EXECUTE FUNCTION generate_student_master_id();
+
+CREATE TABLE student_intake_details (
+    student_id UUID PRIMARY KEY REFERENCES students(id) ON DELETE CASCADE,
+    admission_weight_kg NUMERIC(5,2),
+    health_at_admission TEXT,
+    is_immunized BOOLEAN DEFAULT FALSE,
+    referral_narrative TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    row_version INT DEFAULT 1
+);
+
+CREATE TABLE student_references (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    student_id UUID NOT NULL REFERENCES students(id) ON DELETE CASCADE,
+    full_name TEXT NOT NULL,
+    relationship TEXT, -- e.g., 'Village Leader', 'Pastor'
+    contact_info TEXT,
+    notes TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    row_version INT DEFAULT 1
+);
+
+CREATE TABLE program_transitions (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    student_id UUID NOT NULL REFERENCES students(id) ON DELETE CASCADE,
+    from_program_id UUID REFERENCES programs(id) ON DELETE SET NULL,
+    to_program_id UUID REFERENCES programs(id) ON DELETE SET NULL,
+    transition_date DATE DEFAULT CURRENT_DATE,
+    reason TEXT,
+    recorded_by UUID REFERENCES users(id) ON DELETE SET NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    row_version INT DEFAULT 1
+);
 
 CREATE TABLE student_identifiers (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -196,11 +232,12 @@ CREATE TABLE invitations (
 CREATE TABLE sponsors (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     sponsor_id_code TEXT UNIQUE NOT NULL,
-    user_id UUID REFERENCES users(id),
+    user_id UUID REFERENCES users(id) ON DELETE SET NULL, -- Fix: Handle user deletion
     full_name TEXT NOT NULL,
     email TEXT UNIQUE,
     phone TEXT,
     address_line1 TEXT,
+    address_line2 TEXT, -- Fix: Added for completeness
     city TEXT,
     postal_code TEXT,
     country TEXT DEFAULT 'USA',
@@ -211,7 +248,7 @@ CREATE TABLE sponsors (
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW(),
     row_version INT DEFAULT 1,
-    CONSTRAINT chk_sponsor_email_format CHECK (email IS NULL OR email ~* '^[A-Za-z0-9._%-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,4}$')
+    CONSTRAINT chk_sponsor_email_format CHECK (email IS NULL OR email LIKE '%@%.%') -- Fix: More inclusive regex
 );
 
 CREATE TABLE sponsorships (
@@ -228,15 +265,20 @@ CREATE TABLE sponsorships (
     CONSTRAINT chk_dates CHECK (end_date IS NULL OR end_date >= start_date)
 );
 
+-- Fix: Uniqueness constraint for active sponsorships
+CREATE UNIQUE INDEX idx_unique_active_sponsorship 
+ON sponsorships(student_id, sponsor_id) 
+WHERE (is_active = TRUE);
+
 CREATE TABLE contributions (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     sponsor_id UUID NOT NULL REFERENCES sponsors(id) ON DELETE CASCADE,
-    student_id UUID REFERENCES students(id) ON DELETE SET NULL, -- Optional: Can be a general donation
-    sponsorship_id UUID REFERENCES sponsorships(id) ON DELETE SET NULL, -- Optional: Link to a specific agreement if it exists
+    student_id UUID REFERENCES students(id) ON DELETE SET NULL, -- Used for one-off gifts
+    sponsorship_id UUID REFERENCES sponsorships(id) ON DELETE SET NULL, -- Used for recurring payments
     
     type TEXT NOT NULL DEFAULT 'Subsidy' CHECK (type IN ('Repayment', 'Subsidy', 'Grant', 'General')),
     amount NUMERIC(12, 2) NOT NULL CHECK (amount > 0),
-    currency TEXT DEFAULT 'USD' CHECK (currency = 'USD'),
+    currency CHAR(3) DEFAULT 'USD', -- Fix: Added currency context
     received_date DATE DEFAULT CURRENT_DATE,
     payment_method TEXT CHECK (payment_method IN ('Check', 'Wire', 'Cash', 'Online')),
     reference_number TEXT,
@@ -248,7 +290,12 @@ CREATE TABLE contributions (
     notes TEXT,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW(),
-    row_version INT DEFAULT 1
+    row_version INT DEFAULT 1,
+    CONSTRAINT chk_contribution_target CHECK (
+        (sponsorship_id IS NOT NULL AND student_id IS NULL) OR 
+        (sponsorship_id IS NULL AND student_id IS NOT NULL) OR
+        (sponsorship_id IS NULL AND student_id IS NULL) -- Truly general donation
+    )
 );
 
 -- ==========================================
@@ -289,7 +336,7 @@ CREATE TABLE documents (
     type TEXT NOT NULL, -- e.g., 'Birth Certificate', 'Agreement', 'ID Scan'
     file_url TEXT NOT NULL,
     metadata JSONB,
-    created_by UUID REFERENCES users(id),
+    created_by UUID REFERENCES users(id) ON DELETE SET NULL, -- Fix: Handle user deletion
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW(),
     row_version INT DEFAULT 1
@@ -299,13 +346,19 @@ CREATE TABLE reports (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     student_id UUID NOT NULL REFERENCES students(id) ON DELETE CASCADE,
     year INT NOT NULL CHECK (year > 1900),
-    type TEXT NOT NULL DEFAULT 'APR',
+    type TEXT NOT NULL DEFAULT 'APR' CHECK (type IN ('APR', 'Case History', 'Incident', 'Thank You', 'Birthday', 'Special Gift')),
     status TEXT NOT NULL DEFAULT 'Not Started' CHECK (status IN ('Not Started', 'Draft', 'Pending', 'Approved', 'Returned', 'Complete')),
+    
+    narrative TEXT, -- The core content of the document (Letter body or Case Narrative)
     supervisor_comments TEXT,
-    approved_by UUID REFERENCES users(id),
+    
+    -- Links for relational reports
+    contribution_id UUID REFERENCES contributions(id) ON DELETE SET NULL, 
+    
+    approved_by UUID REFERENCES users(id) ON DELETE SET NULL,
     approved_at TIMESTAMPTZ,
     completion_date DATE,
-    pdf_url TEXT,
+    pdf_url TEXT, -- The final generated document
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW(),
     row_version INT DEFAULT 1
@@ -328,9 +381,9 @@ CREATE TABLE allocation_payouts (
     student_id UUID NOT NULL REFERENCES students(id) ON DELETE CASCADE,
     type TEXT NOT NULL CHECK (type IN ('Subsidy', 'Pocket Money', 'Stipend', 'One-time Grant')),
     amount NUMERIC(12, 2) NOT NULL CHECK (amount > 0),
-    currency TEXT DEFAULT 'USD' CHECK (currency = 'USD'),
+    currency CHAR(3) DEFAULT 'USD', -- Fix: Added currency context
     payout_date DATE DEFAULT CURRENT_DATE,
-    recorded_by UUID REFERENCES users(id),
+    recorded_by UUID REFERENCES users(id) ON DELETE SET NULL, -- Fix: Handle user deletion
     status TEXT DEFAULT 'Paid' CHECK (status IN ('Paid', 'Pending', 'Cancelled')),
     notes TEXT,
     created_at TIMESTAMPTZ DEFAULT NOW(),
@@ -347,7 +400,7 @@ CREATE TABLE migration_metadata (
     migrated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Migration Staging for Bulk Imports (Proposal 3.6.1)
+-- Migration Staging for Bulk Imports
 CREATE TABLE migration_staging_students (
     id SERIAL PRIMARY KEY,
     raw_data JSONB NOT NULL,
@@ -381,7 +434,7 @@ CREATE TABLE communication_templates (
     body_content TEXT NOT NULL,
     is_active BOOLEAN DEFAULT TRUE,
     deleted_at TIMESTAMPTZ, -- Soft delete support
-    created_by UUID REFERENCES users(id),
+    created_by UUID REFERENCES users(id) ON DELETE SET NULL, -- Fix: Handle user deletion
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW(),
     row_version INT DEFAULT 1
@@ -391,18 +444,15 @@ CREATE TABLE communications (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     student_id UUID NOT NULL REFERENCES students(id) ON DELETE CASCADE,
     sponsor_id UUID NOT NULL REFERENCES sponsors(id) ON DELETE CASCADE,
-    template_id UUID REFERENCES communication_templates(id), -- Historical reference
-    category TEXT NOT NULL CHECK (category IN ('Financial', 'Milestone', 'Academic')),
-    type TEXT NOT NULL, -- e.g., 'Thank You', 'Birthday', 'APR'
-    status TEXT NOT NULL DEFAULT 'Pending' CHECK (status IN ('Pending', 'Draft', 'In Review', 'Sent', 'Returned')),
+    report_id UUID REFERENCES reports(id) ON DELETE SET NULL, -- The document being delivered
     
-    trigger_type TEXT CHECK (trigger_type IN ('Receipt', 'Calendar', 'Report', 'Manual')),
-    trigger_id UUID, -- Links to contributions.id or reports.id
+    template_id UUID REFERENCES communication_templates(id), -- Formatting logic
+    category TEXT NOT NULL CHECK (category IN ('Financial', 'Milestone', 'Academic', 'Manual')),
+    status TEXT NOT NULL DEFAULT 'Pending' CHECK (status IN ('Pending', 'Sent', 'Failed')),
     
-    message_body TEXT,      -- The final rendered/edited text
-    message_metadata JSONB, -- Snapshot: {amount, student_grade, sponsor_address, etc.}
+    -- Manual notifications that don't generate a PDF report
+    message_body TEXT, 
     
-    pdf_url TEXT,
     sent_at TIMESTAMPTZ,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW(),
@@ -416,7 +466,6 @@ CREATE TABLE loans (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     student_id UUID NOT NULL REFERENCES students(id) ON DELETE CASCADE,
     site_id UUID REFERENCES sites(id),
-    currency TEXT DEFAULT 'USD' CHECK (currency = 'USD'),
     status TEXT DEFAULT 'Studying' CHECK (status IN ('Studying', 'Refunding', 'Complete', 'Expired')),
     agreement_url TEXT,
     created_at TIMESTAMPTZ DEFAULT NOW(),
@@ -430,11 +479,16 @@ CREATE TABLE loan_transactions (
     transaction_date DATE DEFAULT CURRENT_DATE,
     amount NUMERIC(12, 2) NOT NULL, -- Positive for disbursement (Debt), Negative for repayment (Refund)
     type TEXT NOT NULL CHECK (type IN ('Disbursement', 'Repayment', 'Adjustment')),
-    recorded_by UUID REFERENCES users(id),
+    recorded_by UUID REFERENCES users(id) ON DELETE SET NULL, -- Fix: Handle user deletion
     notes TEXT,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW(),
-    row_version INT DEFAULT 1
+    row_version INT DEFAULT 1,
+    CONSTRAINT chk_loan_transaction_sign CHECK (
+        (type = 'Disbursement' AND amount > 0) OR
+        (type = 'Repayment' AND amount < 0) OR
+        (type = 'Adjustment') -- Can be positive or negative
+    )
 );
 
 -- ==========================================
@@ -447,25 +501,57 @@ CREATE TABLE backups (
     size_bytes BIGINT,
     status TEXT NOT NULL DEFAULT 'Started' CHECK (status IN ('Started', 'Completed', 'Failed')),
     created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW(),
-    completed_at TIMESTAMPTZ
+    updated_at TIMESTAMPTZ DEFAULT NOW(), -- Fix: Added for trigger support
+    completed_at TIMESTAMPTZ,
+    row_version INT DEFAULT 1 -- Fix: Added for trigger support
 );
 
 CREATE TABLE reconciliations (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     contribution_id UUID NOT NULL REFERENCES contributions(id) ON DELETE CASCADE,
     allocation_payout_id UUID NOT NULL REFERENCES allocation_payouts(id) ON DELETE CASCADE,
+    amount NUMERIC(12, 2) NOT NULL CHECK (amount > 0), -- Specifying how much of the gift was used
     reconciled_at TIMESTAMPTZ DEFAULT NOW(),
-    reconciled_by UUID REFERENCES users(id),
+    reconciled_by UUID REFERENCES users(id) ON DELETE SET NULL, -- Fix: Handle user deletion
     notes TEXT
 );
+
+-- Overdraft Prevention Logic
+CREATE OR REPLACE FUNCTION fn_enforce_contribution_limits()
+RETURNS TRIGGER AS $$
+DECLARE
+    v_total_allocated NUMERIC(12,2);
+    v_original_limit NUMERIC(12,2);
+BEGIN
+    -- Force incoming concurrent requests to wait in line sequentially
+    -- This prevents two simultaneous transactions from overallocating the same contribution
+    PERFORM 1 FROM contributions WHERE id = NEW.contribution_id FOR UPDATE;
+
+    SELECT amount INTO v_original_limit FROM contributions WHERE id = NEW.contribution_id;
+    
+    SELECT COALESCE(SUM(amount), 0) INTO v_total_allocated 
+    FROM reconciliations 
+    WHERE contribution_id = NEW.contribution_id 
+      AND (TG_OP = 'INSERT' OR id <> NEW.id);
+
+    IF (v_total_allocated + NEW.amount) > v_original_limit THEN
+        RAISE EXCEPTION 'Allocation Overdraft: Attempted to allocate %, but only % remains available.', 
+            NEW.amount, (v_original_limit - v_total_allocated);
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_limit_reconciliation_overdraft
+BEFORE INSERT OR UPDATE ON reconciliations
+FOR EACH ROW EXECUTE FUNCTION fn_enforce_contribution_limits();
 
 -- ==========================================
 -- 8. AUDIT & LOGGING
 -- ==========================================
 CREATE TABLE audit_logs (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id UUID REFERENCES users(id),
+    user_id UUID REFERENCES users(id) ON DELETE SET NULL, -- Fix: Handle user deletion
     module TEXT NOT NULL,
     action TEXT NOT NULL,
     target_id UUID,
@@ -478,18 +564,33 @@ CREATE TABLE audit_logs (
 -- ==========================================
 -- 8. VIEWS FOR REPORTING
 -- ==========================================
+CREATE VIEW view_contribution_balances AS
+SELECT 
+    c.id AS contribution_id,
+    c.student_id,
+    c.sponsor_id,
+    c.amount AS original_amount,
+    COALESCE(SUM(r.amount), 0) AS amount_used,
+    c.amount - COALESCE(SUM(r.amount), 0) AS remaining_balance
+FROM contributions c
+LEFT JOIN reconciliations r ON c.id = r.contribution_id
+GROUP BY c.id, c.student_id, c.sponsor_id, c.amount;
+
 CREATE VIEW view_loan_balances AS
 SELECT 
     l.id AS loan_id,
     l.student_id,
-    l.status,
     COALESCE(SUM(CASE WHEN t.amount > 0 THEN t.amount ELSE 0 END), 0) AS total_disbursed,
     COALESCE(SUM(CASE WHEN t.amount < 0 THEN ABS(t.amount) ELSE 0 END), 0) AS total_refunded,
     COALESCE(SUM(t.amount), 0) AS outstanding_balance,
-    l.currency
+    CASE 
+        WHEN COUNT(t.id) = 0 THEN 'Pending Disbursement'
+        WHEN COALESCE(SUM(t.amount), 0) <= 0 THEN 'Complete'
+        ELSE l.status
+    END AS effective_status
 FROM loans l
 LEFT JOIN loan_transactions t ON l.id = t.loan_id
-GROUP BY l.id, l.student_id, l.status, l.currency;
+GROUP BY l.id, l.student_id, l.status;
 
 -- ==========================================
 -- 9. INDEXES & TRIGGERS
@@ -501,11 +602,19 @@ CREATE INDEX idx_student_master_id ON students(master_id_number);
 CREATE INDEX idx_contribution_sponsor ON contributions(sponsor_id);
 CREATE INDEX idx_contribution_student ON contributions(student_id);
 
--- Performance Indexes (Added)
+-- Performance Indexes
 CREATE INDEX idx_sponsorships_student_id ON sponsorships(student_id);
 CREATE INDEX idx_sponsorships_sponsor_id ON sponsorships(sponsor_id);
 CREATE INDEX idx_academic_records_site_id ON academic_records(site_id);
 CREATE INDEX idx_loans_student_id ON loans(student_id);
+
+-- Fix: Additional Foreign Key Indexes for Reporting Performance
+CREATE INDEX idx_reconciliations_contribution_id ON reconciliations(contribution_id);
+CREATE INDEX idx_reconciliations_allocation_payout_id ON reconciliations(allocation_payout_id);
+CREATE INDEX idx_loan_transactions_loan_id ON loan_transactions(loan_id);
+CREATE INDEX idx_enrollments_student_id ON enrollments(student_id);
+CREATE INDEX idx_guardians_student_id ON guardians(student_id);
+CREATE INDEX idx_communications_student_sponsor ON communications(student_id, sponsor_id);
 
 CREATE TRIGGER trg_upd_programs BEFORE UPDATE ON programs FOR EACH ROW EXECUTE FUNCTION fn_update_timestamp();
 CREATE TRIGGER trg_upd_sites BEFORE UPDATE ON sites FOR EACH ROW EXECUTE FUNCTION fn_update_timestamp();
@@ -530,3 +639,6 @@ CREATE TRIGGER trg_upd_teachers BEFORE UPDATE ON teachers FOR EACH ROW EXECUTE F
 CREATE TRIGGER trg_upd_guardians BEFORE UPDATE ON guardians FOR EACH ROW EXECUTE FUNCTION fn_update_timestamp();
 CREATE TRIGGER trg_upd_invitations BEFORE UPDATE ON invitations FOR EACH ROW EXECUTE FUNCTION fn_update_timestamp();
 CREATE TRIGGER trg_upd_permissions BEFORE UPDATE ON permissions FOR EACH ROW EXECUTE FUNCTION fn_update_timestamp();
+CREATE TRIGGER trg_upd_student_intake_details BEFORE UPDATE ON student_intake_details FOR EACH ROW EXECUTE FUNCTION fn_update_timestamp();
+CREATE TRIGGER trg_upd_student_references BEFORE UPDATE ON student_references FOR EACH ROW EXECUTE FUNCTION fn_update_timestamp();
+CREATE TRIGGER trg_upd_program_transitions BEFORE UPDATE ON program_transitions FOR EACH ROW EXECUTE FUNCTION fn_update_timestamp();

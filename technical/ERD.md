@@ -1,11 +1,7 @@
-# Bangla Hope SMS - Overall ER Diagram
-
-Below is the comprehensive technical Entity Relationship Diagram (ERD) for the Bangla Hope Sponsorship Management System.
-
 ```mermaid
 erDiagram
     %% ==========================================
-    %% REFERENCE & INFRASTRUCTURE
+    %% 1. SYSTEM & SECURITY
     %% ==========================================
     PROGRAMS {
         uuid id PK
@@ -39,9 +35,6 @@ erDiagram
         int row_version
     }
 
-    %% ==========================================
-    %% USER & SECURITY
-    %% ==========================================
     PERMISSIONS {
         uuid id PK
         text code UK
@@ -49,6 +42,7 @@ erDiagram
         text module
         text description
         timestamptz created_at
+        timestamptz updated_at
         int row_version
     }
 
@@ -86,7 +80,7 @@ erDiagram
     }
 
     %% ==========================================
-    %% STUDENT CORE
+    %% 2. STUDENT CORE
     %% ==========================================
     STUDENTS {
         uuid id PK
@@ -99,15 +93,51 @@ erDiagram
         text religion
         date admission_date
         text status
+        text status_change_reason
+        text exit_destination
         text father_name
         text mother_name
         uuid staff_parent_id FK
         int siblings_count
         text contact_number
-        text situation_overview
-        text photo_url
         uuid current_program_id FK
         timestamptz deleted_at
+        timestamptz created_at
+        timestamptz updated_at
+        int row_version
+    }
+
+    STUDENT_INTAKE_DETAILS {
+        uuid student_id PK, FK
+        numeric admission_weight_kg
+        text health_at_admission
+        boolean is_immunized
+        text referral_narrative
+        timestamptz created_at
+        timestamptz updated_at
+        int row_version
+    }
+
+    STUDENT_REFERENCES {
+        uuid id PK
+        uuid student_id FK
+        text full_name
+        text relationship
+        text contact_info
+        text notes
+        timestamptz created_at
+        timestamptz updated_at
+        int row_version
+    }
+
+    PROGRAM_TRANSITIONS {
+        uuid id PK
+        uuid student_id FK
+        uuid from_program_id FK
+        uuid to_program_id FK
+        date transition_date
+        text reason
+        uuid recorded_by FK
         timestamptz created_at
         timestamptz updated_at
         int row_version
@@ -198,7 +228,7 @@ erDiagram
     }
 
     %% ==========================================
-    %% SPONSORSHIP SYSTEM
+    %% 3. SPONSORSHIP SYSTEM
     %% ==========================================
     INVITATIONS {
         uuid id PK
@@ -219,6 +249,7 @@ erDiagram
         text email UK
         text phone
         text address_line1
+        text address_line2
         text city
         text postal_code
         text country
@@ -251,7 +282,7 @@ erDiagram
         uuid sponsorship_id FK
         text type
         numeric amount
-        text currency
+        char currency
         date received_date
         text payment_method
         text reference_number
@@ -264,7 +295,7 @@ erDiagram
     }
 
     %% ==========================================
-    %% RECORDS & HISTORY
+    %% 4. RECORDS & HISTORY
     %% ==========================================
     ACADEMIC_RECORDS {
         uuid id PK
@@ -297,6 +328,9 @@ erDiagram
         int year
         text type
         text status
+        text narrative
+        text supervisor_comments
+        uuid contribution_id FK
         uuid approved_by FK
         timestamptz approved_at
         date completion_date
@@ -323,7 +357,7 @@ erDiagram
         uuid student_id FK
         text type
         numeric amount
-        text currency
+        char currency
         date payout_date
         uuid recorded_by FK
         text status
@@ -342,25 +376,26 @@ erDiagram
         timestamptz created_at
         timestamptz updated_at
         timestamptz completed_at
+        int row_version
     }
 
     RECONCILIATIONS {
         uuid id PK
         uuid contribution_id FK
         uuid allocation_payout_id FK
+        numeric amount
         timestamptz reconciled_at
         uuid reconciled_by FK
         text notes
     }
 
     %% ==========================================
-    %% LOAN SYSTEM
+    %% 5. LOAN SYSTEM
     %% ==========================================
     LOANS {
         uuid id PK
         uuid student_id FK
         uuid site_id FK
-        text currency
         text status
         text agreement_url
         timestamptz created_at
@@ -382,7 +417,7 @@ erDiagram
     }
 
     %% ==========================================
-    %% COMMUNICATIONS
+    %% 6. COMMUNICATIONS
     %% ==========================================
     COMMUNICATION_TEMPLATES {
         uuid id PK
@@ -403,15 +438,11 @@ erDiagram
         uuid id PK
         uuid student_id FK
         uuid sponsor_id FK
+        uuid report_id FK
         uuid template_id FK
         text category
-        text type
         text status
-        uuid trigger_id FK
-        text trigger_type
         text message_body
-        jsonb message_metadata
-        text pdf_url
         timestamptz sent_at
         timestamptz created_at
         timestamptz updated_at
@@ -427,12 +458,16 @@ erDiagram
     USERS ||--o{ DOCUMENTS : "uploads"
     USERS ||--o{ ALLOCATION_PAYOUTS : "records"
     USERS ||--o{ STUDENTS : "parent of (Staff Child)"
+    USERS ||--o{ PROGRAM_TRANSITIONS : "records"
+    USERS ||--o{ REPORTS : "approves"
 
     PERMISSIONS ||--o{ ROLE_PERMISSIONS : "assigned to"
     
     PROGRAMS ||--o{ STUDENTS : "tracks current"
     PROGRAMS ||--o{ STUDENT_IDENTIFIERS : "categorizes"
     PROGRAMS ||--o{ SITES : "manages"
+    PROGRAMS ||--o{ PROGRAM_TRANSITIONS : "source of"
+    PROGRAMS ||--o{ PROGRAM_TRANSITIONS : "target of"
     
     SITES ||--o{ TEACHERS : "employs"
     
@@ -441,13 +476,11 @@ erDiagram
     STUDENTS ||--o{ STUDENT_IDENTIFIERS : "possesses"
     STUDENTS ||--o{ ACADEMIC_RECORDS : "earns"
     STUDENTS ||--o{ ATTENDANCE_RECORDS : "tracks"
-    STUDENTS ||--o{ REPORTS : "generates"
-    STUDENTS ||--o{ STUDENT_HISTORY : "undergoes"
-    STUDENTS ||--o{ ALLOCATION_PAYOUTS : "receives"
-    STUDENTS ||--o{ SPONSORSHIPS : "benefits from"
-    STUDENTS ||--o{ LOANS : "holds"
-    STUDENTS ||--o{ COMMUNICATIONS : "subject of"
-    STUDENTS ||--o{ DOCUMENTS : "linked to"
+    STUDENTS ||--o{ REPORTS : "generates (APR, Case History, Incident)"
+    STUDENTS ||--o{ STUDENT_HISTORY : "undergoes (Milestones)"
+    STUDENTS ||--o| STUDENT_INTAKE_DETAILS : "has intake data"
+    STUDENTS ||--o{ STUDENT_REFERENCES : "referred by"
+    STUDENTS ||--o{ PROGRAM_TRANSITIONS : "undergoes"
 
     SITES ||--o{ ENROLLMENTS : "hosts"
     SITES ||--o{ ACADEMIC_RECORDS : "hosts"
@@ -462,7 +495,8 @@ erDiagram
     SPONSORS ||--o{ CONTRIBUTIONS : "makes"
     STUDENTS ||--o{ CONTRIBUTIONS : "receives"
     SPONSORSHIPS ||--o{ CONTRIBUTIONS : "fulfills (optional)"
-    CONTRIBUTIONS ||--o| COMMUNICATIONS : "triggers"
+    CONTRIBUTIONS ||--o| REPORTS : "triggers (Thank You)"
+    REPORTS ||--o| COMMUNICATIONS : "delivered via"
     REPORTS ||--o| COMMUNICATIONS : "linked to"
     COMMUNICATION_TEMPLATES ||--o{ COMMUNICATIONS : "defines"
 

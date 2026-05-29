@@ -57,7 +57,18 @@ This document tracks pending questions and strategic decisions that need to be f
 **Context:** Standardizing on USD simplifies the "Truthful Ledger" by removing exchange rate variables from the comparison.
 
 - **Status:** **FINALIZED.** The system now compares **USD Income** vs. **USD Support Value** directly.
-- **Decision:** A direct USD comparison is sufficient for the internal audit requirements.
+- Decision: A direct USD comparison is sufficient for the internal audit requirements.
 
 ---
-*Last Updated: 2026-05-27*
+
+## 8. Communication & Letter Workflow
+**Context:** The system generates student-to-sponsor documents including Thank You letters (financial triggers), Birthday greetings (milestones), and APRs.
+
+- **Question A (Frequency):** When a sponsor pays monthly (Subsidy), should the system trigger a unique "Thank You" task **every month** (12/year), or should these be **consolidated** into a quarterly or bi-annual update?
+- **Question B (Approval Tiers):** Should standard monthly "Thank You" notes require **Supervisor approval** before sending, or can they be sent immediately by the **Secretary** using a verified template? (Note: APRs and Case Histories always require approval).
+- **Question C (Format):** Should all communications (including simple birthday greetings) be generated as **Official PDF documents** with the child's photo and saved to their permanent record, or should some remain as **plain-text emails** only?
+- **Question D (Manual Notifications):** Does the office need to track non-report communications (e.g., "Your student is traveling for holiday" or "Payment method expiring") in the student's historical timeline?
+
+---
+*Last Updated: 2026-05-29*
+

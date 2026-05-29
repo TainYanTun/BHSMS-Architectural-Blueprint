@@ -9,10 +9,11 @@ This document visualizes the database structure, organized by logical functional
 | Domain | Primary Tables | Responsibility |
 | :--- | :--- | :--- |
 | **System & Auth** | `USERS`, `SITES`, `PERMISSIONS` | Global configuration, security, and offline sync metadata. |
-| **Student Core** | `STUDENTS`, `PROGRAMS`, `IDENTIFIERS` | The "Single Source of Truth" for child bio-data and history. |
-| **Education** | `ACADEMIC_RECORDS`, `ATTENDANCE` | Yearly progress tracking and school-specific metrics. |
-| **Sponsorship** | `SPONSORS`, `SPONSORSHIPS`, `COMMS` | Managing relationships and donor communication pipelines. |
-| **Financial** | `CONTRIBUTIONS`, `PAYOUTS`, `LOANS` | Tracking USD-only income (flexible gifts) vs. payout/loan expenditures. |
+| **Student Core** | `STUDENTS`, `PROGRAMS`, `INTAKE` | Bio-data and family background basics. |
+| **Education** | `REPORTS`, `ACADEMIC`, `ATTENDANCE` | Document Factory (APRs, Case Histories, Letters). |
+| **Sponsorship** | `SPONSORS`, `SPONSORSHIPS`, `COMMS` | Managing relationships and donor delivery log. |
+| **Financial** | `CONTRIBUTIONS`, `PAYOUTS`, `LOANS` | Tracking USD-only income vs. payout/loan expenditures. |
+| **Logistics** | `TRANSITIONS`, `REFERENCES` | Tracking student movement and referral sources. |
 | **Data Migration** | `MIGRATION_STAGING`, `METADATA` | High-integrity staging for legacy data import. |
 
 ---
@@ -46,6 +47,8 @@ erDiagram
         uuid id PK
         text code UK
         text module
+        timestamptz updated_at
+        int row_version
     }
 
     ROLE_PERMISSIONS {
@@ -66,13 +69,20 @@ erDiagram
     STUDENTS {
         uuid id PK
         bigint master_id_number UK
-        text legacy_id
         text first_name
         text last_name
+        text status
+        text status_change_reason
+        text exit_destination
         uuid current_program_id FK
         uuid staff_parent_id FK
-        timestamptz last_synced_at
         int row_version
+    }
+
+    STUDENT_INTAKE_DETAILS {
+        uuid student_id PK, FK
+        numeric admission_weight_kg
+        text health_at_admission
     }
 
     STUDENT_IDENTIFIERS {
@@ -89,10 +99,19 @@ erDiagram
         text code UK
     }
 
-    INSTITUTIONS {
+    PROGRAM_TRANSITIONS {
         uuid id PK
-        text name
-        text type
+        uuid student_id FK
+        uuid from_program_id FK
+        uuid to_program_id FK
+        date transition_date
+    }
+
+    STUDENT_REFERENCES {
+        uuid id PK
+        uuid student_id FK
+        text full_name
+        text relationship
     }
 
     DOCUMENTS {
@@ -109,7 +128,7 @@ erDiagram
     ACADEMIC_RECORDS {
         uuid id PK
         uuid student_id FK
-        uuid institution_id FK
+        uuid site_id FK
         int year
         numeric attendance_percentage
     }
@@ -119,7 +138,6 @@ erDiagram
         uuid student_id FK
         int year
         int days_present
-        int total_school_days
     }
 
     REPORTS {
@@ -127,6 +145,8 @@ erDiagram
         uuid student_id FK
         int year
         text status
+        text narrative
+        uuid contribution_id FK
         uuid approved_by FK
     }
 
@@ -145,6 +165,7 @@ erDiagram
         text sponsor_id_code UK
         uuid user_id FK
         text full_name
+        text address_line2
         text status
     }
 
@@ -166,6 +187,7 @@ erDiagram
         uuid id PK
         uuid student_id FK
         uuid sponsor_id FK
+        uuid report_id FK
         uuid template_id FK
         text status
     }
@@ -186,6 +208,7 @@ erDiagram
         uuid student_id FK
         uuid sponsorship_id FK
         numeric amount
+        char currency
         int period_month
         int period_year
     }
@@ -194,6 +217,7 @@ erDiagram
         uuid id PK
         uuid student_id FK
         numeric amount
+        char currency
         text status
     }
 
@@ -225,13 +249,17 @@ erDiagram
     STUDENTS ||--o{ STUDENT_IDENTIFIERS : "possesses"
     STUDENTS ||--o{ DOCUMENTS : "linked to"
     USERS ||--o{ STUDENTS : "parent of (Staff Child)"
+    STUDENTS ||--o| STUDENT_INTAKE_DETAILS : "has intake data"
+    STUDENTS ||--o{ STUDENT_REFERENCES : "referred by"
+    STUDENTS ||--o{ PROGRAM_TRANSITIONS : "undergoes"
+    PROGRAMS ||--o{ PROGRAM_TRANSITIONS : "source of"
+    PROGRAMS ||--o{ PROGRAM_TRANSITIONS : "target of"
 
     %% Educational Progress
     STUDENTS ||--o{ ACADEMIC_RECORDS : "earns"
     STUDENTS ||--o{ ATTENDANCE_RECORDS : "tracks"
-    STUDENTS ||--o{ REPORTS : "generates"
+    STUDENTS ||--o{ REPORTS : "generates (APRs, Letters, Histories)"
     STUDENTS ||--o{ STUDENT_HISTORY : "undergoes"
-    INSTITUTIONS ||--o{ ACADEMIC_RECORDS : "hosts"
 
     %% Sponsorship Lifecycle
     SPONSORS ||--o{ SPONSORSHIPS : "funds"
@@ -242,12 +270,14 @@ erDiagram
     SPONSORS ||--o{ COMMUNICATIONS : "receives"
     STUDENTS ||--o{ COMMUNICATIONS : "subject of"
     COMMUNICATION_TEMPLATES ||--o{ COMMUNICATIONS : "defines"
+    REPORTS ||--o| COMMUNICATIONS : "delivered via"
     COMMUNICATIONS ||--o{ EMAIL_OUTBOX : "triggers"
 
     %% Financial Ledger
     SPONSORS ||--o{ CONTRIBUTIONS : "makes"
     STUDENTS ||--o{ CONTRIBUTIONS : "receives"
     SPONSORSHIPS ||--o{ CONTRIBUTIONS : "fulfills (optional)"
+    CONTRIBUTIONS ||--o| REPORTS : "triggers (Thank You)"
     STUDENTS ||--o{ ALLOCATION_PAYOUTS : "receives"
     
     STUDENTS ||--o{ LOANS : "holds"
