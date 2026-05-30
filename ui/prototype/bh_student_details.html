@@ -69,7 +69,7 @@
     .content { padding: 32px; flex: 1; display: flex; flex-direction: column; gap: 32px; }
 
     /* TAB CONTAINERS - Added spacing */
-    #tab-general, #tab-history { display: flex; flex-direction: column; gap: 32px; }
+    #tab-general, #tab-history, #tab-finance, #tab-communication, #tab-documents { display: flex; flex-direction: column; gap: 32px; }
 
     /* HEADER - Wireframe Layout (Photo + Info) */
     .profile-header-wire { display: flex; gap: 24px; align-items: flex-start; margin-bottom: 8px; }
@@ -83,6 +83,8 @@
     .tag-active { background: #10b981; color: white; }
     .tag-program { background: var(--primary); color: white; }
     
+    .category-tag { font-size: 10px; font-weight: 700; text-transform: uppercase; padding: 2px 6px; border-radius: 4px; background: var(--surface-subtle); color: var(--text-muted); }
+
     .header-meta { font-size: 13px; color: var(--text-muted); margin-top: 16px; line-height: 1.5; }
     .header-meta strong { color: var(--text-main); }
     .header-meta span { text-decoration: underline; cursor: pointer; }
@@ -192,6 +194,7 @@
             <span class="status-tag tag-program">Program: LRC_Residential</span>
           </div>
           <div class="header-meta">
+            MASTER_ID: <strong>202600000124</strong><br>
             CURRENT_ID: <strong>#LRC-0124</strong><br>
             PREVIOUS_IDS: <span>#VLG-0344</span> (Village School Transitioned)
           </div>
@@ -201,9 +204,9 @@
       <!-- TABS NAVIGATION (New Line, Left Aligned) -->
       <div class="profile-tabs">
         <div class="tab-item active" data-tab="tab-general">General Profile</div>
-        <div class="tab-item" data-tab="tab-history">Journey & History</div>
-        <div class="tab-item" data-tab="tab-sponsorship">Sponsorship (USD)</div>
-        <div class="tab-item" data-tab="tab-support">Support & Audit (USD)</div>
+        <div class="tab-item" data-tab="tab-history">Academic & History</div>
+        <div class="tab-item" data-tab="tab-finance">Support & Sponsorship</div>
+        <div class="tab-item" data-tab="tab-communication">Sponsor Communication</div>
         <div class="tab-item" data-tab="tab-documents">Documents (APR)</div>
       </div>
 
@@ -244,7 +247,8 @@
           <div class="card">
             <span class="annotate-label">SEC_03: SPONSORSHIP_DATA</span>
             <div class="field-group"><div class="field-label">PRIMARY_SPONSOR</div><div class="field-value">James O'Neill (#SP-001)</div></div>
-            <div class="field-group"><div class="field-label">LAST_CONTRIBUTION</div><div class="field-value" style="color:var(--accent-teal);">2026-05-15</div></div>
+            <div class="field-group"><div class="field-label">SPONSOR_PREFERENCE</div><div class="field-value">Email Only</div></div>
+            <div class="field-group" style="margin-top: 8px;"><div class="field-label">LAST_CONTRIBUTION</div><div class="field-value" style="color:var(--accent-teal);">2026-05-15</div></div>
           </div>
           <div class="card">
             <span class="annotate-label">SEC_04: SPONSORSHIP_HEALTH</span>
@@ -264,7 +268,7 @@
 
             <div class="field-group" style="margin-top: 12px;">
               <div class="field-label">LATEST_COMMUNICATION</div>
-              <div class="field-value" style="font-size: 12px; font-weight: 500;">Birthday Letter (Sent: May 12, 2024)</div>
+              <div class="field-value" style="font-size: 12px; font-weight: 500;">Birthday Letter (Sent: May 12, 2024 via Email)</div>
             </div>
 
             <div style="margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border-soft);">
@@ -275,143 +279,36 @@
           </div>
         </div>
 
-        <div class="card">
-          <span class="annotate-label">SEC_06: CASE_HISTORY_NARRATIVE</span>
-          <div class="field-group">
-            <div class="field-label">SITUATION_OVERVIEW</div>
-            <div class="field-text">
-              Father deceased in 2022. Rina transitioned from Village School to LRC in 2024 to ensure continued education and residential support.
+        <div class="grid-2">
+          <div class="card">
+            <span class="annotate-label">SEC_15: HEALTH_&_INTAKE_INDICATORS</span>
+            <div class="field-row">
+              <div>
+                <div class="field-group"><div class="field-label">ADMISSION_WEIGHT</div><div class="field-value">18.5 kg</div></div>
+                <div class="field-group"><div class="field-label">IMMUNIZATION_STATUS</div>
+                  <div class="checklist">
+                    <li class="checklist-item"><div class="check-box checked"></div> Fully Immunized</li>
+                  </div>
+                </div>
+              </div>
+              <div>
+                <div class="field-group"><div class="field-label">HEALTH_AT_ADMISSION</div><div class="field-value">Good / Stable</div></div>
+              </div>
             </div>
           </div>
-        </div>
-
-        <!-- ACADEMIC RECORDS -->
-        <div class="card card-table">
-          <span class="annotate-label" style="padding: 16px 24px 8px;">SEC_05: ACADEMIC_RECORDS</span>
-          <table class="prog-table">
-            <thead><tr><th>YEAR</th><th>SCHOOL</th><th>GRADE</th><th>RESULT</th></tr></thead>
-            <tbody>
-              <tr><td>2023</td><td>Hili Village School</td><td>Class 1</td><td>82%</td></tr>
-              <tr><td>2024</td><td>LRC School</td><td>Class 2</td><td>78%</td></tr>
-            </tbody>
-          </table>
+          <div class="card">
+            <span class="annotate-label">SEC_06: CASE_HISTORY_NARRATIVE</span>
+            <div class="field-group">
+              <div class="field-label">SITUATION_OVERVIEW</div>
+              <div class="field-text">
+                Father deceased in 2022. Rina transitioned from Village School to LRC in 2024 to ensure continued education and residential support.
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
-      <!-- TAB CONTENT: SPONSORSHIP (USD) -->
-      <div id="tab-sponsorship" style="display:none;">
-        <div class="card">
-          <span class="annotate-label">SEC_03: ACTIVE_SPONSOR_RELATIONSHIP</span>
-          <div class="field-group"><div class="field-label">PRIMARY_SPONSOR</div><div class="field-value">James O'Neill (#SP-001)</div></div>
-          <div class="field-group"><div class="field-label">START_DATE</div><div class="field-value">2024-01-15</div></div>
-        </div>
-
-        <div class="card">
-          <span class="annotate-label">SEC_12: CONTRIBUTIONS_LEDGER (USD)</span>
-          <div style="display: flex; gap: 40px; margin-bottom: 20px;">
-            <div>
-              <div class="field-label">TOTAL_USD_RECEIVED (LIFETIME)</div>
-              <div style="font-size: 24px; font-weight: 700; color: var(--primary);">$1,450.00</div>
-            </div>
-            <div>
-              <div class="field-label">LAST_RECEIPT_DATE</div>
-              <div style="font-size: 24px; font-weight: 700; color: var(--accent-teal);">2024-05-15</div>
-            </div>
-          </div>
-          
-          <table class="prog-table">
-            <thead>
-              <tr>
-                <th>DATE</th>
-                <th>SPONSOR_NAME</th>
-                <th>AMOUNT</th>
-                <th>METHOD</th>
-                <th>REF_#</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>2024-05-15</td>
-                <td>James O'Neill</td>
-                <td><strong>$45.00</strong></td>
-                <td>Check</td>
-                <td>#1245</td>
-              </tr>
-              <tr>
-                <td>2024-04-12</td>
-                <td>James O'Neill</td>
-                <td><strong>$45.00</strong></td>
-                <td>Check</td>
-                <td>#1102</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- TAB CONTENT: SUPPORT & PAYOUTS (USD) -->
-      <div id="tab-support" style="display:none;">
-        <!-- POLICY SUMMARY -->
-        <div class="card" style="margin-bottom: 24px;">
-          <span class="annotate-label">SEC_10: SUPPORT_POLICY_SUMMARY</span>
-          <div style="display: flex; justify-content: space-between; align-items: center;">
-            <div>
-              <div class="field-label">MONTHLY_SUBSIDY (NON-REPAYABLE)</div>
-              <div class="field-value" style="font-size: 24px; color: var(--accent-teal);">$30.00 <span style="font-size: 14px; font-weight: 500; color: var(--text-muted);">/ Month</span></div>
-            </div>
-            <div style="text-align: right;">
-              <div class="field-label">POLICY_STATUS</div>
-              <div class="status-tag tag-active">ACTIVE_GRANT</div>
-            </div>
-          </div>
-          <div style="font-size: 12px; color: var(--text-muted); margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border-soft);">
-            Standard residential care grant covering: <strong>Food, Housing, Medical, and Education.</strong>
-          </div>
-        </div>
-
-        <!-- PAYOUT HISTORY -->
-        <div class="card card-table">
-          <span class="annotate-label" style="padding: 16px 24px 8px;">SEC_13: SUPPORT_PAYOUT_HISTORY (USD)</span>
-          <table class="prog-table">
-            <thead>
-              <tr>
-                <th>MONTH_YEAR</th>
-                <th>AMOUNT_USD</th>
-                <th>FUNDING_SOURCE</th>
-                <th>STATUS</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td><strong>MAY 2024</strong></td>
-                <td>$30.00</td>
-                <td>Sponsor (#SP-001)</td>
-                <td><span class="status-tag" style="background:#dcfce7; color:#16a34a; font-size:10px;">PAID</span></td>
-              </tr>
-              <tr>
-                <td><strong>JUN 2024</strong></td>
-                <td>$30.00</td>
-                <td>Sponsor (#SP-001)</td>
-                <td><span class="status-tag" style="background:#fef3c7; color:#d97706; font-size:10px;">PENDING</span></td>
-              </tr>
-              <tr>
-                <td><strong>APR 2024</strong></td>
-                <td>$30.00</td>
-                <td>Sponsor (#SP-001)</td>
-                <td><span class="status-tag" style="background:#dcfce7; color:#16a34a; font-size:10px;">PAID</span></td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <!-- LOAN SECTION -->
-        <div class="card" style="margin-top: 24px;">
-          <span class="annotate-label">SEC_11: HIGHER_ED_LOAN (REPAYABLE)</span>
-          <div style="padding: 10px 0; text-align: center; color: var(--text-light); font-style: italic;">
-            No active loan agreement for this student.
-          </div>
-        </div>
-      </div>
+      <!-- TAB CONTENT: ACADEMIC & HISTORY -->
       <div id="tab-history" style="display:none;">
         <div class="card">
           <span class="annotate-label">SEC_07: STUDENT_JOURNEY_TIMELINE</span>
@@ -442,12 +339,187 @@
             </div>
           </div>
         </div>
-        <div class="card" style="border: 2px dashed var(--border-strong); background: #fcfdfe;">
-          <span class="annotate-label">SEC_08: MASTER_SYSTEM_LINK</span>
-          <div class="field-group" style="padding: 10px;">
-            <div class="field-label">GLOBAL_MASTER_ID (UUID)</div>
-            <div class="field-value" style="font-family: monospace;">550e8400-e29b-41d4-a716-446655440000</div>
+
+        <!-- ACADEMIC RECORDS -->
+        <div class="card card-table">
+          <span class="annotate-label" style="padding: 16px 24px 8px;">SEC_05: ACADEMIC_RECORDS_BY_PROGRAM</span>
+          <table class="prog-table">
+            <thead>
+              <tr>
+                <th>YEAR</th>
+                <th>PROGRAM / LOCATION</th>
+                <th>GRADE</th>
+                <th>ATTENDANCE</th>
+                <th>RESULT_SUMMARY</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>2023</strong></td>
+                <td><span class="category-tag">VLG</span> Hili Village Day School</td>
+                <td>Class 1</td>
+                <td>94.2%</td>
+                <td>Promoted (82% Avg)</td>
+              </tr>
+              <tr>
+                <td><strong>2024</strong></td>
+                <td><span class="category-tag">LRC</span> LRC Residential Center</td>
+                <td>Class 2</td>
+                <td>98.5%</td>
+                <td>Term 1: Excellent</td>
+              </tr>
+              <tr>
+                <td><strong>2025</strong></td>
+                <td><span class="category-tag">BRD</span> Dinajpur Boarding School</td>
+                <td>Class 3</td>
+                <td>--</td>
+                <td><span style="color:var(--text-light); font-style:italic;">Enrollment Pending</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- TAB CONTENT: SUPPORT & SPONSORSHIP (USD) -->
+      <div id="tab-finance" style="display:none;">
+        
+        <!-- SUPPORT STATUS OVERVIEW -->
+        <div class="card" style="border-top: 4px solid var(--accent-teal);">
+          <span class="annotate-label">FIN_SEC_01: CURRENT_SUPPORT_SUMMARY</span>
+          <div class="grid-2">
+            <div>
+              <div class="field-label">PRIMARY_SPONSOR</div>
+              <div class="field-value">James O'Neill <span style="font-weight: 400; color: var(--text-muted);">(#SP-001)</span></div>
+              <div style="margin-top: 12px;">
+                <div class="field-label">LIFETIME_SUPPORT_RECEIVED</div>
+                <div style="font-size: 24px; font-weight: 800; color: var(--primary);">$1,450.00</div>
+              </div>
+            </div>
+            <div style="border-left: 1px solid var(--border-soft); padding-left: 24px;">
+              <div class="field-label">SUPPORT_RELIABILITY</div>
+              <div style="display: flex; align-items: center; gap: 8px; margin-top: 4px;">
+                <div style="flex: 1; height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden;">
+                  <div style="width: 92%; height: 100%; background: #10b981;"></div>
+                </div>
+                <span style="font-weight: 800; color: #10b981;">92%</span>
+              </div>
+              <p style="font-size: 11px; color: var(--text-muted); margin-top: 8px;">
+                Sponsor coverage for the last 12 months. Organization grants covered the remaining 8%.
+              </p>
+            </div>
           </div>
+        </div>
+
+        <!-- UNIFIED SUPPORT TIMELINE -->
+        <div class="card card-table">
+          <span class="annotate-label" style="padding: 16px 24px 8px;">FIN_SEC_02: MONTHLY_SUPPORT_TIMELINE</span>
+          <table class="prog-table">
+            <thead>
+              <tr>
+                <th>MONTH / YEAR</th>
+                <th>SUPPORT_ISSUED</th>
+                <th>COST (USD)</th>
+                <th>FUNDING_SOURCE</th>
+                <th>DISPATCH_STATUS</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>MAY 2026</strong></td>
+                <td><span class="category-tag">Residential Subsidy</span></td>
+                <td><strong>$30.00</strong></td>
+                <td>
+                  <span style="font-weight: 600;">Sponsor: James O'Neill</span><br>
+                  <span style="font-size: 10px; color: var(--text-muted);">Check #1245 (Rec: 2026-05-15)</span>
+                </td>
+                <td><span class="status-tag" style="background:#dcfce7; color:#16a34a; font-size:10px;">PAID</span></td>
+              </tr>
+              <tr>
+                <td><strong>MAY 2026</strong></td>
+                <td><span class="category-tag">Pocket Money</span></td>
+                <td><strong>$5.00</strong></td>
+                <td>
+                  <span style="font-weight: 600; color: var(--accent-pink);">Bangla Hope Grant</span><br>
+                  <span style="font-size: 10px; color: var(--text-muted);">Internal Organizational Funds</span>
+                </td>
+                <td><span class="status-tag" style="background:#dcfce7; color:#16a34a; font-size:10px;">PAID</span></td>
+              </tr>
+              <tr>
+                <td><strong>APR 2026</strong></td>
+                <td><span class="category-tag">Residential Subsidy</span></td>
+                <td><strong>$30.00</strong></td>
+                <td>
+                  <span style="font-weight: 600;">Sponsor: James O'Neill</span><br>
+                  <span style="font-size: 10px; color: var(--text-muted);">Online #STRIPE-990 (Rec: 2026-04-12)</span>
+                </td>
+                <td><span class="status-tag" style="background:#dcfce7; color:#16a34a; font-size:10px;">PAID</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- HIGHER ED SECTION -->
+        <div class="card" style="background: var(--surface-subtle); border: 1px dashed var(--border-strong);">
+          <span class="annotate-label">FIN_SEC_03: HIGHER_ED_LOAN_STATUS</span>
+          <div style="text-align: center; padding: 10px; color: var(--text-muted); font-style: italic; font-size: 12px;">
+            Student is not currently in the Higher Education Loan Program.
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB CONTENT: SPONSOR COMMUNICATION -->
+      <div id="tab-communication" style="display:none;">
+        <!-- PREFERENCES -->
+        <div class="card" style="border-left: 4px solid var(--accent-teal);">
+          <span class="annotate-label">COM_SEC_01: DELIVERY_PREFERENCES</span>
+          <div class="grid-2">
+            <div>
+              <div class="field-label">PREFERRED_CHANNEL</div>
+              <div class="field-value">Email Only</div>
+            </div>
+            <div>
+              <div class="field-label">ACTIVE_RECIPIENT_ADDRESS</div>
+              <div class="field-value">james.oneill@example.com</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- LOG -->
+        <div class="card card-table">
+          <span class="annotate-label" style="padding: 16px 24px 8px;">COM_SEC_02: SPONSOR_COMMUNICATION_LOG</span>
+          <table class="prog-table">
+            <thead>
+              <tr>
+                <th>DATE</th>
+                <th>CATEGORY</th>
+                <th>CHANNEL</th>
+                <th>SUBJECT / CONTENT</th>
+                <th>STATUS</th>
+                <th>ACTIONS</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>2024-05-12</strong></td>
+                <td><span class="category-tag">Milestone</span></td>
+                <td><span class="category-tag">Email</span></td>
+                <td>Birthday Greeting (7th Birthday)</td>
+                <td><span class="status-tag" style="background:#dcfce7; color:#16a34a; font-size:10px;">SENT</span></td>
+                <td><button class="btn-secondary" style="padding: 4px 8px; font-size: 10px;">View Email</button></td>
+              </tr>
+              <tr>
+                <td><strong>2024-04-15</strong></td>
+                <td><span class="category-tag">Financial</span></td>
+                <td><span class="category-tag">Email</span></td>
+                <td>Thank You Letter (#REC-9921)</td>
+                <td><span class="status-tag" style="background:#dcfce7; color:#16a34a; font-size:10px;">SENT</span></td>
+                <td><button class="btn-secondary" style="padding: 4px 8px; font-size: 10px;">View PDF</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div style="text-align: right;">
+          <a href="bh_communication_hub.html" style="font-size: 12px; color: var(--accent-teal); font-weight: 700; text-decoration: none;">Open Communication Hub →</a>
         </div>
       </div>
 
@@ -503,22 +575,33 @@
     const sections = {
       'tab-general': document.getElementById('tab-general'),
       'tab-history': document.getElementById('tab-history'),
-      'tab-sponsorship': document.getElementById('tab-sponsorship'),
-      'tab-support': document.getElementById('tab-support'),
+      'tab-finance': document.getElementById('tab-finance'),
+      'tab-communication': document.getElementById('tab-communication'),
       'tab-documents': document.getElementById('tab-documents')
     };
+
     tabs.forEach(tab => {
       tab.addEventListener('click', () => {
         const target = tab.getAttribute('data-tab');
         if (!target) return;
+
+        // Update active tab styling
         tabs.forEach(t => t.classList.remove('active'));
         tab.classList.add('active');
-        Object.values(sections).forEach(s => s.style.display = 'none');
+
+        // Hide all sections and show the target
+        Object.keys(sections).forEach(key => {
+          if (sections[key]) {
+            sections[key].style.display = 'none';
+          }
+        });
+
         if (sections[target]) {
-          sections[target].style.display = 'block';
+          sections[target].style.display = 'flex';
         }
       });
     });
   </script>
 </body>
+
 </html>

@@ -357,8 +357,10 @@ CREATE TABLE contributions (
 CREATE TABLE academic_records (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     student_id UUID NOT NULL REFERENCES students(id) ON DELETE RESTRICT,
-    orphanage_id UUID REFERENCES orphanages(id),
-    village_sector_id UUID REFERENCES village_sectors(id),
+    program_id UUID REFERENCES programs(id) ON DELETE SET NULL, -- Vertical context
+    orphanage_id UUID REFERENCES orphanages(id), -- Specific residential location
+    village_sector_id UUID REFERENCES village_sectors(id), -- Specific village school location
+    institution_id UUID REFERENCES educational_institutions(id), -- Higher Ed institution
     year INT NOT NULL CHECK (year > 1900),
     grade_level TEXT,
     result_summary TEXT,
@@ -498,14 +500,22 @@ CREATE TABLE communications (
     student_id UUID NOT NULL REFERENCES students(id) ON DELETE RESTRICT,
     sponsor_id UUID NOT NULL REFERENCES sponsors(id) ON DELETE RESTRICT,
     report_id UUID REFERENCES reports(id) ON DELETE SET NULL, -- The document being delivered
-    
+
+    -- Delivery Details
+    channel TEXT DEFAULT 'Email' CHECK (channel IN ('Email', 'Postal Mail', 'SMS')),
+    recipient_email TEXT, -- Snapshot of the email address used
+    subject TEXT, -- Snapshot of the subject line
+
     template_id UUID REFERENCES communication_templates(id), -- Formatting logic
     category TEXT NOT NULL CHECK (category IN ('Financial', 'Milestone', 'Academic', 'Manual')),
     status TEXT NOT NULL DEFAULT 'Pending' CHECK (status IN ('Pending', 'Sent', 'Failed')),
-    
-    -- Manual notifications that don't generate a PDF report
-    message_body TEXT, 
-    
+
+    -- Manual notifications or captured snapshot of the final body
+    message_body TEXT,
+
+    -- Technical Audit Trail
+    delivery_log JSONB, -- Stores SMTP responses, message IDs, or error details
+
     sent_at TIMESTAMPTZ,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW(),

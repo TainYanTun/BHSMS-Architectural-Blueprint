@@ -9,20 +9,23 @@ This document serves as the "Visual DNA" and single source of truth for the syst
 - **Aesthetic:** Clean "Data-First" humanitarian style. It prioritizes utility and structural clarity over decorative elements.
 - **Atmosphere:** Deep navy surfaces paired with crisp slate-white backgrounds. The interface should feel "instrument-like"—precise, reliable, and dense with information.
 
-## 2. Color Palette & Roles
+## 2. Color Palette & Roles (Theming)
 
-| Semantic Role | Hex Code | Purpose |
-| :--- | :--- | :--- |
-| `primary-navy` | `#1e3a4a` | Core branding, primary headers, and high-contrast accents. |
-| `sidebar-bg` | `#0a1f35` | Background for the persistent navigation sidebar. |
-| `sidebar-active` | `#1e293b` | Background for selected navigation nodes. |
-| `action-teal` | `#2B7A9E` | Primary call-to-action, icons, active tab underlines, and links. |
-| `signal-pink` | `#d17a8e` | Secondary accents, soft alerts, and distinct categorization tags. |
-| `success-green` | `#10b981` | Approval markers and positive state indicators. |
-| `bg-app` | `#f8fafc` | Global application background. |
-| `surface-white` | `#ffffff` | Primary content areas, cards, and topbar background. |
-| `surface-subtle`| `#f1f5f9` | Table headers, sub-sections, and hover highlights. |
-| `border-neutral` | `#e2e8f0` | Standard dividers and container borders. |
+The system uses semantic tokens to support Light and Dark modes seamlessly.
+
+| Semantic Token | Light Mode | Dark Mode | Primary Purpose |
+| :--- | :--- | :--- | :--- |
+| `primary-navy` | `#1e3a4a` | `#1e3a4a` | Core brand identity. |
+| `sidebar-bg` | `#0a1f35` | `#071120` | Navigation sidebar background. |
+| `action-teal` | `#2B7A9E` | `#38bdf8` | Primary CTA, links, and luminous accents. |
+| `signal-pink` | `#d17a8e` | `#f472b6` | Secondary accents and soft alerts. |
+| `success-green` | `#10b981` | `#10b981` | Success states and approvals. |
+| `bg-app` | `#f8fafc` | `#020617` | Global application background. |
+| `surface` | `#ffffff` | `#0f172a` | Main content cards and surfaces. |
+| `surface-subtle`| `#f1f5f9` | `#1e293b` | Table headers, hovers, and sub-surfaces. |
+| `border-neutral` | `#e2e8f0` | `#334155` | Dividers and container borders. |
+| `text-main` | `#0f172a` | `#f8fafc` | Primary readable text. |
+| `text-muted` | `#64748b` | `#94a3b8` | Secondary information and labels. |
 
 ## 3. Typography Rules
 
@@ -62,21 +65,34 @@ This document serves as the "Visual DNA" and single source of truth for the syst
 - **Tags/Pills:** Capsule-shaped with `20px` radius; uses light backgrounds with dark text (e.g., `tag-teal`).
 
 ### 4.4 Navigation
-- **Sidebar:** 252px width; nav items use 18px icons with a 12px gap.
+- **Sidebar (Collapsible Icon Dock):**
+    - **Expanded Width:** 252px.
+    - **Collapsed Width:** 68px (Icon-only "Dock" mode).
+    - **Logic:** Features a floating toggle button and workflow-based grouping. Icons are 18px with a 12px gap.
+    - **Scrolling:** The middle section (`sidebar-sections`) is independently scrollable with a slim, themed scrollbar to accommodate deep workflow hierarchies.
 - **Topbar:** 64px height; fixed-position breadcrumb path on the left.
 - **Tabs:** Underlined style with a 2px Teal bottom border for the active state.
+
+### 4.5 Loading States (Skeleton Loading)
+- **Visual Style:** Pulsing "Shimmer" animation.
+- **Color:** Base color `surface-subtle` (#f1f5f9) with a linear-gradient shimmer.
+- **Logic:** Skeleton shapes must match the exact geometry of the final component (e.g., circular for avatars, rectangular for card headers, multi-row for tables).
+- **Implementation:** Prefer CSS-only skeletons to minimize layout shift during data hydration.
 
 ## 5. Layout Principles
 - **Grid:** Based on an 8px/4px spacing system.
 - **Padding:** 32px standard content gutter; 12px-20px internal card padding.
-- **Containers:** Max-width for tables is generally `1fr`; sidebars are fixed at 310px.
+- **Containers:** Main content area transitions its margin dynamically (`252px` or `68px`) based on the sidebar state.
 - **Density:** High density is preferred over excessive whitespace.
 
 ## 6. Depth & Elevation
-- **Layer 0 (Base):** `bg-app` (`#f8fafc`).
-- **Layer 1 (Surface):** Cards and content areas with `0 1px 3px rgba(0,0,0,0.05)` shadow.
-- **Layer 2 (Sidebar):** High-contrast Dark Navy (`#0a1f35`) with 1px right border.
-- **Layer 3 (Overlay):** Topbar with 1px bottom border and subtle shadow.
+
+| Layer | Light Mode Logic | Dark Mode Logic |
+| :--- | :--- | :--- |
+| **Layer 0 (Base)** | `#f8fafc` | `#020617` |
+| **Layer 1 (Surface)** | Shadow: `0 1px 3px rgba(0,0,0,0.05)` | Border: `1px solid #334155` |
+| **Layer 2 (Sidebar)** | Right Border: `1px solid #e2e8f0` | Right Border: `1px solid #334155` |
+| **Layer 3 (Overlay)** | Shadow: `0 4px 6px -1px rgba(0,0,0,0.1)` | Subtle Glow: `0 0 15px rgba(56, 189, 248, 0.05)` |
 
 ## 7. Do's and Don'ts
 
@@ -85,6 +101,7 @@ This document serves as the "Visual DNA" and single source of truth for the syst
 - Keep **Lora** strictly for branding and primary headers.
 - Include **technical annotations** (`[SEC_XX]`) for every major UI block.
 - Maintain the **monospace schema path** in the topbar at all times.
+- Implement **Skeleton Loaders** for all async data containers to prevent layout shift.
 
 ### ❌ Don't
 - Never use heavy gradients or rounded corners exceeding 8px.
@@ -94,8 +111,8 @@ This document serves as the "Visual DNA" and single source of truth for the syst
 
 ## 8. Responsive Behavior
 - **Breakpoints:**
-    - `Desktop`: > 1024px (Full sidebar + Main).
-    - `Tablet`: 768px - 1024px (Collapsed sidebar icon-only).
+    - `Desktop`: > 1024px (Expanded sidebar by default; user-collapsible).
+    - `Tablet`: 768px - 1024px (Auto-collapsed "Icon Dock" mode).
     - `Mobile`: < 768px (Hidden sidebar with hamburger trigger).
 - **Stacking:** Cards collapse to full-width; form `field-rows` stack vertically on mobile.
 
@@ -104,6 +121,21 @@ This document serves as the "Visual DNA" and single source of truth for the syst
 
 > "Generate a high-density dashboard card using the Lora/Nunito hierarchy. Ensure the header uses a subtle linear gradient and contains the [SEC_XX: MODULE_ID] technical label in Courier New."
 
-> "Implement a data table following the high-density spec: 10px bold upper-case headers on #f1f5f9 background, with 13px Nunito text for row data and a subtle hover highlight."
+> "Implement the Collapsible Icon Dock sidebar (252px/68px) with scrollable navigation sections. Ensure the profile footer and logo remain pinned."
 
-> "Structure the page with a 252px sidebar (#0a1f35) and a 64px topbar. Include the monospace schema path in the topbar and use a 32px content gutter."
+> "Structure the page using the workflow-oriented sidebar sections: Overview, Programs, Student Lifecycle, Sponsorship, Communications, Finance, and System."
+
+> "Implement a Skeleton Loader for this data table. Ensure the shimmer effect pulses against the #f1f5f9 background and matches the exact row heights and column widths of the final UI."
+
+## 10. Technical Implementation Standards (React)
+
+### 10.1 Iconography
+- **Library:** `lucide-react` (successor to Feather).
+- **Style:** Stroke-based, minimalist geometry.
+- **Stroke Weight:** 2px default; use 1.5px for high-density dashboard areas to maintain a "precise" feel.
+- **Size:** 18px for sidebar/navigation; 16px for inline table actions.
+
+### 10.2 State Management & UI
+- **Sidebar State:** Persist the `collapsed` boolean in `localStorage` or a global state (e.g., Zustand/Redux) to ensure the UI feels stable across sessions.
+- **Dynamic Margins:** Use a global CSS variable or a styled-component theme provider to manage the `main` content margin transition when the sidebar state changes.
+

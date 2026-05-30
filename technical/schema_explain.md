@@ -110,6 +110,9 @@ Tracks child development matrices, automated document compilation pipelines, and
 
 ### `academic_records` & `attendance_records`
 * **Purpose:** Evaluates yearly school metrics, performance indicators, grade evaluations, and strict ratios of classroom attendance measurements (`days_present` / `total_school_days`).
+* **Key Design:**
+    * **Program-Aware Tracking:** Explicitly links to `program_id` and structural identifiers (`orphanage_id`, `village_sector_id`, or `institution_id`). This ensures that as a child moves from a Village School to a Residential Center (or eventually to a University Loan), their academic history remains a continuous, searchable timeline bound to the specific programmatic context of that year.
+    * **Standardized Attendance:** Captures `attendance_percentage` as a normalized metric across all program types.
 
 ### `documents`
 * **Purpose:** Decentralized asset management table tracking secure physical verification files, birth certifications, and signed legal agreements stored via remote cloud storage links (`file_url`).
@@ -118,7 +121,12 @@ Tracks child development matrices, automated document compilation pipelines, and
 * **Purpose:** Manages the drafting, approval states, and completion workflows for case histories, special donor notes, and Annual Progress Reports (APRs) before they are rendered into flat PDF links for export.
 
 ### `communications`
-* **Purpose:** The delivery outbox pipeline. Tracks execution histories, dates, and delivery states (`Pending`, `Sent`, `Failed`) for messages and reports routed directly to donors.
+* **Purpose:** The delivery outbox and audit pipeline. Tracks execution histories, delivery states, and communication snapshots.
+* **Key Design:**
+    * **Multi-Channel Support:** Uses a `channel` field to manage Email, Postal Mail, and SMS routing.
+    * **Audit Snapshotting:** Captures `recipient_email` and `subject` at the moment of dispatch, ensuring the record remains accurate even if the sponsor's profile is updated later.
+    * **Laravel Integration:** Includes a `delivery_log` JSONB column specifically designed to store SMTP response headers, unique Message-IDs, and detailed failure exceptions for technical debugging.
+    * Tracks delivery states (`Pending`, `Sent`, `Failed`) for both automated reports and manual messages.
 
 ### `communication_templates`
 * **Purpose:** Central repository housing pre-formatted messaging templates, dynamic placeholder keys, and transactional formatting rules.

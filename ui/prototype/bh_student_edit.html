@@ -164,8 +164,30 @@
               <input type="date" class="input-field" value="2024-01-15" readonly style="background: var(--surface-subtle); border-style: dashed;">
             </div>
           </div>
+        </div>
+
+        <div class="card">
+          <span class="annotate-label">Zone_C: Medical_Intake_&_Narrative</span>
+          <div class="field-row">
+            <div class="field-group">
+              <label class="input-label">Admission Weight (KG)</label>
+              <input type="number" step="0.1" class="input-field" value="18.5">
+            </div>
+            <div class="field-group">
+              <label class="input-label">Immunization Status</label>
+              <select class="input-field">
+                <option selected>Fully Immunized</option>
+                <option>Partial / Pending</option>
+                <option>Not Immunized</option>
+              </select>
+            </div>
+          </div>
           <div class="field-group">
-            <label class="input-label">Case History Narrative</label>
+            <label class="input-label">Health Status at Admission</label>
+            <input type="text" class="input-field" value="Good / Stable">
+          </div>
+          <div class="field-group" style="margin-bottom: 0;">
+            <label class="input-label">Case History & Referral Narrative</label>
             <textarea class="input-field">Father deceased in 2022 due to a chronic illness. Mother, Mst. Fatema, is a day laborer but struggles to find consistent work...</textarea>
           </div>
         </div>

@@ -344,10 +344,14 @@ erDiagram
         uuid student_id FK
         uuid sponsor_id FK
         uuid report_id FK
+        text channel
+        text recipient_email
+        text subject
         uuid template_id FK
         text category
         text status
         text message_body
+        jsonb delivery_log
         timestamptz sent_at
         timestamptz created_at
         timestamptz updated_at
@@ -517,6 +521,8 @@ erDiagram
     VILLAGE_SECTORS ||--o{ ENROLLMENTS : "hosts"
     ORPHANAGES ||--o{ ACADEMIC_RECORDS : "hosts"
     VILLAGE_SECTORS ||--o{ ACADEMIC_RECORDS : "hosts"
+    PROGRAMS ||--o{ ACADEMIC_RECORDS : "tracks progress for"
+    EDUCATIONAL_INSTITUTIONS ||--o{ ACADEMIC_RECORDS : "hosts"
 
     SPONSORS ||--o{ SPONSORSHIPS : "funds"
     SPONSORS ||--o{ CONTRIBUTIONS : "makes"
