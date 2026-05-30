@@ -25,15 +25,26 @@ CREATE SEQUENCE student_master_id_seq START WITH 1;
 -- ==========================================
 -- 1. REFERENCE TABLES
 -- ==========================================
+-- ==========================================
+-- 1. REFERENCE TABLES
+-- ==========================================
 CREATE TABLE programs (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     name TEXT NOT NULL,
-    code TEXT UNIQUE NOT NULL,
+    code TEXT UNIQUE NOT NULL, -- 3-Letter Code
     description TEXT,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW(),
     row_version INT DEFAULT 1
 );
+
+INSERT INTO programs (name, code, description) VALUES
+('Orphanage Residential Program', 'LRC', 'Love Receiving Center'),
+('Boarding School Program', 'BRD', 'Boarding School Sponsorship'),
+('Village Schools Program', 'VLG', 'Community-based Day Schools'),
+('Higher Study Loan Program', 'LON', 'University & Higher Ed Loans'),
+('Employee Children Program', 'STF', 'Bangla Hope Employee Children');
+
 
 CREATE TABLE orphanages (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -130,7 +141,7 @@ CREATE TABLE students (
     dob DATE NOT NULL,
     religion TEXT CHECK (length(religion) <= 50),
     admission_date DATE DEFAULT CURRENT_DATE,
-    status TEXT NOT NULL DEFAULT 'Active' CHECK (status IN ('Active', 'Archived', 'Dropped', 'Graduated')),
+    status TEXT NOT NULL DEFAULT 'Active' CHECK (status IN ('Active', 'Dropped', 'Completed')),
     
     father_name TEXT CHECK (length(father_name) <= 200),
     mother_name TEXT CHECK (length(mother_name) <= 200),
@@ -413,7 +424,6 @@ CREATE TABLE student_history (
     event_date DATE DEFAULT CURRENT_DATE,
     title TEXT NOT NULL,
     description TEXT,
-    is_milestone BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW(),
     row_version INT DEFAULT 1

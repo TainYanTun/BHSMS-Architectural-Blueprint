@@ -407,7 +407,6 @@ erDiagram
         date event_date
         text title
         text description
-        boolean is_milestone
         timestamptz created_at
         timestamptz updated_at
         int row_version
