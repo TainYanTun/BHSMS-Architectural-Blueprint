@@ -3,6 +3,12 @@ erDiagram
     %% ==========================================
     %% 1. SYSTEM & SECURITY
     %% ==========================================
+    ROLES {
+        text name PK
+        text description
+        timestamptz created_at
+    }
+
     PROGRAMS {
         uuid id PK
         text name
@@ -13,11 +19,18 @@ erDiagram
         int row_version
     }
 
-    SITES {
+    ORPHANAGES {
         uuid id PK
-        uuid program_id FK
         text name
-        text type
+        text location
+        timestamptz created_at
+        timestamptz updated_at
+        int row_version
+    }
+
+    VILLAGE_SECTORS {
+        uuid id PK
+        text name
         text location
         timestamptz created_at
         timestamptz updated_at
@@ -26,7 +39,8 @@ erDiagram
 
     TEACHERS {
         uuid id PK
-        uuid site_id FK
+        uuid orphanage_id FK
+        uuid village_sector_id FK
         text full_name
         text contact_number
         text email
@@ -48,11 +62,11 @@ erDiagram
 
     USERS {
         uuid id PK
-        text username UK
-        text email UK
+        text username "UK (Active Only)"
+        text email "UK (Active Only)"
         text password_hash
         text full_name
-        text role
+        text role FK
         text office_location
         boolean is_active
         timestamptz last_login
@@ -63,7 +77,7 @@ erDiagram
     }
 
     ROLE_PERMISSIONS {
-        text role PK
+        text role PK, FK
         uuid permission_id PK, FK
     }
 
@@ -74,9 +88,21 @@ erDiagram
         text action
         uuid target_id
         text target_type
-        jsonb mutation_detail
+        jsonb mutation_detail "gin_path_ops"
         inet ip_address
         timestamptz created_at
+    }
+
+    BACKUPS {
+        uuid id PK
+        text filename
+        text storage_path
+        bigint size_bytes
+        text status
+        timestamptz created_at
+        timestamptz updated_at
+        timestamptz completed_at
+        int row_version
     }
 
     %% ==========================================
@@ -84,10 +110,10 @@ erDiagram
     %% ==========================================
     STUDENTS {
         uuid id PK
-        bigint master_id_number UK
+        bigint master_id_number "UK (Active Only)"
         text legacy_id
-        text first_name
-        text last_name
+        text first_name "LEN <= 100"
+        text last_name "LEN <= 100"
         text gender
         date dob
         text religion
@@ -159,7 +185,8 @@ erDiagram
     ENROLLMENTS {
         uuid id PK
         uuid student_id FK
-        uuid site_id FK
+        uuid orphanage_id FK
+        uuid village_sector_id FK
         uuid program_id FK
         date start_date
         date end_date
@@ -193,7 +220,10 @@ erDiagram
         timestamptz updated_at
         int row_version
     }
-    
+
+    %% ==========================================
+    %% 3. MIGRATION LAYER
+    %% ==========================================
     MIGRATION_METADATA {
         uuid id PK
         text table_name
@@ -204,7 +234,7 @@ erDiagram
     }
 
     MIGRATION_STAGING_STUDENTS {
-        int id PK
+        bigint id PK
         jsonb raw_data
         text validation_errors
         text status
@@ -212,7 +242,7 @@ erDiagram
     }
 
     MIGRATION_STAGING_SPONSORS {
-        int id PK
+        bigint id PK
         jsonb raw_data
         text validation_errors
         text status
@@ -220,7 +250,7 @@ erDiagram
     }
 
     MIGRATION_STAGING_CONTRIBUTIONS {
-        int id PK
+        bigint id PK
         jsonb raw_data
         text validation_errors
         text status
@@ -228,13 +258,13 @@ erDiagram
     }
 
     %% ==========================================
-    %% 3. SPONSORSHIP SYSTEM
+    %% 4. SPONSORSHIP SYSTEM
     %% ==========================================
     INVITATIONS {
         uuid id PK
         text email UK
         text token UK
-        text role
+        text role FK
         timestamptz expires_at
         timestamptz created_at
         timestamptz updated_at
@@ -243,10 +273,10 @@ erDiagram
 
     SPONSORS {
         uuid id PK
-        text sponsor_id_code UK
+        text sponsor_id_code "UK (Active Only)"
         uuid user_id FK
-        text full_name
-        text email UK
+        text full_name "LEN <= 200"
+        text email "UK (Active Only)"
         text phone
         text address_line1
         text address_line2
@@ -280,7 +310,7 @@ erDiagram
         uuid sponsor_id FK
         uuid student_id FK
         uuid sponsorship_id FK
-        text type
+        text type "IMMUTABLE"
         numeric amount
         char currency
         date received_date
@@ -294,13 +324,44 @@ erDiagram
         int row_version
     }
 
+    COMMUNICATION_TEMPLATES {
+        uuid id PK
+        text code UK
+        text name
+        text category
+        text subject_line
+        text body_content
+        boolean is_active
+        timestamptz deleted_at
+        uuid created_by FK
+        timestamptz created_at
+        timestamptz updated_at
+        int row_version
+    }
+
+    COMMUNICATIONS {
+        uuid id PK
+        uuid student_id FK
+        uuid sponsor_id FK
+        uuid report_id FK
+        uuid template_id FK
+        text category
+        text status
+        text message_body
+        timestamptz sent_at
+        timestamptz created_at
+        timestamptz updated_at
+        int row_version
+    }
+
     %% ==========================================
-    %% 4. RECORDS & HISTORY
+    %% 5. RECORDS & HISTORY
     %% ==========================================
     ACADEMIC_RECORDS {
         uuid id PK
         uuid student_id FK
-        uuid site_id FK
+        uuid orphanage_id FK
+        uuid village_sector_id FK
         int year
         text grade_level
         text result_summary
@@ -355,7 +416,7 @@ erDiagram
     ALLOCATION_PAYOUTS {
         uuid id PK
         uuid student_id FK
-        text type
+        text type "IMMUTABLE"
         numeric amount
         char currency
         date payout_date
@@ -364,18 +425,6 @@ erDiagram
         text notes
         timestamptz created_at
         timestamptz updated_at
-        int row_version
-    }
-
-    BACKUPS {
-        uuid id PK
-        text filename
-        text storage_path
-        bigint size_bytes
-        text status
-        timestamptz created_at
-        timestamptz updated_at
-        timestamptz completed_at
         int row_version
     }
 
@@ -390,12 +439,22 @@ erDiagram
     }
 
     %% ==========================================
-    %% 5. LOAN SYSTEM
+    %% 6. LOAN SYSTEM
     %% ==========================================
+    EDUCATIONAL_INSTITUTIONS {
+        uuid id PK
+        text name
+        text type
+        text location
+        timestamptz created_at
+        timestamptz updated_at
+        int row_version
+    }
+
     LOANS {
         uuid id PK
         uuid student_id FK
-        uuid site_id FK
+        uuid institution_id FK
         text status
         text agreement_url
         timestamptz created_at
@@ -407,7 +466,7 @@ erDiagram
         uuid id PK
         uuid loan_id FK
         date transaction_date
-        numeric amount
+        numeric amount "IMMUTABLE"
         text type
         uuid recorded_by FK
         text notes
@@ -417,91 +476,60 @@ erDiagram
     }
 
     %% ==========================================
-    %% 6. COMMUNICATIONS
+    %% RELATIONSHIPS (All child links use ON DELETE RESTRICT)
     %% ==========================================
-    COMMUNICATION_TEMPLATES {
-        uuid id PK
-        text code UK
-        text name
-        text category
-        text subject_line
-        text body_content
-        boolean is_active
-        timestamptz deleted_at
-        uuid created_by FK
-        timestamptz created_at
-        timestamptz updated_at
-        int row_version
-    }
-
-    COMMUNICATIONS {
-        uuid id PK
-        uuid student_id FK
-        uuid sponsor_id FK
-        uuid report_id FK
-        uuid template_id FK
-        text category
-        text status
-        text message_body
-        timestamptz sent_at
-        timestamptz created_at
-        timestamptz updated_at
-        int row_version
-    }
-
-    %% ==========================================
-    %% RELATIONSHIPS
-    %% ==========================================
+    ROLES ||--o{ USERS : "defines"
+    ROLES ||--o{ ROLE_PERMISSIONS : "assigned"
+    ROLES ||--o{ INVITATIONS : "targeted"
+    
     USERS ||--o{ AUDIT_LOGS : "generates"
     USERS ||--o{ LOAN_TRANSACTIONS : "records"
-    USERS ||--o{ COMMUNICATION_TEMPLATES : "manages"
     USERS ||--o{ DOCUMENTS : "uploads"
     USERS ||--o{ ALLOCATION_PAYOUTS : "records"
     USERS ||--o{ STUDENTS : "parent of (Staff Child)"
     USERS ||--o{ PROGRAM_TRANSITIONS : "records"
     USERS ||--o{ REPORTS : "approves"
+    USERS ||--o{ COMMUNICATION_TEMPLATES : "manages"
 
     PERMISSIONS ||--o{ ROLE_PERMISSIONS : "assigned to"
     
     PROGRAMS ||--o{ STUDENTS : "tracks current"
     PROGRAMS ||--o{ STUDENT_IDENTIFIERS : "categorizes"
-    PROGRAMS ||--o{ SITES : "manages"
     PROGRAMS ||--o{ PROGRAM_TRANSITIONS : "source of"
     PROGRAMS ||--o{ PROGRAM_TRANSITIONS : "target of"
     
-    SITES ||--o{ TEACHERS : "employs"
+    ORPHANAGES ||--o{ TEACHERS : "employs"
+    VILLAGE_SECTORS ||--o{ TEACHERS : "employs"
     
     STUDENTS ||--o{ GUARDIANS : "has"
     STUDENTS ||--o{ ENROLLMENTS : "enrolled in"
     STUDENTS ||--o{ STUDENT_IDENTIFIERS : "possesses"
     STUDENTS ||--o{ ACADEMIC_RECORDS : "earns"
     STUDENTS ||--o{ ATTENDANCE_RECORDS : "tracks"
-    STUDENTS ||--o{ REPORTS : "generates (APR, Case History, Incident)"
-    STUDENTS ||--o{ STUDENT_HISTORY : "undergoes (Milestones)"
+    STUDENTS ||--o{ REPORTS : "generates"
+    STUDENTS ||--o{ STUDENT_HISTORY : "undergoes"
     STUDENTS ||--o| STUDENT_INTAKE_DETAILS : "has intake data"
     STUDENTS ||--o{ STUDENT_REFERENCES : "referred by"
     STUDENTS ||--o{ PROGRAM_TRANSITIONS : "undergoes"
+    STUDENTS ||--o{ COMMUNICATIONS : "subject of"
+    STUDENTS ||--o{ LOANS : "holds"
 
-    SITES ||--o{ ENROLLMENTS : "hosts"
-    SITES ||--o{ ACADEMIC_RECORDS : "hosts"
-    SITES ||--o{ LOANS : "receives funds at"
-
-    PROGRAMS ||--o{ ENROLLMENTS : "manages"
+    ORPHANAGES ||--o{ ENROLLMENTS : "hosts"
+    VILLAGE_SECTORS ||--o{ ENROLLMENTS : "hosts"
+    ORPHANAGES ||--o{ ACADEMIC_RECORDS : "hosts"
+    VILLAGE_SECTORS ||--o{ ACADEMIC_RECORDS : "hosts"
 
     SPONSORS ||--o{ SPONSORSHIPS : "funds"
-    SPONSORS ||--o{ COMMUNICATIONS : "receives"
-    SPONSORS ||--o{ DOCUMENTS : "linked to"
-
     SPONSORS ||--o{ CONTRIBUTIONS : "makes"
-    STUDENTS ||--o{ CONTRIBUTIONS : "receives"
-    SPONSORSHIPS ||--o{ CONTRIBUTIONS : "fulfills (optional)"
-    CONTRIBUTIONS ||--o| REPORTS : "triggers (Thank You)"
-    REPORTS ||--o| COMMUNICATIONS : "delivered via"
-    REPORTS ||--o| COMMUNICATIONS : "linked to"
-    COMMUNICATION_TEMPLATES ||--o{ COMMUNICATIONS : "defines"
+    SPONSORS ||--o{ COMMUNICATIONS : "receives"
+    SPONSORSHIPS ||--o{ CONTRIBUTIONS : "fulfills"
 
     CONTRIBUTIONS ||--o{ RECONCILIATIONS : "reconciled by"
     ALLOCATION_PAYOUTS ||--o{ RECONCILIATIONS : "reconciled by"
-    USERS ||--o{ RECONCILIATIONS : "performs"
 
     LOANS ||--o{ LOAN_TRANSACTIONS : "tracks"
+    EDUCATIONAL_INSTITUTIONS ||--o{ LOANS : "hosts"
+    
+    COMMUNICATION_TEMPLATES ||--o{ COMMUNICATIONS : "defines"
+    REPORTS ||--o{ COMMUNICATIONS : "delivered via"
+```
