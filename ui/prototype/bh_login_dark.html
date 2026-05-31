@@ -4,36 +4,36 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Bangla Hope – Secure Auth Gateway</title>
+  <title>Bangla Hope – Secure Auth Gateway (Dark Mode)</title>
   <link
     href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Lora:ital,wght@0,400;0,600;1,400&display=swap"
     rel="stylesheet">
   <style>
     :root {
-      --primary: #1e3a4a;
-      --accent-teal: #2B7A9E; 
-      --accent-pink: #d17a8e;
-      --bg-app: #f8fafc;
-      --surface: #ffffff;
-      --surface-subtle: #f1f5f9;
-      --border: #e2e8f0;
-      --border-soft: #f1f5f9;
-      --border-strong: #cbd5e1;
-      --text-main: #0f172a;
-      --text-muted: #64748b;
-      --text-light: #94a3b8;
+      --primary: #cbd5e1;
+      --accent-teal: #38bdf8; 
+      --accent-pink: #f472b6;
+      --bg-app: #0f172a;
+      --surface: #1e293b;
+      --surface-subtle: #0f172a;
+      --border: #334155;
+      --border-soft: #334155;
+      --border-strong: #475569;
+      --text-main: #f1f5f9;
+      --text-muted: #94a3b8;
+      --text-light: #64748b;
       --radius: 8px;
       --radius-sm: 6px;
-      --shadow: 0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.02);
-      --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
-      --ink: #0f172a;
+      --shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+      --shadow-lg: 0 20px 25px -5px rgba(0,0,0,0.5), 0 10px 10px -5px rgba(0,0,0,0.3);
+      --ink: #f8fafc;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { 
       font-family: 'Nunito', sans-serif; 
-      background-color: #f8fafc;
-      background-image: url('../../assets/low-poly-grid-haikei-light.svg');
+      background-color: #0f172a;
+      background-image: url('../../assets/low-poly-grid-haikei-dark.svg');
       background-size: cover;
       background-attachment: fixed;
       background-position: center;
@@ -92,7 +92,7 @@
     }
     .logo-img-box { width: 48px; height: 48px; background: #fff; border-radius: 8px; margin: 0 auto 16px; display: flex; align-items: center; justify-content: center; padding: 6px; box-shadow: var(--shadow); border: 1px solid var(--border-soft); }
     .logo-img-box img { width: 100%; height: 100%; object-fit: contain; }
-    .logo-text h1 { font-family: 'Lora', serif; font-size: 18px; font-weight: 600; color: var(--primary); line-height: 1.2; }
+    .logo-text h1 { font-family: 'Lora', serif; font-size: 18px; font-weight: 600; color: var(--accent-teal); line-height: 1.2; }
     .logo-text span { display: block; font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em; margin-top: 4px; }
 
     /* FORM CONTENT */
@@ -113,35 +113,35 @@
       color: var(--text-main);
       transition: all 0.2s;
     }
-    .input-field:focus { outline: none; border-color: var(--accent-teal); background: var(--surface); box-shadow: 0 0 0 3px rgba(43, 122, 158, 0.1); }
+    .input-field:focus { outline: none; border-color: var(--accent-teal); background: var(--surface); box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2); }
 
     /* MFA SECTION - Dashed Wireframe but Polished */
     .mfa-block { 
       border: 1.5px dashed var(--border-strong); 
-      background: #fcfdfe; 
+      background: var(--surface-subtle); 
       padding: 20px; 
       border-radius: var(--radius-sm);
       margin-bottom: 24px;
       position: relative;
     }
-    .mfa-tag { position: absolute; top: -10px; left: 16px; background: #fcfdfe; padding: 0 8px; font-size: 9px; font-weight: 800; color: var(--accent-pink); text-transform: uppercase; letter-spacing: 0.05em; }
+    .mfa-tag { position: absolute; top: -10px; left: 16px; background: var(--surface); padding: 0 8px; font-size: 9px; font-weight: 800; color: var(--accent-pink); text-transform: uppercase; letter-spacing: 0.05em; }
 
     /* BUTTON - Dashboard Nav Active Style */
     .btn-auth { 
       width: 100%; 
       padding: 14px; 
-      background: #1e293b; 
-      color: white; 
+      background: var(--accent-teal); 
+      color: #0f172a; 
       border: none; 
       border-radius: var(--radius-sm);
-      font-weight: 700; 
+      font-weight: 800; 
       font-size: 13px; 
       text-transform: uppercase; 
       letter-spacing: 0.05em;
       cursor: pointer; 
       transition: all 0.2s;
     }
-    .btn-auth:hover { background: #0a1f35; transform: translateY(-1px); box-shadow: var(--shadow); }
+    .btn-auth:hover { background: #7dd3fc; transform: translateY(-1px); box-shadow: var(--shadow); }
 
     /* FOOTER */
     .card-footer { font-size: 10px; color: var(--text-muted); text-align: center; margin-top: 24px; line-height: 1.6; }
@@ -163,7 +163,7 @@
   </div>
 
   <div class="login-container">
-    <span class="annotate-label">GATEWAY: AUTH_01</span>
+    <span class="annotate-label">GATEWAY: AUTH_01 (DARK_MODE)</span>
     
     <div class="card">
       <header class="card-header-logo">
