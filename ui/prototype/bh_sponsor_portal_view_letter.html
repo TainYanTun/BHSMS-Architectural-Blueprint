@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bangla Hope – Sponsor Portal: View Letter</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Lora:ital,wght@0,400;0,600;1,400&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --primary-navy: #1e3a4a;
+      --sidebar-bg: #0a1f35;
+      --sidebar-active: #1e293b;
+      --action-teal: #2B7A9E;
+      --bg-app: #f1f5f9; /* Slightly darker to make the "paper" pop */
+      --surface-white: #ffffff;
+      --border-neutral: #e2e8f0;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --radius: 8px;
+      
+      /* PDF Style Variables */
+      --primary: #1e3a4a;
+      --accent-teal: #2B7A9E; 
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Nunito', sans-serif; background: var(--bg-app); color: var(--text-main); min-height: 100vh; display: flex; }
+
+    /* SIDEBAR */
+    .sidebar { width: 252px; background: var(--sidebar-bg); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; bottom: 0; z-index: 100; }
+    .sidebar-logo { padding: 24px 20px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
+    .logo-img { width: 36px; height: 36px; background: #fff; border-radius: 6px; display: flex; align-items: center; justify-content: center; padding: 4px; font-weight: 800; color: var(--primary-navy); }
+    .logo-text h1 { font-family: 'Lora', serif; font-size: 15px; font-weight: 600; color: #f8fafc; }
+    .nav-section { padding: 20px 12px; }
+    .nav-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 6px; color: #94a3b8; font-size: 13px; text-decoration: none; margin-bottom: 4px; }
+    .nav-item:hover { background: rgba(255, 255, 255, 0.05); color: #fff; }
+    .nav-item.active { background: var(--sidebar-active); color: #fff; font-weight: 600; }
+
+    /* MAIN CONTENT */
+    .main { margin-left: 252px; flex: 1; display: flex; flex-direction: column; }
+    .topbar { height: 64px; background: var(--surface-white); border-bottom: 1px solid var(--border-neutral); padding: 0 32px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 50; }
+    .portal-label { font-family: 'Courier New', monospace; font-size: 11px; font-weight: 700; color: var(--action-teal); text-transform: uppercase; }
+
+    .content { padding: 32px; display: flex; flex-direction: column; align-items: center; }
+    .back-nav { width: 100%; max-width: 793px; margin-bottom: 20px; display: flex; align-items: center; gap: 8px; text-decoration: none; color: var(--text-muted); font-size: 13px; font-weight: 600; }
+    .back-nav:hover { color: var(--action-teal); }
+
+    /* THE PDF PAGE (Exact duplicate of bh_thank_you_pdf_preview.html styles) */
+    .pdf-page { 
+      background: white; 
+      width: 793px; 
+      min-height: 1122px; 
+      box-shadow: 0 0 20px rgba(0,0,0,0.1); 
+      padding: 60px 80px; 
+      display: flex; 
+      flex-direction: column; 
+      color: #000; 
+      position: relative; 
+      margin-bottom: 40px;
+    }
+    
+    .pdf-header { border-bottom: 2px solid var(--primary); padding-bottom: 20px; margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center; }
+    .pdf-branding h1 { font-family: 'Lora', serif; font-size: 28px; color: var(--primary); }
+    .pdf-branding p { font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--accent-teal); font-weight: 700; margin-top: 4px; }
+    
+    .receipt-meta { text-align: right; }
+    .receipt-meta h2 { font-size: 18px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--primary); margin-bottom: 4px; }
+    .receipt-id { font-family: 'Courier New', monospace; font-weight: 700; color: var(--accent-teal); }
+
+    .receipt-details-box { border: 1px solid #e2e8f0; border-radius: 4px; margin-bottom: 40px; display: flex; overflow: hidden; }
+    .details-side { flex: 1; padding: 20px; }
+    .details-side:first-child { border-right: 1px solid #e2e8f0; background: #f8fafc; }
+    .details-label { font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase; margin-bottom: 4px; }
+    .details-value { font-size: 14px; font-weight: 700; color: #1e293b; margin-bottom: 12px; }
+
+    .letter-body { flex: 1; font-family: 'Nunito', sans-serif; font-size: 15px; line-height: 1.8; color: #334155; margin-bottom: 60px; }
+    .letter-salutation { margin-bottom: 20px; font-weight: 700; }
+    .letter-content p { margin-bottom: 15px; text-align: justify; }
+    .letter-closing { margin-top: 40px; }
+
+    .student-footer-box { display: flex; gap: 20px; align-items: center; background: #f1f5f9; padding: 20px; border-radius: 4px; margin-top: auto; }
+    .student-photo-small { width: 70px; height: 90px; background: #cbd5e1; border: 1px solid #94a3b8; display: flex; align-items: center; justify-content: center; font-size: 9px; color: #64748b; font-weight: 700; }
+    .student-mini-meta { flex: 1; }
+    .student-mini-name { font-family: 'Lora', serif; font-size: 18px; font-weight: 600; color: var(--primary); }
+    .student-mini-id { font-family: 'Courier New', monospace; font-size: 11px; font-weight: 700; color: var(--accent-teal); }
+
+    .pdf-footer { border-top: 1px solid #eee; padding-top: 20px; margin-top: 20px; display: flex; justify-content: space-between; font-size: 11px; color: #94a3b8; }
+
+    /* ACTION BUTTONS */
+    .floating-actions {
+      position: fixed;
+      right: 40px;
+      bottom: 40px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .btn-fab {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: var(--action-teal);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s;
+    }
+
+    .btn-fab:hover {
+      transform: scale(1.1);
+      background: var(--primary-navy);
+    }
+
+  </style>
+</head>
+
+<body>
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-img">BH</div>
+      <div class="logo-text"><h1>Bangla Hope</h1><span>Sponsor Portal</span></div>
+    </div>
+    <nav class="nav-section">
+      <a href="#" class="nav-item">Dashboard</a>
+      <a href="#" class="nav-item">My Students</a>
+      <a href="bh_sponsor_portal_communications.html" class="nav-item active">Communications</a>
+      <a href="#" class="nav-item">Donation History</a>
+      <a href="#" class="nav-item">Tax Receipts</a>
+      <a href="#" class="nav-item">My Profile</a>
+    </nav>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+    <header class="topbar">
+      <div class="portal-label">PORTAL_USER / COMMUNICATIONS / VIEW_OFFICIAL_LETTER</div>
+      <div style="display:flex; align-items:center; gap:12px;">
+        <span style="font-size:12px; font-weight:700; color:var(--text-muted);">John & Sarah Miller</span>
+        <div style="width:32px; height:32px; background:var(--action-teal); color:white; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:800;">JM</div>
+      </div>
+    </header>
+
+    <div class="content">
+      <a href="bh_sponsor_portal_communications.html" class="back-nav">← Back to My Communications</a>
+
+      <!-- THE "EXACT" LETTER (PORTED FROM PDF PREVIEW) -->
+      <div class="pdf-page">
+        <div class="pdf-header">
+          <div class="pdf-branding">
+            <h1>Bangla Hope</h1>
+            <p>Official Sponsorship Receipt</p>
+          </div>
+          <div class="receipt-meta">
+            <h2>Donation Receipt</h2>
+            <p class="receipt-id">#REC-9921</p>
+            <p style="font-size: 12px; color: #666; margin-top: 5px;">Date: May 25, 2026</p>
+          </div>
+        </div>
+
+        <div class="receipt-details-box">
+          <div class="details-side">
+            <div class="details-label">Received From:</div>
+            <div class="details-value" style="font-size: 16px;">John & Sarah Miller</div>
+            <div class="details-label">Address:</div>
+            <div class="details-value">123 Pinecrest Ave, Seattle, WA 98101, USA</div>
+          </div>
+          <div class="details-side">
+            <div class="details-label">Payment Amount:</div>
+            <div class="details-value" style="font-size: 20px; color: var(--primary);">$50.00 USD</div>
+            <div class="details-label">Designated For:</div>
+            <div class="details-value">Sponsorship of Abdur Rahman (#202600124)</div>
+            <div class="details-label">Reference:</div>
+            <div class="details-value">Contribution Received on May 15, 2026</div>
+          </div>
+        </div>
+
+        <div class="letter-body">
+          <div class="letter-salutation">Dear John & Sarah Miller,</div>
+          <div class="letter-content">
+            <p>Thank you so much for your recent contribution of <b>$50.00</b> received on <b>May 15, 2026</b>. Your continued support makes a world of difference in my life and education.</p>
+            <p>This month at school, I have been studying hard for my mathematics exams. I am also enjoying my time in the gardening club where we are planting new vegetables for the monsoon season.</p>
+            <p>I hope you are doing well and having a blessed month. Thank you for being my sponsor!</p>
+          </div>
+          <div class="letter-closing">
+            <p>Sincerely,</p>
+            <p style="font-family: 'Lora', serif; font-size: 20px; font-weight: 600; margin-top: 10px;">Abdur Rahman</p>
+          </div>
+        </div>
+
+        <div class="student-footer-box">
+          <div class="student-photo-small">[PHOTO]</div>
+          <div class="student-mini-meta">
+            <div class="student-mini-name">Abdur Rahman</div>
+            <div class="student-mini-id">ID: #202600124 / LRC Primary</div>
+            <p style="font-size: 11px; color: #64748b; margin-top: 5px;">Bangla Hope provides housing, education, and medical care through your support.</p>
+          </div>
+        </div>
+
+        <div class="pdf-footer">
+          <div>
+            <strong>Bangla Hope Sponsorship Office</strong><br>
+            Post Box 612, Hili, Dinajpur, Bangladesh
+          </div>
+          <div style="text-align: right;">
+            www.banglahope.org<br>
+            Non-Profit Identification: #501(c)(3)
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FLOATING ACTIONS FOR PORTAL CONTEXT -->
+    <div class="floating-actions">
+      <button class="btn-fab" title="Print Letter" onclick="window.print()">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+      </button>
+      <button class="btn-fab" title="Download PDF" onclick="alert('Downloading Official PDF...')">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+      </button>
+    </div>
+  </main>
+</body>
+
+</html>

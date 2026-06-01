@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bangla Hope – Student Profile: Rina Begum</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Lora:ital,wght@0,400;0,600;1,400&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --primary: #1e3a4a;
+      --accent-teal: #2B7A9E; 
+      --accent-pink: #d17a8e;
+      --bg-app: #f8fafc;
+      --surface: #ffffff;
+      --surface-subtle: #f1f5f9;
+      --surface-2: #f1f5f9;
+      --border: #e2e8f0;
+      --border-soft: #f1f5f9;
+      --border-strong: #cbd5e1;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --text-light: #94a3b8;
+      --radius: 8px;
+      --radius-sm: 6px;
+      --shadow: 0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.02);
+      --ink: #0f172a;
+      --ink-2: #334155;
+      --ink-3: #64748b;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Nunito', sans-serif; background: var(--bg-app); color: var(--text-main); min-height: 100vh; display: flex; font-size: 14px; line-height: 1.6; }
+
+    /* SIDEBAR - Exactly from bh_dashboard.html */
+    .sidebar { width: 252px; min-height: 100vh; background: #0a1f35; display: flex; flex-direction: column; position: fixed; top: 0; left: 0; bottom: 0; z-index: 100; box-shadow: 1px 0 0 var(--border); }
+    .sidebar-logo { padding: 24px 20px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
+    .logo-img { width: 36px; height: 36px; background: #fff; border-radius: 6px; display: flex; align-items: center; justify-content: center; padding: 4px; }
+    .logo-img img { width: 100%; height: 100%; object-fit: contain; }
+    .logo-text h1 { font-family: 'Lora', serif; font-size: 15px; font-weight: 600; color: #f8fafc; line-height: 1.2; }
+    .logo-text span { display: block; font-size: 10px; color: #94a3b8; letter-spacing: 0.05em; text-transform: uppercase; margin-top: 2px; }
+    .sidebar-section { padding: 16px 12px 4px; }
+    .sidebar-section-label { font-size: 10px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: #475569; padding: 0 12px; margin-bottom: 8px; }
+    .nav-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: var(--radius-sm); cursor: pointer; color: #94a3b8; font-size: 13px; font-weight: 500; transition: all 0.2s; margin-bottom: 2px; text-decoration: none; }
+    .nav-item:hover { background: rgba(255, 255, 255, 0.05); color: #f1f5f9; }
+    .nav-item.active { background: #1e293b; color: #fff; font-weight: 600; }
+    .nav-icon { width: 18px; height: 18px; opacity: 0.8; }
+    .nav-badge { margin-left: auto; background: #1e293b; color: #94a3b8; font-size: 11px; padding: 2px 8px; border-radius: 12px; }
+    .sidebar-footer { margin-top: auto; padding: 16px; border-top: 1px solid rgba(255, 255, 255, 0.05); }
+    .user-row { display: flex; align-items: center; gap: 12px; color: #f8fafc; }
+    .avatar { width: 32px; height: 32px; border-radius: 50%; background: #334155; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; }
+    .user-name { font-size: 13px; font-weight: 600; }
+    .user-role { font-size: 11px; color: #64748b; }
+
+    /* MAIN CONTENT AREA */
+    .main { margin-left: 252px; flex: 1; display: flex; flex-direction: column; }
+    
+    /* TOPBAR - Wireframe Layout with Dashboard Styling */
+    .topbar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 32px; height: 64px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 50; }
+    .schema-path { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+    .topbar-btns { display: flex; gap: 8px; }
+    .btn-secondary { display: inline-flex; align-items: center; padding: 6px 14px; background: var(--surface-subtle); border: 1px solid var(--border); border-radius: 6px; font-size: 12px; font-weight: 600; color: var(--text-main); text-decoration: none; transition: all 0.2s; cursor: pointer; }
+    .btn-secondary:hover { background: var(--border-soft); border-color: var(--border-strong); }
+    .btn-primary { display: inline-flex; align-items: center; padding: 6px 14px; background: var(--accent-teal); border: 1px solid var(--accent-teal); border-radius: 6px; font-size: 12px; font-weight: 600; color: white; text-decoration: none; transition: all 0.2s; cursor: pointer; }
+    .btn-primary:hover { background: #1e5c78; }
+
+    .content { padding: 32px; flex: 1; display: flex; flex-direction: column; gap: 32px; }
+
+    /* TAB CONTAINERS - Added spacing */
+    #tab-general, #tab-history, #tab-finance, #tab-communication, #tab-documents { display: flex; flex-direction: column; gap: 32px; }
+
+    /* HEADER - Wireframe Layout (Photo + Info) */
+    .profile-header-wire { display: flex; gap: 24px; align-items: flex-start; margin-bottom: 8px; }
+    .photo-asset { width: 120px; height: 140px; background: var(--surface-subtle); border: 1.5px solid var(--border-strong); border-radius: var(--radius-sm); display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-light); font-size: 10px; font-weight: 700; text-transform: uppercase; gap: 8px; }
+    .photo-asset svg { width: 32px; height: 32px; opacity: 0.4; }
+    
+    .header-info { flex: 1; border-left: 4px solid var(--primary); padding-left: 20px; }
+    .page-title { font-family: 'Lora', serif; font-size: 32px; font-weight: 600; color: var(--text-main); line-height: 1.1; }
+    .status-tags { margin-top: 12px; display: flex; gap: 8px; }
+    .status-tag { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 4px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
+    .tag-active { background: #10b981; color: white; }
+    .tag-program { background: var(--primary); color: white; }
+    
+    .category-tag { font-size: 10px; font-weight: 700; text-transform: uppercase; padding: 2px 6px; border-radius: 4px; background: var(--surface-subtle); color: var(--text-muted); }
+
+    .header-meta { font-size: 13px; color: var(--text-muted); margin-top: 16px; line-height: 1.5; }
+    .header-meta strong { color: var(--text-main); }
+    .header-meta span { text-decoration: underline; cursor: pointer; }
+
+    /* TABS SYSTEM - RE-ALIGNED */
+    .profile-tabs { display: flex; gap: 32px; border-bottom: 1px solid var(--border); margin-top: 24px; }
+    .tab-item { padding: 12px 4px; font-size: 13px; font-weight: 700; color: var(--text-muted); cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.2s; text-transform: uppercase; letter-spacing: 0.05em; }
+    .tab-item:hover { color: var(--primary); }
+    .tab-item.active { color: var(--accent-teal); border-bottom-color: var(--accent-teal); }
+
+    /* JOURNEY TIMELINE */
+    .timeline { position: relative; padding-left: 32px; margin-top: 10px; }
+    .timeline::before { content: ''; position: absolute; left: 11px; top: 0; bottom: 0; width: 2px; background: var(--border-strong); }
+    .timeline-item { position: relative; margin-bottom: 32px; }
+    .timeline-item:last-child { margin-bottom: 0; }
+    .timeline-marker { position: absolute; left: -32px; top: 4px; width: 24px; height: 24px; border-radius: 50%; background: var(--surface); border: 2px solid var(--accent-teal); display: flex; align-items: center; justify-content: center; z-index: 2; }
+    .timeline-marker.archived { border-color: var(--text-light); }
+    .timeline-marker::after { content: ''; width: 8px; height: 8px; border-radius: 50%; background: var(--accent-teal); }
+    .timeline-marker.archived::after { background: var(--text-light); }
+    .timeline-content { background: var(--surface-subtle); padding: 16px; border-radius: var(--radius-sm); border: 1px solid var(--border); }
+    .timeline-date { font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px; }
+    .timeline-title { font-size: 15px; font-weight: 700; color: var(--primary); display: flex; align-items: center; gap: 8px; }
+    .timeline-desc { font-size: 13px; color: var(--text-muted); margin-top: 8px; }
+
+    /* GRID & CARDS */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+    .card { background: var(--surface); border: 1.5px solid var(--border-soft); border-radius: var(--radius); box-shadow: var(--shadow); position: relative; padding: 24px; }
+    
+    .annotate-label { font-size: 10px; font-weight: 800; color: var(--accent-teal); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 16px; display: block; border-bottom: 1px solid var(--border-soft); padding-bottom: 8px; }
+
+    /* FIELD STYLING */
+    .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .field-group { margin-bottom: 16px; }
+    .field-group:last-child { margin-bottom: 0; }
+    .field-label { font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+    .field-value { font-size: 14px; color: var(--text-main); font-weight: 600; padding-bottom: 4px; border-bottom: 1px solid var(--border-soft); }
+    .field-text { font-size: 13px; color: var(--text-muted); line-height: 1.5; background: var(--surface-subtle); padding: 12px; border-radius: 6px; margin-top: 8px; }
+
+    /* CHECKLIST STYLING */
+    .checklist { list-style: none; margin-top: 8px; }
+    .checklist-item { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text-main); font-weight: 600; margin-bottom: 6px; }
+    .check-box { width: 14px; height: 14px; border: 1.5px solid var(--border-strong); border-radius: 3px; display: flex; align-items: center; justify-content: center; }
+    .check-box.checked { background: var(--accent-teal); border-color: var(--accent-teal); }
+    .check-box.checked::after { content: '✓'; color: white; font-size: 10px; }
+
+    /* TABLE STYLING */
+    .card-table { padding: 0; overflow: hidden; border: 2px dashed var(--border-strong); background: #fcfdfe; }
+    .prog-table { width: 100%; border-collapse: collapse; }
+    .prog-table th { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-3); text-align: left; padding: 12px 20px; background: var(--surface-subtle); border-bottom: 1.5px solid var(--border); }
+    .prog-table td { padding: 14px 20px; border-bottom: 1px solid var(--border-soft); font-size: 13px; }
+
+  </style>
+</head>
+
+<body>
+  <!-- SIDEBAR - Exactly from bh_dashboard.html -->
+  <nav class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-img"><img src="data:image/png;base64,..." alt="Logo"></div>
+      <div class="logo-text"><h1>Bangla Hope</h1><span>Sponsorship Program</span></div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-section-label">Overview</div>
+      <a href="bh_dashboard.html" class="nav-item">Dashboard</a>
+      <a href="bh_students.html" class="nav-item active">All Students <span class="nav-badge">821</span></a>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-section-label">Programs</div>
+      <a href="bh_lrc.html" class="nav-item">LRC Children's Home</a>
+      <a href="bh_boarding.html" class="nav-item">Boarding Schools</a>
+      <a href="bh_village.html" class="nav-item">Village Day Schools</a>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-section-label">Management</div>
+      <a href="bh_sponsor_details.html" class="nav-item">Sponsors</a>
+      <a href="#" class="nav-item">Subsidies & Finance</a>
+      <a href="bh_reports_apr.html" class="nav-item">Reports & APR</a>
+      <a href="bh_communication_hub.html" class="nav-item">Communication Hub</a>
+      <a href="bh_communication_templates.html" class="nav-item">Template Manager</a>
+      <a href="bh_archive.html" class="nav-item">Drop / Archive</a>
+    </div>
+  </nav>
+
+  <!-- MAIN -->
+  <div class="main">
+    <!-- TOPBAR -->
+    <header class="topbar">
+      <div class="schema-path">SCHEMA: DIRECTORY // STUDENT_PROFILE // #LRC-0124</div>
+      <div class="topbar-btns">
+        <a href="bh_student_edit.html" class="btn-secondary">Edit Record</a>
+        <a href="bh_generate_case_study.html" class="btn-secondary">Generate Case History</a>
+        <a href="bh_students.html" class="btn-primary"> [BACK] </a>
+      </div>
+    </header>
+
+    <div class="content">
+      <!-- PROFILE HEADER -->
+      <div class="profile-header-wire">
+        <div class="photo-asset">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          Photo Asset
+        </div>
+        <div class="header-info">
+          <h2 class="page-title">RINA BEGUM</h2>
+          <div class="status-tags">
+            <span class="status-tag tag-active">Active</span>
+            <span class="status-tag tag-program">Program: LRC_Residential</span>
+          </div>
+          <div class="header-meta">
+            MASTER_ID: <strong>202600000124</strong><br>
+            CURRENT_ID: <strong>#LRC-0124</strong><br>
+            PREVIOUS_IDS: <span>#VLG-0344</span> (Village School Transitioned)
+          </div>
+        </div>
+      </div>
+
+      <!-- TABS NAVIGATION (New Line, Left Aligned) -->
+      <div class="profile-tabs">
+        <div class="tab-item active" data-tab="tab-general">General Profile</div>
+        <div class="tab-item" data-tab="tab-history">Academic & History</div>
+        <div class="tab-item" data-tab="tab-finance">Support & Sponsorship</div>
+        <div class="tab-item" data-tab="tab-communication">Sponsor Communication</div>
+        <div class="tab-item" data-tab="tab-documents">Documents (APR)</div>
+      </div>
+
+      <!-- TAB CONTENT: GENERAL PROFILE -->
+      <div id="tab-general">
+        <div class="grid-2">
+          <div class="card">
+            <span class="annotate-label">SEC_01: PERS_IDENTITY</span>
+            <div class="field-row">
+              <div>
+                <div class="field-group"><div class="field-label">FULL_LEGAL_NAME</div><div class="field-value">Rina Begum</div></div>
+                <div class="field-group"><div class="field-label">DATE_OF_BIRTH</div><div class="field-value">2017-05-12 (7.2Y)</div></div>
+                <div class="field-group"><div class="field-label">RELIGION</div><div class="field-value">Islam</div></div>
+              </div>
+              <div>
+                <div class="field-group"><div class="field-label">GENDER</div><div class="field-value">Female</div></div>
+                <div class="field-group"><div class="field-label">ADMISSION_DATE</div><div class="field-value">2024-01-15</div></div>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <span class="annotate-label">SEC_02: FAMILY_BACKGROUND</span>
+            <div class="field-row">
+              <div>
+                <div class="field-group"><div class="field-label">FATHER_NAME</div><div class="field-value">Late Md. Abdur Rashid</div></div>
+                <div class="field-group"><div class="field-label">MOTHER_NAME</div><div class="field-value">Mst. Fatema</div></div>
+              </div>
+              <div>
+                <div class="field-group"><div class="field-label">SIBLINGS</div><div class="field-value">1 Brother, 2 Sisters</div></div>
+                <div class="field-group"><div class="field-label">PRIMARY_GUARDIAN</div><div class="field-value">Mother (Fatema)</div></div>
+              </div>
+            </div>
+            <div class="field-group" style="margin-top: 10px;"><div class="field-label">CONTACT_INFO</div><div class="field-value">01712-XXXXXX (Mobile)</div></div>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="card">
+            <span class="annotate-label">SEC_03: SPONSORSHIP_DATA</span>
+            <div class="field-group"><div class="field-label">PRIMARY_SPONSOR</div><div class="field-value">James O'Neill (#SP-001)</div></div>
+            <div class="field-group"><div class="field-label">SPONSOR_PREFERENCE</div><div class="field-value">Email Only</div></div>
+            <div class="field-group" style="margin-top: 8px;"><div class="field-label">LAST_CONTRIBUTION</div><div class="field-value" style="color:var(--accent-teal);">2026-05-15</div></div>
+          </div>
+          <div class="card">
+            <span class="annotate-label">SEC_04: SPONSORSHIP_HEALTH</span>
+            <!-- Health Badge -->
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px; padding: 12px; background: var(--surface-subtle); border-radius: 8px;">
+              <div style="width: 48px; height: 48px; border-radius: 50%; border: 4px solid #10b981; display: flex; align-items: center; justify-content: center; font-weight: 800; color: #10b981; font-size: 12px; background: white;">OK</div>
+              <div>
+                <div style="font-size: 14px; font-weight: 700; color: var(--text-main);">Status: Healthy</div>
+                <div style="font-size: 11px; color: var(--text-muted);">Recent support & milestones up to date</div>
+              </div>
+            </div>
+
+            <div class="field-group">
+              <div class="field-label">ANNUAL_REPORT (APR/ARP)</div>
+              <div class="field-value">2023_Complete // 2024_In_Progress</div>
+            </div>
+
+            <div class="field-group" style="margin-top: 12px;">
+              <div class="field-label">LATEST_COMMUNICATION</div>
+              <div class="field-value" style="font-size: 12px; font-weight: 500;">Birthday Letter (Sent: May 12, 2024 via Email)</div>
+            </div>
+
+            <div style="margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border-soft);">
+              <a href="bh_communication_hub.html" class="btn-secondary" style="width: 100%; justify-content: center; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em;">
+                View Full Comm. History
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="card">
+            <span class="annotate-label">SEC_15: HEALTH_&_INTAKE_INDICATORS</span>
+            <div class="field-row">
+              <div>
+                <div class="field-group"><div class="field-label">ADMISSION_WEIGHT</div><div class="field-value">18.5 kg</div></div>
+                <div class="field-group"><div class="field-label">IMMUNIZATION_STATUS</div>
+                  <div class="checklist">
+                    <li class="checklist-item"><div class="check-box checked"></div> Fully Immunized</li>
+                  </div>
+                </div>
+              </div>
+              <div>
+                <div class="field-group"><div class="field-label">HEALTH_AT_ADMISSION</div><div class="field-value">Good / Stable</div></div>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <span class="annotate-label">SEC_06: CASE_HISTORY_NARRATIVE</span>
+            <div class="field-group">
+              <div class="field-label">SITUATION_OVERVIEW</div>
+              <div class="field-text">
+                Father deceased in 2022. Rina transitioned from Village School to LRC in 2024 to ensure continued education and residential support.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB CONTENT: ACADEMIC & HISTORY -->
+      <div id="tab-history" style="display:none;">
+        <div class="card">
+          <span class="annotate-label">SEC_07: STUDENT_JOURNEY_TIMELINE</span>
+          <div class="timeline">
+            <div class="timeline-item">
+              <div class="timeline-marker"></div>
+              <div class="timeline-content">
+                <div class="timeline-date">JAN 2024 — PRESENT</div>
+                <div class="timeline-title">Admitted to Love Receiving Center (LRC)</div>
+                <div class="timeline-desc">Full residential care initiated. ID: #LRC-0124</div>
+              </div>
+            </div>
+            <div class="timeline-item">
+              <div class="timeline-marker archived"></div>
+              <div class="timeline-content" style="border-style: dashed; opacity: 0.8;">
+                <div class="timeline-date">JAN 2024</div>
+                <div class="timeline-title">Transitioned from Village Schools ⇄</div>
+                <div class="timeline-desc">Promotion due to socioeconomic needs.</div>
+              </div>
+            </div>
+            <div class="timeline-item">
+              <div class="timeline-marker archived"></div>
+              <div class="timeline-content" style="opacity: 0.7;">
+                <div class="timeline-date">MAR 2022 — DEC 2023</div>
+                <div class="timeline-title">Village Day School Sponsorship</div>
+                <div class="timeline-desc">Student at Hili Village School. ID: #VLG-0344</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ACADEMIC RECORDS -->
+        <div class="card card-table">
+          <span class="annotate-label" style="padding: 16px 24px 8px;">SEC_05: ACADEMIC_RECORDS_BY_PROGRAM</span>
+          <table class="prog-table">
+            <thead>
+              <tr>
+                <th>YEAR</th>
+                <th>PROGRAM / LOCATION</th>
+                <th>GRADE</th>
+                <th>ATTENDANCE</th>
+                <th>RESULT_SUMMARY</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>2023</strong></td>
+                <td><span class="category-tag">VLG</span> Hili Village Day School</td>
+                <td>Class 1</td>
+                <td>94.2%</td>
+                <td>Promoted (82% Avg)</td>
+              </tr>
+              <tr>
+                <td><strong>2024</strong></td>
+                <td><span class="category-tag">LRC</span> LRC Residential Center</td>
+                <td>Class 2</td>
+                <td>98.5%</td>
+                <td>Term 1: Excellent</td>
+              </tr>
+              <tr>
+                <td><strong>2025</strong></td>
+                <td><span class="category-tag">BRD</span> Dinajpur Boarding School</td>
+                <td>Class 3</td>
+                <td>--</td>
+                <td><span style="color:var(--text-light); font-style:italic;">Enrollment Pending</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- TAB CONTENT: SUPPORT & SPONSORSHIP (USD) -->
+      <div id="tab-finance" style="display:none;">
+        
+        <!-- SUPPORT STATUS OVERVIEW -->
+        <div class="card" style="border-top: 4px solid var(--accent-teal);">
+          <span class="annotate-label">FIN_SEC_01: CURRENT_SUPPORT_SUMMARY</span>
+          <div class="grid-2">
+            <div>
+              <div class="field-label">PRIMARY_SPONSOR</div>
+              <div class="field-value">James O'Neill <span style="font-weight: 400; color: var(--text-muted);">(#SP-001)</span></div>
+              <div style="margin-top: 12px;">
+                <div class="field-label">LIFETIME_SUPPORT_RECEIVED</div>
+                <div style="font-size: 24px; font-weight: 800; color: var(--primary);">$1,450.00</div>
+              </div>
+            </div>
+            <div style="border-left: 1px solid var(--border-soft); padding-left: 24px;">
+              <div class="field-label">SUPPORT_RELIABILITY</div>
+              <div style="display: flex; align-items: center; gap: 8px; margin-top: 4px;">
+                <div style="flex: 1; height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden;">
+                  <div style="width: 92%; height: 100%; background: #10b981;"></div>
+                </div>
+                <span style="font-weight: 800; color: #10b981;">92%</span>
+              </div>
+              <p style="font-size: 11px; color: var(--text-muted); margin-top: 8px;">
+                Sponsor coverage for the last 12 months. Organization grants covered the remaining 8%.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- UNIFIED SUPPORT TIMELINE -->
+        <div class="card card-table">
+          <span class="annotate-label" style="padding: 16px 24px 8px;">FIN_SEC_02: MONTHLY_SUPPORT_TIMELINE</span>
+          <table class="prog-table">
+            <thead>
+              <tr>
+                <th>MONTH / YEAR</th>
+                <th>SUPPORT_ISSUED</th>
+                <th>COST (USD)</th>
+                <th>FUNDING_SOURCE</th>
+                <th>DISPATCH_STATUS</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>MAY 2026</strong></td>
+                <td><span class="category-tag">Residential Subsidy</span></td>
+                <td><strong>$30.00</strong></td>
+                <td>
+                  <span style="font-weight: 600;">Sponsor: James O'Neill</span><br>
+                  <span style="font-size: 10px; color: var(--text-muted);">Check #1245 (Rec: 2026-05-15)</span>
+                </td>
+                <td><span class="status-tag" style="background:#dcfce7; color:#16a34a; font-size:10px;">PAID</span></td>
+              </tr>
+              <tr>
+                <td><strong>MAY 2026</strong></td>
+                <td><span class="category-tag">Pocket Money</span></td>
+                <td><strong>$5.00</strong></td>
+                <td>
+                  <span style="font-weight: 600; color: var(--accent-pink);">Bangla Hope Grant</span><br>
+                  <span style="font-size: 10px; color: var(--text-muted);">Internal Organizational Funds</span>
+                </td>
+                <td><span class="status-tag" style="background:#dcfce7; color:#16a34a; font-size:10px;">PAID</span></td>
+              </tr>
+              <tr>
+                <td><strong>APR 2026</strong></td>
+                <td><span class="category-tag">Residential Subsidy</span></td>
+                <td><strong>$30.00</strong></td>
+                <td>
+                  <span style="font-weight: 600;">Sponsor: James O'Neill</span><br>
+                  <span style="font-size: 10px; color: var(--text-muted);">Online #STRIPE-990 (Rec: 2026-04-12)</span>
+                </td>
+                <td><span class="status-tag" style="background:#dcfce7; color:#16a34a; font-size:10px;">PAID</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- HIGHER ED SECTION -->
+        <div class="card" style="background: var(--surface-subtle); border: 1px dashed var(--border-strong);">
+          <span class="annotate-label">FIN_SEC_03: HIGHER_ED_LOAN_STATUS</span>
+          <div style="text-align: center; padding: 10px; color: var(--text-muted); font-style: italic; font-size: 12px;">
+            Student is not currently in the Higher Education Loan Program.
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB CONTENT: SPONSOR COMMUNICATION -->
+      <div id="tab-communication" style="display:none;">
+        <!-- PREFERENCES -->
+        <div class="card" style="border-left: 4px solid var(--accent-teal);">
+          <span class="annotate-label">COM_SEC_01: DELIVERY_PREFERENCES</span>
+          <div class="grid-2">
+            <div>
+              <div class="field-label">PREFERRED_CHANNEL</div>
+              <div class="field-value">Email Only</div>
+            </div>
+            <div>
+              <div class="field-label">ACTIVE_RECIPIENT_ADDRESS</div>
+              <div class="field-value">james.oneill@example.com</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- LOG -->
+        <div class="card card-table">
+          <span class="annotate-label" style="padding: 16px 24px 8px;">COM_SEC_02: SPONSOR_COMMUNICATION_LOG</span>
+          <table class="prog-table">
+            <thead>
+              <tr>
+                <th>DATE</th>
+                <th>CATEGORY</th>
+                <th>CHANNEL</th>
+                <th>SUBJECT / CONTENT</th>
+                <th>STATUS</th>
+                <th>ACTIONS</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>2024-05-12</strong></td>
+                <td><span class="category-tag">Milestone</span></td>
+                <td><span class="category-tag">Email</span></td>
+                <td>Birthday Greeting (7th Birthday)</td>
+                <td><span class="status-tag" style="background:#dcfce7; color:#16a34a; font-size:10px;">SENT</span></td>
+                <td><button class="btn-secondary" style="padding: 4px 8px; font-size: 10px;">View Email</button></td>
+              </tr>
+              <tr>
+                <td><strong>2024-04-15</strong></td>
+                <td><span class="category-tag">Financial</span></td>
+                <td><span class="category-tag">Email</span></td>
+                <td>Thank You Letter (#REC-9921)</td>
+                <td><span class="status-tag" style="background:#dcfce7; color:#16a34a; font-size:10px;">SENT</span></td>
+                <td><button class="btn-secondary" style="padding: 4px 8px; font-size: 10px;">View PDF</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div style="text-align: right;">
+          <a href="bh_communication_hub.html" style="font-size: 12px; color: var(--accent-teal); font-weight: 700; text-decoration: none;">Open Communication Hub →</a>
+        </div>
+      </div>
+
+      <!-- TAB CONTENT: DOCUMENTS (APR/ARP) -->
+      <div id="tab-documents" style="display:none;">
+        <div class="card">
+          <span class="annotate-label">SEC_09: ANNUAL_PROGRESS_REPORTS (APR/ARP)</span>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <p class="field-label" style="margin-bottom: 0;">Sponsor Communication & Compliance Documents</p>
+            <button class="btn-primary" style="font-size: 11px;">Generate New 2024 ARP</button>
+          </div>
+          <table class="prog-table">
+            <thead>
+              <tr>
+                <th>YEAR</th>
+                <th>DOCUMENT TYPE</th>
+                <th>STATUS</th>
+                <th>DATE COMPLETED</th>
+                <th>ACTIONS</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>2023</td>
+                <td>Annual Progress Report</td>
+                <td><span class="status-tag" style="background: #10b981; color: white;">COMPLETE</span></td>
+                <td>2023-11-12</td>
+                <td><button class="btn-secondary" style="padding: 4px 8px;">View PDF</button></td>
+              </tr>
+              <tr>
+                <td>2022</td>
+                <td>Annual Progress Report</td>
+                <td><span class="status-tag" style="background: #f59e0b; color: white;">PENDING</span></td>
+                <td>--</td>
+                <td><button class="btn-secondary" style="padding: 4px 8px;">Review Draft</button></td>
+              </tr>
+              <tr>
+                <td>2024</td>
+                <td>Annual Progress Report</td>
+                <td><span class="status-tag" style="background: #94a3b8; color: white;">NOT STARTED</span></td>
+                <td>--</td>
+                <td><button class="btn-primary" style="padding: 4px 12px; font-size: 11px;" onclick="window.location.href='bh_arp_draft.html'">Start Draft</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const tabs = document.querySelectorAll('.tab-item');
+    const sections = {
+      'tab-general': document.getElementById('tab-general'),
+      'tab-history': document.getElementById('tab-history'),
+      'tab-finance': document.getElementById('tab-finance'),
+      'tab-communication': document.getElementById('tab-communication'),
+      'tab-documents': document.getElementById('tab-documents')
+    };
+
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        const target = tab.getAttribute('data-tab');
+        if (!target) return;
+
+        // Update active tab styling
+        tabs.forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+
+        // Hide all sections and show the target
+        Object.keys(sections).forEach(key => {
+          if (sections[key]) {
+            sections[key].style.display = 'none';
+          }
+        });
+
+        if (sections[target]) {
+          sections[target].style.display = 'flex';
+        }
+      });
+    });
+  </script>
+</body>
+
+</html>

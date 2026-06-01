@@ -2,66 +2,49 @@
 
 **Senior Development Project 1: Orphanage Sponsorship & Student Management System**
 
-This repository contains the initial wireframes, prototypes, and design blueprints for the **Bangla Hope** management system. The project aims to provide a comprehensive digital solution for managing student records, sponsorship details, and program-wide analytics for the Bangla Hope orphanage and its associated educational programs.
+This repository contains the organized architectural blueprints, schemas, and prototypes for the **Bangla Hope** management system.
 
-## Project Overview
+## 📂 Project Structure
 
-Bangla Hope is a sponsorship program that supports children across multiple platforms:
-- **LRC Children's Home:** A residential campus for orphans.
-- **Boarding Schools:** Mixed residential facilities.
-- **Village Day Schools:** Local community schools (11+ locations).
+The project has been organized into logical modules for better discoverability:
 
-This system is designed to streamline administrative tasks, track student progress (APR - Annual Progress Reports), and manage sponsor relationships.
+### 📁 [core/](./core/) - Project Basics
+*   **[README.md](./README.md)**: This project overview.
+*   **[PROPOSAL.md](./core/PROPOSAL.md)**: Original project vision and requirements.
+*   **[DESIGN.md](./core/DESIGN.md)**: General design philosophy and UI guidelines.
+*   **[CLIENT_CLARIFICATIONS.md](./core/CLIENT_CLARIFICATIONS.md)**: Specific rules and decisions from the client.
 
-## Key Modules & Prototypes
+### 📁 [technical/](./technical/) - System Architecture
+*   **[schema.sql](./technical/schema.sql)**: The complete PostgreSQL database schema.
+*   **[DATA_ARCHITECTURE.md](./technical/DATA_ARCHITECTURE.md)**: High-level data flow and sync logic.
+*   **[ERD.md](./technical/ERD.md)**: Entity Relationship Diagram (Mermaid).
+*   **[PERMISSIONS.md](./technical/PERMISSIONS.md)**: RBAC (Role-Based Access Control) matrix.
 
-The project currently includes several wireframe variants, ranging from high-fidelity UI concepts to low-fidelity functional blueprints:
+### 📁 [financial/](./financial/) - Money & Ledger
+*   **[FINANCIAL_WORKFLOW.md](./financial/FINANCIAL_WORKFLOW.md)**: Logic for Subsidies and **Simple Loan 2.0**.
+*   **[FINANCIAL_GUIDE.md](./financial/FINANCIAL_GUIDE.md)**: Overall financial architecture policies.
+*   **[bangla_hope_table_guide.md](./financial/bangla_hope_table_guide.md)**: Field-level guide for financial tables.
 
-### 1. Program Dashboard (`bh_dashboard.html`)
-*   **Status:** High-Fidelity Prototype
-*   **Features:** 
-    *   Real-time statistics (Total Students, Active Sponsors, Monthly Subsidy).
-    *   Program-specific enrollment tracking.
-    *   Recent activity logs (Admissions, Report generation).
-    *   Quick actions for administrative tasks.
+### 📁 [communication/](./communication/) - Sponsor Relations
+*   **[COMMUNICATION_HUB_GUIDE.md](./communication/COMMUNICATION_HUB_GUIDE.md)**: Templates and trigger logic for sponsor comms.
+*   **[CHART.md](./communication/CHART.md)**: Communication flow and reporting charts.
 
-### 2. Student Directory (`wireframe/bh_students_blueprint.html`)
-*   **Status:** Low-Fidelity Blueprint (B&W)
-*   **Features:**
-    *   Master grid view of all students with unique UIDs.
-    *   Tabbed interface for: Info, Case History, Sponsors, and APR Logs.
-    *   Filtering system by Name, Gender, and Program.
+### 📁 [ui/](./ui/) - Prototypes & Wireframes
+*   **[bh_dashboard.html](./ui/bh_dashboard.html)**: High-fidelity administrative dashboard.
+*   **[prototype/](./ui/prototype/)**: Interactive HTML prototypes (including the new Financial Ledger).
+*   **[wireframe/](./ui/wireframe/)**: Low-fidelity structural blueprints.
 
-### 3. Admission Entry (`wireframe/bh_admit_blueprint.html`)
-*   **Status:** Low-Fidelity Blueprint (B&W)
-*   **Features:**
-    *   Standardized schema for new child admissions.
-    *   Sections for Personal Identity, Program Placement, and Guardian Narratives.
-    *   Operational controls for Draft Saving and Confirmation.
+---
 
-## 🛠️ Tech & Design Stack
+## 🛠️ Design Philosophy
 
-- **Wireframing:** HTML5 / CSS3 (Vanilla)
-- **Typography:** 
-    - *System Fonts:* Courier New (Blueprints), Nunito/Lora (High-Fidelity)
-- **Methodology:** Component-based UI design focusing on administrative efficiency.
-
-## Directory Structure
-
-```text
-Bangal_hope_blueprint/
-├── wireframe/
-│   ├── bh_admit_blueprint.html     # Admission form schema
-│   ├── bh_dashboard_blueprint.html # Dashboard structure
-│   └── bh_students_blueprint.html  # Student management grid
-├── bh_dashboard.html               # High-fidelity dashboard UI
-├── bh_complete_sample.html         # Integrated sample view
-└── README.md                       # Project documentation
-```
+- **Unified Ledger:** The system uses a single-stream "Battery Model" for loans to prevent data entry errors.
+- **Restricted Envelopes:** Sponsor gifts are digitally tagged to specific students to ensure restricted funding integrity.
+- **Record-Keeping Only:** This is a **Manual Digital Ledger**; it does not process real-world payments.
 
 ## Project Status
 
-This is currently in **Phase 1: Wireframing & Prototyping**. These files serve as the architectural foundation for the Senior Development Project 1. Future phases will include database integration, backend development, and user authentication.
+This is currently in **Phase 1: Wireframing & Prototyping**. These files serve as the architectural foundation for the Senior Development Project 1.
 
 ---
 *Developed as part of the Senior Development Project 1 curriculum.*

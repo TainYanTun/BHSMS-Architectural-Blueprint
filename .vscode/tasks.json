@@ -1,0 +1,21 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "sqlproj: Build BangalDB",
+			"type": "process",
+			"command": "dotnet",
+			"args": [
+				"build",
+				"/Users/admin/Github_Project/Senior_project/Bangal_hope_blueprint/BangalDB/BangalDB.sqlproj"
+			],
+			"problemMatcher": "$sqlproj-problem-matcher",
+			"isBackground": true,
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			},
+			"detail": "Builds the BangalDB SQL project"
+		}
+	]
+}

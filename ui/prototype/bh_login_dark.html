@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bangla Hope – Secure Auth Gateway (Dark Mode)</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Lora:ital,wght@0,400;0,600;1,400&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --primary: #cbd5e1;
+      --accent-teal: #38bdf8; 
+      --accent-pink: #f472b6;
+      --bg-app: #0f172a;
+      --surface: #1e293b;
+      --surface-subtle: #0f172a;
+      --border: #334155;
+      --border-soft: #334155;
+      --border-strong: #475569;
+      --text-main: #f1f5f9;
+      --text-muted: #94a3b8;
+      --text-light: #64748b;
+      --radius: 8px;
+      --radius-sm: 6px;
+      --shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+      --shadow-lg: 0 20px 25px -5px rgba(0,0,0,0.5), 0 10px 10px -5px rgba(0,0,0,0.3);
+      --ink: #f8fafc;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { 
+      font-family: 'Nunito', sans-serif; 
+      background-color: #0f172a;
+      background-image: url('../../assets/low-poly-grid-haikei-dark.svg');
+      background-size: cover;
+      background-attachment: fixed;
+      background-position: center;
+      color: var(--text-main); 
+      min-height: 100vh; 
+      display: flex; 
+      justify-content: center; 
+      align-items: center; 
+    }
+
+    /* SYSTEM MARKER - Styled like a Topbar Item */
+    .system-marker { 
+      position: fixed; 
+      top: 20px; 
+      right: 20px; 
+      background: var(--surface); 
+      border: 1px solid var(--border); 
+      padding: 10px 16px; 
+      border-radius: var(--radius-sm);
+      box-shadow: var(--shadow);
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+    .system-marker strong { color: var(--accent-teal); }
+
+    /* LOGIN CONTAINER - Wireframe 400px */
+    .login-container { width: 400px; position: relative; }
+    
+    .annotate-label { 
+      font-size: 10px; 
+      font-weight: 800; 
+      color: var(--accent-teal); 
+      text-transform: uppercase; 
+      letter-spacing: 0.1em; 
+      margin-bottom: 12px; 
+      display: block; 
+    }
+
+    /* MAIN CARD - Dashboard Card Style */
+    .card { 
+      background: var(--surface); 
+      border: 1.5px solid var(--border-soft); 
+      border-radius: var(--radius); 
+      box-shadow: var(--shadow-lg); 
+      overflow: hidden;
+    }
+
+    /* LOGO HEADER - Card Header Style */
+    .card-header-logo { 
+      padding: 32px; 
+      text-align: center; 
+      border-bottom: 1px solid var(--border-soft); 
+      background: linear-gradient(90deg, var(--surface) 0%, var(--surface-subtle) 100%); 
+    }
+    .logo-img-box { width: 48px; height: 48px; background: #fff; border-radius: 8px; margin: 0 auto 16px; display: flex; align-items: center; justify-content: center; padding: 6px; box-shadow: var(--shadow); border: 1px solid var(--border-soft); }
+    .logo-img-box img { width: 100%; height: 100%; object-fit: contain; }
+    .logo-text h1 { font-family: 'Lora', serif; font-size: 18px; font-weight: 600; color: var(--accent-teal); line-height: 1.2; }
+    .logo-text span { display: block; font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em; margin-top: 4px; }
+
+    /* FORM CONTENT */
+    .card-content { padding: 32px; }
+    
+    .field-group { margin-bottom: 24px; }
+    .field-label { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; display: block; }
+    
+    .input-field { 
+      width: 100%; 
+      height: 44px; 
+      padding: 10px 14px; 
+      background: var(--surface-subtle); 
+      border: 1px solid var(--border); 
+      border-radius: var(--radius-sm);
+      font-family: inherit;
+      font-size: 14px;
+      color: var(--text-main);
+      transition: all 0.2s;
+    }
+    .input-field:focus { outline: none; border-color: var(--accent-teal); background: var(--surface); box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2); }
+
+    /* MFA SECTION - Dashed Wireframe but Polished */
+    .mfa-block { 
+      border: 1.5px dashed var(--border-strong); 
+      background: var(--surface-subtle); 
+      padding: 20px; 
+      border-radius: var(--radius-sm);
+      margin-bottom: 24px;
+      position: relative;
+    }
+    .mfa-tag { position: absolute; top: -10px; left: 16px; background: var(--surface); padding: 0 8px; font-size: 9px; font-weight: 800; color: var(--accent-pink); text-transform: uppercase; letter-spacing: 0.05em; }
+
+    /* BUTTON - Dashboard Nav Active Style */
+    .btn-auth { 
+      width: 100%; 
+      padding: 14px; 
+      background: var(--accent-teal); 
+      color: #0f172a; 
+      border: none; 
+      border-radius: var(--radius-sm);
+      font-weight: 800; 
+      font-size: 13px; 
+      text-transform: uppercase; 
+      letter-spacing: 0.05em;
+      cursor: pointer; 
+      transition: all 0.2s;
+    }
+    .btn-auth:hover { background: #7dd3fc; transform: translateY(-1px); box-shadow: var(--shadow); }
+
+    /* FOOTER */
+    .card-footer { font-size: 10px; color: var(--text-muted); text-align: center; margin-top: 24px; line-height: 1.6; }
+    .card-footer strong { color: var(--text-main); }
+
+    .bottom-links { margin-top: 20px; text-align: center; font-size: 12px; }
+    .link-item { color: var(--accent-teal); font-weight: 700; text-decoration: none; cursor: pointer; }
+    .link-item:hover { text-decoration: underline; }
+    .divider { color: var(--border-strong); margin: 0 8px; }
+
+  </style>
+</head>
+
+<body>
+
+  <div class="system-marker">
+    NODE: <strong>HILI_OFFICE_V1</strong><br>
+    IP_RESTRICTED: <strong>YES</strong>
+  </div>
+
+  <div class="login-container">
+    <span class="annotate-label">GATEWAY: AUTH_01 (DARK_MODE)</span>
+    
+    <div class="card">
+      <header class="card-header-logo">
+        <div class="logo-img-box">
+          <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIcAAABNCAYAAACMlHfYAAAEDmlDQ1BrQ0dDb2xvclNwYWNlR2VuZXJpY1JHQgAAOI2NVV1oHFUUPpu5syskzoPUpqaSDv41lLRsUtGE2uj+ZbNt3CyTbLRBkMns3Z1pJjPj/KRpKT4UQRDBqOCT4P9bwSchaqvtiy2itFCiBIMo+ND6R6HSFwnruTOzu5O4a73L3PnmnO9+595z7t4LkLgsW5beJQIsGq4t5dPis8fmxMQ6dMF90A190C0rjpUqlSYBG+PCv9rt7yDG3tf2t/f/Z+uuUEcBiN2F2Kw4yiLiZQD+FcWyXYAEQfvICddi+AnEO2ycIOISw7UAVxieD/Cyz5mRMohfRSwoqoz+xNuIB+cj9loEB3Pw2448NaitKSLLRck2q5pOI9O9g/t/tkXda8Tbg0+PszB9FN8DuPaXKnKW4YcQn1Xk3HSIry5ps8UQ/2W5aQnxIwBdu7yFcgrxPsRjVXu8HOh0qao30cArp9SZZxDfg3h1wTzKxu5E/LUxX5wKdX5SnAzmDx4A4OIqLbB69yMesE1pKojLjVdoNsfyiPi45hZmAn3uLWdpOtfQOaVmikEs7ovj8hFWpz7EV6mel0L9Xy23FMYlPYZenAx0yDB1/PX6dledmQjikjkXCxqMJS9WtfFCyH9XtSekEF+2dH+P4tzITduTygGfv58a5VCTH5PtXD7EFZiNyUDBhHnsFTBgE0SQIA9pfFtgo6cKGuhooeilaKH41eDs38Ip+f4At1Rq/sjr6NEwQqb/I/DQqsLvaFUjvAx+eWirddAJZnAj1DFJL0mSg/gcIpPkMBkhoyCSJ8lTZIxk0TpKDjXHliJzZPO50dR5ASNSnzeLvIvod0HG/mdkmOC0z8VKnzcQ2M/Yz2vKldduXjp9bleLu0ZWn7vWc+l0JGcaai10yNrUnXLP/8Jf59ewX+c3Wgz+B34Df+vbVrc16zTMVgp9um9bxEfzPU5kPqUtVWxhs6OiWTVW+gIfywB9uXi7CGcGW/zk98k/kmvJ95IfJn/j3uQ+4c5zn3Kfcd+AyF3gLnJfcl9xH3OfR2rUee80a+6vo7EK5mmXUdyfQlrYLTwoZIU9wsPCZEtP6BWGhAlhL3p2N6sTjRdduwbHsG9kq32sgBepc+xurLPW4T9URpYGJ3ym4+8zA05u44QjST8ZIoVtu3qE7fWmdn5LPdqvgcZz8Ww8BWJ8X3w0PhQ/wnCDGd+LvlHs8dRy6bLLDuKMaZ20tZrqisPJ5ONiCq8yKhYM5cCgKOu66Lsc0aYOtZdo5QCwezI4wm9J/v0X23mlZXOfBjj8Jzv3WrY5D+CsA9D7aMs2gGfjve8ArD6mePZSeCfEYt8CONWDw8FXTxrPqx/r9Vt4biXeANh8vV7/+/16ffMD1N8AuKD/A/8leAvFY9bLAAAAXGVYSWZNTQAqAAAACAAEAQYAAwAAAAEAAgAAARIAAwAAAAEAAQAAASgAAwAAAAEAAgAAh2kABAAAAAEAAAA+AAAAAAACoAIABAAAAAEAAACHoAMABAAAAAEAAABNAAAAAKv3+/8AAAILaVRYdFhNTDpjb20uYWRvYmUueG1wAAAAAAA8eDp4bXBtZXRhIHhtbG5zOng9ImFkb2JlOm5zOm1ldGEvIiB4OnhtcHRrPSJYTVAgQ29yZSA2LjAuMCI+CiAgIDxyZGY6UkRGIHhtbG5zOnJkZj0iaHR0cDovL3d3dy53My5vcmcvMTk5OS8wMi8yMi1yZGYtc3ludGF4LW5zIyI+CiAgICAgIDxyZGY6RGVzY3JpcHRpb24 rdr="Bangla Hope">
+        </div>
+        <div class="logo-text">
+          <h1>BANGLA HOPE SYSTEM</h1>
+          <span>Secure Administration Entry</span>
+        </div>
+      </header>
+
+      <div class="card-content">
+        <div class="field-group">
+          <label class="field-label">USER_IDENTIFIER (UID/EMAIL)</label>
+          <input type="text" class="input-field" placeholder="admin_hili_01" value="admin_hili_01">
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">SECURE_PASSPHRASE</label>
+          <input type="password" class="input-field" value="password123">
+          <div style="font-size: 8px; color: var(--text-light); text-align: right; margin-top: 4px; font-weight: 800;">[MASKED_INPUT]</div>
+        </div>
+
+        <div class="mfa-block">
+          <span class="mfa-tag">MFA_VERIFICATION</span>
+          <div style="font-size: 11px; margin-bottom: 8px; font-weight: 700; color: var(--text-muted);">INPUT_NODE_TOKEN:</div>
+          <input type="text" class="input-field" style="height: 38px; text-align: center; letter-spacing: 0.2em; font-weight: 800;" placeholder="000-000">
+        </div>
+
+        <button class="btn-auth">INITIATE_SESSION_ENTRY</button>
+
+        <div class="card-footer">
+          AUTHORIZED ACCESS ONLY. ALL SESSIONS ARE LOGGED.<br>
+          REF: <strong>USER_ROLE_ENFORCEMENT</strong>
+        </div>
+      </div>
+    </div>
+
+    <div class="bottom-links">
+      <span class="link-item">FORGOT_PASSPHRASE?</span>
+      <span class="divider">|</span>
+      <span class="link-item">CONTACT_IT_SUPPORT</span>
+    </div>
+  </div>
+
+</body>
+</html>

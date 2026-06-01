@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bangla Hope – Management: Site Registry</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Lora:ital,wght@0,400;0,600;1,400&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --primary: #1e3a4a;
+      --accent-teal: #2B7A9E; 
+      --accent-pink: #d17a8e;
+      --bg-app: #f8fafc;
+      --surface: #ffffff;
+      --surface-subtle: #f1f5f9;
+      --border: #e2e8f0;
+      --border-strong: #cbd5e1;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --radius: 8px;
+      --radius-sm: 6px;
+      --shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Nunito', sans-serif; background: var(--bg-app); color: var(--text-main); min-height: 100vh; display: flex; font-size: 14px; line-height: 1.6; }
+
+    /* SIDEBAR */
+    .sidebar { width: 252px; min-height: 100vh; background: #0a1f35; display: flex; flex-direction: column; position: fixed; top: 0; left: 0; bottom: 0; z-index: 100; }
+    .sidebar-logo { padding: 24px 20px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
+    .logo-img { width: 36px; height: 36px; background: #fff; border-radius: 6px; display: flex; align-items: center; justify-content: center; padding: 4px; font-weight: 800; color: var(--primary); }
+    .logo-text h1 { font-family: 'Lora', serif; font-size: 15px; font-weight: 600; color: #f8fafc; line-height: 1.2; }
+    .sidebar-section { padding: 16px 12px 4px; }
+    .sidebar-section-label { font-size: 10px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: #475569; padding: 0 12px; margin-bottom: 8px; }
+    .nav-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: var(--radius-sm); color: #94a3b8; text-decoration: none; font-size: 13px; margin-bottom: 2px; }
+    .nav-item:hover { background: rgba(255, 255, 255, 0.05); color: #f1f5f9; }
+    .nav-item.active { background: #1e293b; color: #fff; font-weight: 600; }
+
+    /* MAIN */
+    .main { margin-left: 252px; flex: 1; display: flex; flex-direction: column; }
+    .topbar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 32px; height: 64px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 50; }
+    .breadcrumb { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+
+    .content { padding: 32px; }
+    .page-header { margin-bottom: 32px; display: flex; justify-content: space-between; align-items: flex-end; }
+    .page-title { font-family: 'Lora', serif; font-size: 28px; font-weight: 600; }
+    
+    /* TABLE */
+    .card { background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border); box-shadow: var(--shadow); overflow: hidden; }
+    .card-header { padding: 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+    .card-title { font-size: 16px; font-weight: 700; }
+
+    .table { width: 100%; border-collapse: collapse; }
+    .table th { background: var(--surface-subtle); padding: 12px 20px; text-align: left; font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); border-bottom: 1px solid var(--border); }
+    .table td { padding: 15px 20px; border-bottom: 1px solid var(--border-soft); vertical-align: middle; }
+    
+    .site-code { font-family: 'Courier New', monospace; font-weight: 700; background: var(--surface-subtle); padding: 2px 6px; border-radius: 4px; font-size: 12px; }
+    .site-name { font-weight: 700; color: var(--primary); font-size: 15px; }
+
+    .badge { display: inline-flex; padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
+    .badge-hq { background: #eff6ff; color: #1e40af; }
+    .badge-remote { background: #f0fdf4; color: #166534; }
+
+    .btn-action { padding: 6px 12px; border-radius: 4px; font-size: 12px; font-weight: 600; cursor: pointer; border: 1px solid var(--border-strong); background: white; transition: all 0.2s; text-decoration: none; color: var(--text-main); }
+    .btn-action:hover { background: var(--surface-subtle); border-color: var(--primary); }
+    .btn-primary { background: var(--accent-teal); color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: 700; font-size: 13px; cursor: pointer; text-transform: uppercase; letter-spacing: 0.05em; }
+
+    /* MODAL */
+    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 1000; }
+    .modal { background: white; width: 500px; border-radius: 12px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); overflow: hidden; }
+    .modal-header { padding: 20px 24px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+    .modal-body { padding: 24px; }
+    .modal-footer { padding: 16px 24px; background: var(--surface-subtle); border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 12px; }
+
+    .form-group { margin-bottom: 20px; }
+    .label { display: block; font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px; letter-spacing: 0.05em; }
+    .input { width: 100%; padding: 10px 14px; border: 1.5px solid var(--border); border-radius: 6px; font-size: 14px; outline: none; font-family: inherit; }
+    .input:focus { border-color: var(--accent-teal); }
+    .hint { font-size: 11px; color: var(--text-muted); margin-top: 6px; line-height: 1.4; }
+
+  </style>
+</head>
+
+<body>
+  <nav class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-img">BH</div>
+      <div class="logo-text"><h1>Bangla Hope</h1></div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-section-label">Overview</div>
+      <a href="bh_dashboard.html" class="nav-item">Dashboard</a>
+      <a href="bh_students.html" class="nav-item">All Students</a>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-section-label">System</div>
+      <a href="bh_user_management.html" class="nav-item">User Registry</a>
+      <a href="bh_site_registry.html" class="nav-item active">Site Registry</a>
+      <a href="bh_audit_log.html" class="nav-item">Audit Logs</a>
+    </div>
+  </nav>
+
+  <div class="main">
+    <header class="topbar">
+      <div class="breadcrumb">Settings // Site Registry</div>
+      <div class="user-info" style="font-size: 12px; font-weight: 600; color: var(--text-muted);">
+        Admin: <span style="color: var(--accent-teal);">Main HQ Server</span>
+      </div>
+    </header>
+
+    <div class="content">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Physical Site Registry</h1>
+          <p style="color: var(--text-muted);">Define every physical school, office, and home within the Bangla Hope network.</p>
+        </div>
+        <button class="btn-primary" onclick="openModal()">+ Add New Site</button>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Active Sites</div>
+        </div>
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Site Code</th>
+              <th>Site Name</th>
+              <th>Location Type</th>
+              <th>Last Sync</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="site-code">HILI_HQ</span></td>
+              <td><span class="site-name">Main HQ Office</span></td>
+              <td><span class="badge badge-hq">Central HQ</span></td>
+              <td><span style="color: var(--text-muted);">-- (Master)</span></td>
+              <td><button class="btn-action">Edit Details</button></td>
+            </tr>
+            <tr>
+              <td><span class="site-code">VLG_01</span></td>
+              <td><span class="site-name">Ghoraghat Village School</span></td>
+              <td><span class="badge badge-remote">Remote Site</span></td>
+              <td>2 hours ago</td>
+              <td><button class="btn-action">Edit Details</button></td>
+            </tr>
+            <tr>
+              <td><span class="site-code">LRC_HOME</span></td>
+              <td><span class="site-name">LRC Children's Home</span></td>
+              <td><span class="badge badge-remote">Residential</span></td>
+              <td>15 mins ago</td>
+              <td><button class="btn-action">Edit Details</button></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADD SITE MODAL -->
+  <div class="modal-overlay" id="siteModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 class="card-title">Register New Physical Site</h3>
+        <button onclick="closeModal()" style="border:none; background:none; cursor:pointer; font-size:24px;">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="label">Site Name</label>
+          <input type="text" class="input" placeholder="e.g., Pirganj Village School">
+        </div>
+        
+        <div class="grid-2" style="display:grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+          <div class="form-group">
+            <label class="label">Unique Site Code</label>
+            <input type="text" class="input" placeholder="e.g., VLG_04">
+            <p class="hint">Short prefix for database tagging.</p>
+          </div>
+          <div class="form-group">
+            <label class="label">Location Type</label>
+            <select class="input">
+              <option>Village School</option>
+              <option>Residential Home</option>
+              <option>Administrative Office</option>
+              <option>Feeding School</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="label">Physical Address / Details</label>
+          <textarea class="input" style="min-height: 80px;" placeholder="Village, Union, Upazila..."></textarea>
+        </div>
+
+        <div style="background: #f0f9ff; border: 1px solid #bae6fd; padding: 12px; border-radius: 8px; font-size: 12px; color: #0369a1;">
+           <b>Auto-Integration:</b> Once saved, this site will be available for user assignments. All data synced from users at this site will carry this marker automatically.
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-action" onclick="closeModal()" style="background: white;">Cancel</button>
+        <button class="btn-primary" onclick="closeModal()">Register Site</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function openModal() {
+      document.getElementById('siteModal').style.display = 'flex';
+    }
+    function closeModal() {
+      document.getElementById('siteModal').style.display = 'none';
+    }
+  </script>
+</body>
+
+</html>

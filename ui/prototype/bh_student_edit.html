@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bangla Hope – Edit Student Hub: Rina Begum</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Lora:ital,wght@0,400;0,600;1,400&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --primary: #1e3a4a;
+      --accent-teal: #2B7A9E; 
+      --accent-pink: #d17a8e;
+      --bg-app: #f8fafc;
+      --surface: #ffffff;
+      --surface-subtle: #f1f5f9;
+      --border: #e2e8f0;
+      --border-strong: #cbd5e1;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --radius: 8px;
+      --radius-sm: 6px;
+      --shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Nunito', sans-serif; background: var(--bg-app); color: var(--text-main); min-height: 100vh; display: flex; font-size: 14px; line-height: 1.6; }
+
+    /* SIDEBAR - Consistent with App */
+    .sidebar { width: 252px; min-height: 100vh; background: #0a1f35; display: flex; flex-direction: column; position: fixed; top: 0; left: 0; bottom: 0; z-index: 100; }
+    .sidebar-logo { padding: 24px 20px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
+    .logo-img { width: 36px; height: 36px; background: #fff; border-radius: 6px; display: flex; align-items: center; justify-content: center; padding: 4px; }
+    .logo-img img { width: 100%; height: 100%; object-fit: contain; }
+    .logo-text h1 { font-family: 'Lora', serif; font-size: 15px; font-weight: 600; color: #f8fafc; line-height: 1.2; }
+    .logo-text span { display: block; font-size: 10px; color: #94a3b8; text-transform: uppercase; }
+    .sidebar-section { padding: 16px 12px 4px; }
+    .nav-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: var(--radius-sm); color: #94a3b8; text-decoration: none; font-size: 13px; margin-bottom: 2px; }
+    .nav-item:hover { background: rgba(255, 255, 255, 0.05); color: #f1f5f9; }
+    .nav-item.active { background: #1e293b; color: #fff; font-weight: 600; }
+
+    /* MAIN AREA */
+    .main { margin-left: 252px; flex: 1; display: flex; flex-direction: column; }
+    
+    .topbar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 32px; height: 64px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 50; }
+    .schema-path { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+    
+    .btn { display: inline-flex; align-items: center; padding: 8px 18px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s; border: 1px solid transparent; text-decoration: none; text-transform: uppercase; letter-spacing: 0.05em; }
+    .btn-secondary { background: var(--surface-subtle); color: var(--text-main); border-color: var(--border); }
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-outline-danger { border-color: var(--accent-pink); color: var(--accent-pink); background: transparent; width: 100%; justify-content: center; margin-bottom: 12px; }
+    .btn-outline-danger:hover { background: #fdf3f6; }
+    .btn-action { background: var(--surface); border-color: var(--border-strong); color: var(--text-main); width: 100%; justify-content: center; margin-bottom: 12px; }
+    .btn-action:hover { border-color: var(--primary); background: var(--surface-subtle); }
+
+    .content { padding: 32px; display: grid; grid-template-columns: 1fr 300px; gap: 32px; align-items: flex-start; }
+
+    /* CARDS & FORMS */
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); padding: 24px; margin-bottom: 24px; }
+    .annotate-label { font-size: 10px; font-weight: 800; color: var(--accent-teal); text-transform: uppercase; letter-spacing: 0.1em; display: block; margin-bottom: 20px; border-bottom: 1px solid var(--surface-subtle); padding-bottom: 8px; }
+
+    .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 20px; }
+    .field-group { margin-bottom: 20px; }
+    .input-label { display: block; font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px; }
+    .input-field { width: 100%; padding: 10px 14px; border: 1.5px solid var(--border); border-radius: 6px; font-size: 14px; color: var(--text-main); font-family: inherit; transition: border-color 0.2s; }
+    .input-field:focus { outline: none; border-color: var(--accent-teal); }
+    textarea.input-field { min-height: 120px; resize: vertical; line-height: 1.5; }
+
+    /* ACTION HUB SIDEBAR */
+    .action-hub-title { font-family: 'Lora', serif; font-size: 18px; font-weight: 600; margin-bottom: 8px; color: var(--primary); }
+    .action-hub-desc { font-size: 12px; color: var(--text-muted); margin-bottom: 20px; line-height: 1.4; }
+    
+    .status-badge { display: inline-flex; align-items: center; padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: 700; background: var(--surface-subtle); color: var(--primary); border: 1px solid var(--border); margin-bottom: 24px; }
+
+    .audit-section { background: #fffbeb; border: 1px solid #fde68a; }
+    .audit-label { color: #92400e; }
+
+  </style>
+</head>
+
+<body>
+  <nav class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-img"><img src="data:image/png;base64,..." alt="Logo"></div>
+      <div class="logo-text"><h1>Bangla Hope</h1><span>Sponsorship Program</span></div>
+    </div>
+    <div class="sidebar-section">
+      <a href="bh_dashboard.html" class="nav-item">Dashboard</a>
+      <a href="bh_students.html" class="nav-item active">All Students</a>
+      <a href="bh_village.html" class="nav-item">Village Schools</a>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-section-label">Management</div>
+      <a href="bh_sponsor_details.html" class="nav-item">Sponsors</a>
+      <a href="#" class="nav-item">Subsidies & Finance</a>
+      <a href="bh_reports_apr.html" class="nav-item">Reports & APR</a>
+      <a href="bh_communication_hub.html" class="nav-item">Communication Hub</a>
+      <a href="bh_communication_templates.html" class="nav-item">Template Manager</a>
+      <a href="bh_archive.html" class="nav-item">Drop / Archive</a>
+    </div>
+  </nav>
+
+  <div class="main">
+    <header class="topbar">
+      <div class="schema-path">DIRECTORY // PROFILE // #LRC-0124 // ACTION_HUB</div>
+      <div style="display: flex; gap: 12px;">
+        <a href="bh_student_details.html" class="btn btn-secondary">Discard Changes</a>
+        <button class="btn btn-primary">Save All Changes</button>
+      </div>
+    </header>
+
+    <div class="content">
+      <!-- MAIN EDITING FORM -->
+      <div class="form-container">
+        <h2 style="font-family: 'Lora', serif; font-size: 28px; margin-bottom: 24px;">Edit Student: Rina Begum</h2>
+
+        <div class="card">
+          <span class="annotate-label">Zone_A: Personal_Identity</span>
+          <div class="field-row">
+            <div class="field-group">
+              <label class="input-label">Full Legal Name</label>
+              <input type="text" class="input-field" value="Rina Begum">
+            </div>
+            <div class="field-group">
+              <label class="input-label">Date of Birth</label>
+              <input type="date" class="input-field" value="2017-05-12">
+            </div>
+          </div>
+          <div class="field-row">
+            <div class="field-group">
+              <label class="input-label">Gender</label>
+              <select class="input-field">
+                <option>Female</option>
+                <option>Male</option>
+              </select>
+            </div>
+            <div class="field-group">
+              <label class="input-label">Religion</label>
+              <input type="text" class="input-field" value="Islam">
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <span class="annotate-label">Zone_B: Family_Background</span>
+          <div class="field-row">
+            <div class="field-group">
+              <label class="input-label">Father's Name</label>
+              <input type="text" class="input-field" value="Late Md. Abdur Rashid">
+            </div>
+            <div class="field-group">
+              <label class="input-label">Mother's Name</label>
+              <input type="text" class="input-field" value="Mst. Fatema">
+            </div>
+          </div>
+          <div class="field-row">
+             <div class="field-group">
+              <label class="input-label">Siblings (e.g., 1 Brother, 2 Sisters)</label>
+              <input type="text" class="input-field" value="1 Brother, 2 Sisters">
+            </div>
+             <div class="field-group">
+              <label class="input-label">Admission Date 🔒</label>
+              <input type="date" class="input-field" value="2024-01-15" readonly style="background: var(--surface-subtle); border-style: dashed;">
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <span class="annotate-label">Zone_C: Medical_Intake_&_Narrative</span>
+          <div class="field-row">
+            <div class="field-group">
+              <label class="input-label">Admission Weight (KG)</label>
+              <input type="number" step="0.1" class="input-field" value="18.5">
+            </div>
+            <div class="field-group">
+              <label class="input-label">Immunization Status</label>
+              <select class="input-field">
+                <option selected>Fully Immunized</option>
+                <option>Partial / Pending</option>
+                <option>Not Immunized</option>
+              </select>
+            </div>
+          </div>
+          <div class="field-group">
+            <label class="input-label">Health Status at Admission</label>
+            <input type="text" class="input-field" value="Good / Stable">
+          </div>
+          <div class="field-group" style="margin-bottom: 0;">
+            <label class="input-label">Case History & Referral Narrative</label>
+            <textarea class="input-field">Father deceased in 2022 due to a chronic illness. Mother, Mst. Fatema, is a day laborer but struggles to find consistent work...</textarea>
+          </div>
+        </div>
+
+        <div class="card audit-section">
+          <span class="annotate-label audit-label">Security: Audit_Logging</span>
+          <div class="field-group" style="margin-bottom: 0;">
+            <label class="input-label" style="color: #92400e;">Reason for this modification (Mandatory)</label>
+            <input type="text" class="input-field" placeholder="e.g., Correcting misspelling in guardian name..." style="border-color: #fcd34d;">
+          </div>
+        </div>
+      </div>
+
+      <!-- CRITICAL ACTIONS SIDEBAR -->
+      <div class="action-sidebar">
+        <div class="card" style="border-top: 4px solid var(--primary); position: sticky; top: 96px;">
+          <span class="annotate-label">Critical_Program_Actions</span>
+          <div class="status-badge">Current Status: LRC_ACTIVE</div>
+          
+          <div class="action-group">
+            <h3 class="action-hub-title">Transition Student</h3>
+            <p class="action-hub-desc">Move this student to a new program (e.g., Village to Boarding). This will archive the current ID.</p>
+            <button class="btn btn-action">Initiate Transition [⇄]</button>
+          </div>
+
+          <div style="margin: 24px 0; border-top: 1px dashed var(--border-strong);"></div>
+
+          <div class="action-group">
+            <h3 class="action-hub-title">Departure</h3>
+            <p class="action-hub-desc">Permanently remove from active sponsorship. This moves the record to the Drop List.</p>
+            <button class="btn btn-outline-danger">Mark as Dropped [✖]</button>
+            <button class="btn btn-action" style="border-color: #10b981; color: #10b981;">Mark as Graduated [✔]</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

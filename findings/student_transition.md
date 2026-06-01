@@ -37,9 +37,9 @@ The system handles ID generation automatically based on the selected program to 
     - Upon selecting a program in the Admission form, the system queries the database for the highest existing number in that program category.
     - **Example:** If the last Village student was `VLG-550`, the system suggests `VLG-551`.
 
-3.  **Validation & Override:**
+3.  **Approval & Override:**
     - The ID field is **read-only by default**.
-    - An **"Unlock"** icon allows admins to manually enter an ID for legacy data migration (with immediate duplicate-check validation).
+    - An **"Unlock"** icon allows admins to manually enter an ID for legacy data migration (with immediate duplicate-check approval).
 
 ---
 

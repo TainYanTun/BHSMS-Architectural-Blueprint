@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bangla Hope – Sponsor Portal: My Communications</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Lora:ital,wght@0,400;0,600;1,400&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --primary-navy: #1e3a4a;
+      --sidebar-bg: #0a1f35;
+      --sidebar-active: #1e293b;
+      --action-teal: #2B7A9E;
+      --bg-app: #f8fafc;
+      --surface-white: #ffffff;
+      --surface-subtle: #f1f5f9;
+      --border-neutral: #e2e8f0;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --radius: 8px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Nunito', sans-serif; background: var(--bg-app); color: var(--text-main); min-height: 100vh; display: flex; }
+
+    /* SIDEBAR (Sponsor Version) */
+    .sidebar { width: 252px; background: var(--sidebar-bg); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; bottom: 0; z-index: 100; }
+    .sidebar-logo { padding: 24px 20px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
+    .logo-img { width: 36px; height: 36px; background: #fff; border-radius: 6px; display: flex; align-items: center; justify-content: center; padding: 4px; font-weight: 800; color: var(--primary-navy); }
+    .logo-text h1 { font-family: 'Lora', serif; font-size: 15px; font-weight: 600; color: #f8fafc; }
+    .logo-text span { display: block; font-size: 10px; color: #94a3b8; text-transform: uppercase; }
+
+    .nav-section { padding: 20px 12px; }
+    .nav-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 6px; color: #94a3b8; font-size: 13px; text-decoration: none; margin-bottom: 4px; }
+    .nav-item:hover { background: rgba(255, 255, 255, 0.05); color: #fff; }
+    .nav-item.active { background: var(--sidebar-active); color: #fff; font-weight: 600; }
+
+    /* MAIN CONTENT */
+    .main { margin-left: 252px; flex: 1; display: flex; flex-direction: column; }
+    .topbar { height: 64px; background: var(--surface-white); border-bottom: 1px solid var(--border-neutral); padding: 0 32px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 50; }
+    .portal-label { font-family: 'Courier New', monospace; font-size: 11px; font-weight: 700; color: var(--action-teal); text-transform: uppercase; }
+
+    .content { padding: 32px; max-width: 1000px; margin: 0 auto; width: 100%; }
+    .page-header { margin-bottom: 32px; }
+    .page-title { font-family: 'Lora', serif; font-size: 28px; color: var(--primary-navy); }
+    .page-subtitle { color: var(--text-muted); font-size: 14px; margin-top: 4px; }
+
+    /* COMMUNICATION FEED */
+    .comm-list { display: flex; flex-direction: column; gap: 16px; }
+    .comm-card { background: var(--surface-white); border-radius: var(--radius); border: 1px solid var(--border-neutral); padding: 20px; display: flex; gap: 20px; transition: transform 0.2s, box-shadow 0.2s; cursor: pointer; text-decoration: none; color: inherit; }
+    .comm-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.05); border-color: var(--action-teal); }
+    
+    .student-avatar { width: 60px; height: 60px; border-radius: 50%; background: var(--surface-subtle); display: flex; align-items: center; justify-content: center; flex-shrink: 0; border: 2px solid #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.1); overflow: hidden; }
+    .student-avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+    .comm-info { flex: 1; }
+    .comm-top { display: flex; justify-content: space-between; margin-bottom: 4px; }
+    .comm-type { font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--action-teal); letter-spacing: 0.05em; }
+    .comm-date { font-size: 12px; color: var(--text-muted); }
+    .comm-subject { font-size: 16px; font-weight: 700; color: var(--primary-navy); margin-bottom: 8px; }
+    .comm-preview { font-size: 14px; color: var(--text-muted); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.5; }
+
+    .comm-meta { display: flex; align-items: center; gap: 12px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--surface-subtle); }
+    .meta-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-muted); font-weight: 600; }
+    .unread-dot { width: 8px; height: 8px; background: var(--action-teal); border-radius: 50%; }
+
+    /* FILTERS */
+    .filter-tabs { display: flex; gap: 24px; border-bottom: 1px solid var(--border-neutral); margin-bottom: 24px; }
+    .filter-tab { padding: 12px 4px; font-size: 13px; font-weight: 700; color: var(--text-muted); cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.2s; }
+    .filter-tab:hover { color: var(--primary-navy); }
+    .filter-tab.active { color: var(--action-teal); border-color: var(--action-teal); }
+
+  </style>
+</head>
+
+<body>
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-img">BH</div>
+      <div class="logo-text"><h1>Bangla Hope</h1><span>Sponsor Portal</span></div>
+    </div>
+    <nav class="nav-section">
+      <a href="#" class="nav-item">Dashboard</a>
+      <a href="#" class="nav-item">My Students</a>
+      <a href="bh_sponsor_portal_communications.html" class="nav-item active">Communications</a>
+      <a href="#" class="nav-item">Donation History</a>
+      <a href="#" class="nav-item">Tax Receipts</a>
+      <a href="#" class="nav-item">My Profile</a>
+    </nav>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+    <header class="topbar">
+      <div class="portal-label">PORTAL_USER / COMMUNICATIONS / INBOX</div>
+      <div style="display:flex; align-items:center; gap:12px;">
+        <span style="font-size:12px; font-weight:700; color:var(--text-muted);">John & Sarah Miller</span>
+        <div style="width:32px; height:32px; background:var(--action-teal); color:white; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:800;">JM</div>
+      </div>
+    </header>
+
+    <div class="content">
+      <div class="page-header">
+        <h2 class="page-title">My Communications</h2>
+        <p class="page-subtitle">Messages, reports, and updates from your sponsored students.</p>
+      </div>
+
+      <div class="filter-tabs">
+        <div class="filter-tab active">All Messages</div>
+        <div class="filter-tab">Unread</div>
+        <div class="filter-tab">Annual Reports</div>
+        <div class="filter-tab">Photos</div>
+      </div>
+
+      <div class="comm-list">
+        <!-- MESSAGE 1 -->
+        <a href="bh_sponsor_portal_view_letter.html" class="comm-card">
+          <div class="student-avatar">
+            <div style="background:#cbd5e1; width:100%; height:100%; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:800;">AR</div>
+          </div>
+          <div class="comm-info">
+            <div class="comm-top">
+              <span class="comm-type">Thank You Letter</span>
+              <span class="comm-date">May 27, 2026</span>
+            </div>
+            <div class="comm-subject">A note from Abdur Rahman</div>
+            <div class="comm-preview">Dear John & Sarah Miller, Thank you so much for your recent gift of $50.00 for the month of June 2026. Your continued support makes a world of difference in my life...</div>
+            <div class="comm-meta">
+              <div class="meta-item"><div class="unread-dot"></div> New Message</div>
+              <div class="meta-item">Student: Abdur Rahman</div>
+              <div class="meta-item">Ref: #REC-9921</div>
+            </div>
+          </div>
+        </a>
+
+        <!-- MESSAGE 2 -->
+        <a href="#" class="comm-card">
+          <div class="student-avatar">
+             <div style="background:#cbd5e1; width:100%; height:100%; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:800;">FK</div>
+          </div>
+          <div class="comm-info">
+            <div class="comm-top">
+              <span class="comm-type">Birthday Greeting</span>
+              <span class="comm-date">May 12, 2026</span>
+            </div>
+            <div class="comm-subject">Fatima's Birthday Wish!</div>
+            <div class="comm-preview">It is my birthday! Thank you so much for being my sponsor. This year I am 10 years old and my favorite subject at school is Mathematics...</div>
+            <div class="comm-meta">
+              <div class="meta-item">Read</div>
+              <div class="meta-item">Student: Fatima Khatun</div>
+            </div>
+          </div>
+        </a>
+
+        <!-- MESSAGE 3 -->
+        <a href="#" class="comm-card">
+          <div class="student-avatar">
+             <div style="background:#cbd5e1; width:100%; height:100%; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:800;">AR</div>
+          </div>
+          <div class="comm-info">
+            <div class="comm-top">
+              <span class="comm-type">Annual Progress Report</span>
+              <span class="comm-date">Jan 15, 2026</span>
+            </div>
+            <div class="comm-subject">2025 Progress Report – Abdur Rahman</div>
+            <div class="comm-preview">Comprehensive update on Abdur's academic performance, health status, and social development over the past year. Includes new 2026 profile photo...</div>
+            <div class="comm-meta">
+              <div class="meta-item">Read</div>
+              <div class="meta-item">Student: Abdur Rahman</div>
+              <div class="meta-item">📎 PDF Attachment</div>
+            </div>
+          </div>
+        </a>
+      </div>
+    </div>
+  </main>
+</body>
+
+</html>

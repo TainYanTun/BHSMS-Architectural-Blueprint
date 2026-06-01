@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bangla Hope – Communication Template Manager</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Lora:ital,wght@0,400;0,600;1,400&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --primary-navy: #1e3a4a;
+      --sidebar-bg: #0a1f35;
+      --sidebar-active: #1e293b;
+      --action-teal: #2B7A9E;
+      --signal-pink: #d17a8e;
+      --success-green: #10b981;
+      --bg-app: #f8fafc;
+      --surface-white: #ffffff;
+      --surface-subtle: #f1f5f9;
+      --border-neutral: #e2e8f0;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --radius: 8px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Nunito', sans-serif;
+      background: var(--bg-app);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+    }
+
+    /* SIDEBAR */
+    .sidebar {
+      width: 252px;
+      min-height: 100vh;
+      background: var(--sidebar-bg);
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      z-index: 100;
+    }
+
+    .sidebar-logo {
+      padding: 24px 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .logo-img {
+      width: 36px;
+      height: 36px;
+      background: #fff;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 4px;
+    }
+
+    .logo-text h1 {
+      font-family: 'Lora', serif;
+      font-size: 15px;
+      font-weight: 600;
+      color: #f8fafc;
+    }
+
+    .logo-text span {
+      display: block;
+      font-size: 10px;
+      color: #94a3b8;
+      text-transform: uppercase;
+    }
+
+    .nav-section {
+      padding: 20px 12px;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 12px;
+      border-radius: 6px;
+      color: #94a3b8;
+      font-size: 13px;
+      text-decoration: none;
+      margin-bottom: 4px;
+    }
+
+    .nav-item:hover {
+      background: rgba(255, 255, 255, 0.05);
+      color: #fff;
+    }
+
+    .nav-item.active {
+      background: var(--sidebar-active);
+      color: #fff;
+      font-weight: 600;
+    }
+
+    /* MAIN CONTENT */
+    .main {
+      margin-left: 252px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .topbar {
+      height: 64px;
+      background: var(--surface-white);
+      border-bottom: 1px solid var(--border-neutral);
+      padding: 0 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .breadcrumb {
+      font-family: 'Courier New', monospace;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--action-teal);
+      text-transform: uppercase;
+    }
+
+    .content {
+      padding: 32px;
+      display: grid;
+      grid-template-columns: 350px 1fr;
+      gap: 24px;
+    }
+
+    .header-row {
+      grid-column: span 2;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+    }
+
+    .page-title h2 {
+      font-family: 'Lora', serif;
+      font-size: 28px;
+      color: var(--primary-navy);
+    }
+
+    .page-title p {
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+
+    /* CARDS */
+    .module-card {
+      background: var(--surface-white);
+      border-radius: var(--radius);
+      border: 1px solid var(--border-neutral);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .card-header {
+      padding: 16px 24px;
+      background: linear-gradient(90deg, var(--surface-white) 0%, var(--surface-subtle) 100%);
+      border-bottom: 1px solid var(--border-neutral);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .card-label {
+      font-family: 'Courier New', monospace;
+      font-size: 10px;
+      font-weight: 800;
+      color: var(--action-teal);
+      text-transform: uppercase;
+    }
+
+    /* LIST VIEW */
+    .template-list {
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    .template-item {
+      padding: 16px 24px;
+      border-bottom: 1px solid var(--border-neutral);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .template-item:hover {
+      background: var(--surface-subtle);
+    }
+
+    .template-item.active {
+      background: #f0f9ff;
+      border-left: 4px solid var(--action-teal);
+      padding-left: 20px;
+    }
+
+    .template-name {
+      font-weight: 700;
+      font-size: 14px;
+      color: var(--primary-navy);
+      margin-bottom: 4px;
+    }
+
+    .template-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .category-badge {
+      font-size: 9px;
+      font-weight: 800;
+      text-transform: uppercase;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: #e2e8f0;
+      color: #475569;
+    }
+
+    .id-tag {
+      font-family: 'Courier New', monospace;
+      font-weight: 700;
+      background: var(--surface-subtle);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    /* EDITOR VIEW */
+    .editor-container {
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .form-label {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+
+    .form-input {
+      padding: 10px 12px;
+      border: 1.5px solid var(--border-neutral);
+      border-radius: 6px;
+      font-size: 14px;
+      outline: none;
+    }
+
+    .form-input:focus {
+      border-color: var(--action-teal);
+    }
+
+    .template-editor {
+      min-height: 400px;
+      border: 1.5px solid var(--border-neutral);
+      border-radius: 6px;
+      padding: 20px;
+      font-family: 'Nunito', sans-serif;
+      font-size: 15px;
+      line-height: 1.6;
+      outline: none;
+    }
+
+    .template-editor:focus {
+      border-color: var(--action-teal);
+    }
+
+    /* VARIABLES PANEL */
+    .variables-panel {
+      background: var(--surface-subtle);
+      border-radius: 6px;
+      padding: 16px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .var-chip {
+      background: #fff;
+      border: 1px solid var(--border-neutral);
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-family: 'Courier New', monospace;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--action-teal);
+      cursor: pointer;
+    }
+
+    .var-chip:hover {
+      border-color: var(--action-teal);
+      background: #f0f9ff;
+    }
+
+    .btn-action {
+      background: var(--action-teal);
+      color: #fff;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      cursor: pointer;
+    }
+
+    .btn-outline {
+      background: transparent;
+      border: 1.5px solid var(--border-neutral);
+      color: var(--text-muted);
+      padding: 10px 20px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      cursor: pointer;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-img">BH</div>
+      <div class="logo-text">
+        <h1>Bangla Hope</h1>
+        <span>Sponsorship SMS</span>
+      </div>
+    </div>
+    <nav class="nav-section">
+      <a href="bh_dashboard.html" class="nav-item">Dashboard</a>
+      <a href="bh_students.html" class="nav-item">Student Master</a>
+      <a href="bh_sponsors.html" class="nav-item">Sponsor Registry</a>
+      <a href="bh_communication_hub.html" class="nav-item">Communication Hub</a>
+      <a href="bh_reports_apr.html" class="nav-item">Reports & APR</a>
+      <a href="#" class="nav-item active">Template Manager</a>
+      <a href="bh_loan.html" class="nav-item">Loan Program</a>
+      <a href="bh_audit_log.html" class="nav-item">Audit Logs</a>
+    </nav>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+    <header class="topbar">
+      <div class="breadcrumb">SYSTEM_CORE / CONFIGURATION / TEMPLATES</div>
+      <div class="user-info" style="display:flex; align-items:center; gap:12px;">
+        <span style="font-size:12px; font-weight:600; color:var(--text-muted);">Supervisor: SPD</span>
+        <div style="width:32px; height:32px; background:#e2e8f0; border-radius:50%;"></div>
+      </div>
+    </header>
+
+    <div class="content">
+      <div class="header-row">
+        <div class="page-title">
+          <h2>Communication Template Manager</h2>
+          <p>Supervisors only: Create and maintain organization-wide dynamic templates.</p>
+        </div>
+        <button class="btn-action">+ Create New Template</button>
+      </div>
+
+      <!-- LEFT: TEMPLATE LIST -->
+      <div class="module-card">
+        <div class="card-header">
+          <div class="card-label">[SEC_14: TEMPLATE_LIBRARY]</div>
+        </div>
+        <div class="template-list">
+          <div class="template-item active">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <div class="template-name">Contribution Receipt</div>
+            </div>
+            <div class="template-meta">
+              <span class="category-badge">Financial</span>
+              <span>Updated 2 days ago</span>
+            </div>
+          </div>
+          <div class="template-item">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <div class="template-name">Special Gift Note</div>
+            </div>
+            <div class="template-meta">
+              <span class="category-badge">Financial</span>
+              <span>Updated 5 days ago</span>
+            </div>
+          </div>
+          <div class="template-item">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <div class="template-name">Student Birthday</div>
+            </div>
+            <div class="template-meta">
+              <span class="category-badge">Milestone</span>
+              <span>Updated 3 weeks ago</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: TEMPLATE EDITOR -->
+      <div class="module-card">
+        <div class="card-header">
+          <div class="card-label">[SEC_15: TEMPLATE_EDITOR]</div>
+          <div style="display:flex; gap:12px;">
+            <button class="btn-outline" style="border-color: var(--signal-pink); color: var(--signal-pink);">Archive Template</button>
+            <button class="btn-outline">Test with Data</button>
+            <button class="btn-action">Save Changes</button>
+          </div>
+        </div>
+        <div class="editor-container">
+          <!-- ARCHIVE WARNING -->
+          <div style="background: #f1f5f9; border: 1px solid var(--border-neutral); padding: 12px 16px; border-radius: 6px; font-size: 12px; color: var(--text-muted); display: flex; align-items: flex-start; gap: 12px;">
+            <span style="font-size: 16px;">ⓘ</span>
+            <div>
+              Archived templates will no longer appear in the Communication Hub but will be preserved for historical records.
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Template Name</label>
+            <input type="text" class="form-input" value="General Contribution Acknowledgement">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Category</label>
+            <select class="form-input">
+              <option selected>Financial</option>
+              <option>Milestone</option>
+              <option>Academic</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label">Dynamic Variables (Click to Insert)</label>
+            <div class="variables-panel">
+              <div class="var-chip">[STUDENT_NAME]</div>
+              <div class="var-chip">[SPONSOR_NAME]</div>
+              <div class="var-chip">[AMOUNT]</div>
+              <div class="var-chip">[DATE]</div>
+              <div class="var-chip">[DAYS_SINCE_LAST]</div>
+              <div class="var-chip">[STUDENT_AGE]</div>
+              <div class="var-chip">[GRADE]</div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Body Content</label>
+            <div class="template-editor" contenteditable="true">
+              <p>Dear [SPONSOR_NAME],</p>
+              <p><br></p>
+              <p>Thank you so much for your recent contribution of <b>[AMOUNT]</b> received on <b>[DATE]</b>. Your continued support makes a world of difference in my life and education.</p>
+              <p><br></p>
+              <p>This month at school, I have been studying hard for my [SUBJECT] exams. I am also enjoying my time in the [CLUB] where we are [ACTIVITY].</p>
+              <p><br></p>
+              <p>I hope you are doing well and having a blessed month. Thank you for being my sponsor!</p>
+              <p><br></p>
+              <p>Sincerely,</p>
+              <p><b>[STUDENT_NAME]</b></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</body>
+
+</html>
