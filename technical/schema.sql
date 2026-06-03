@@ -371,7 +371,7 @@ CREATE TABLE academic_records (
 );
 
 CREATE TABLE attendance_records (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID,
     student_id UUID NOT NULL REFERENCES students(id) ON DELETE RESTRICT,
     year INT NOT NULL CHECK (year > 1900),
     days_present INT NOT NULL CHECK (days_present >= 0),
@@ -380,8 +380,8 @@ CREATE TABLE attendance_records (
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW(),
     row_version INT DEFAULT 1,
-    UNIQUE(student_id, year)
-);
+    PRIMARY KEY (id, created_at)
+) PARTITION BY RANGE (created_at);
 
 CREATE TABLE documents (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -396,6 +396,17 @@ CREATE TABLE documents (
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW(),
     row_version INT DEFAULT 1
+);
+
+CREATE TABLE job_queue (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    task_type TEXT NOT NULL, -- e.g., 'GENERATE_PDF', 'SEND_EMAIL'
+    payload JSONB NOT NULL,   -- Contextual data (e.g., student_id, report_id)
+    status TEXT NOT NULL DEFAULT 'Pending' CHECK (status IN ('Pending', 'Processing', 'Completed', 'Failed')),
+    attempts INT DEFAULT 0,
+    error_log TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 CREATE TABLE reports (
@@ -628,7 +639,7 @@ FOR EACH ROW EXECUTE FUNCTION fn_enforce_contribution_limits();
 -- 8. AUDIT & LOGGING
 -- ==========================================
 CREATE TABLE audit_logs (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID,
     user_id UUID REFERENCES users(id) ON DELETE SET NULL, -- Fix: Handle user deletion
     module TEXT NOT NULL,
     action TEXT NOT NULL,
@@ -636,8 +647,9 @@ CREATE TABLE audit_logs (
     target_type TEXT,
     mutation_detail JSONB,
     ip_address INET,
-    created_at TIMESTAMPTZ DEFAULT NOW()
-);
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    PRIMARY KEY (id, created_at)
+) PARTITION BY RANGE (created_at);
 
 -- ==========================================
 -- 8. VIEWS FOR REPORTING

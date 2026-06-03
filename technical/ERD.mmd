@@ -1,4 +1,3 @@
-```mermaid
 erDiagram
     %% ==========================================
     %% 1. SYSTEM & SECURITY
@@ -7,6 +6,17 @@ erDiagram
         text name PK
         text description
         timestamptz created_at
+    }
+
+    JOB_QUEUE {
+        uuid id PK
+        text task_type
+        jsonb payload
+        text status
+        int attempts
+        text error_log
+        timestamptz created_at
+        timestamptz updated_at
     }
 
     PROGRAMS {
@@ -537,4 +547,3 @@ erDiagram
     
     COMMUNICATION_TEMPLATES ||--o{ COMMUNICATIONS : "defines"
     REPORTS ||--o{ COMMUNICATIONS : "delivered via"
-```
