@@ -364,6 +364,18 @@ CREATE TABLE contributions (
 -- ==========================================
 -- 5. PROGRESS, RECORDS & HISTORY
 -- ==========================================
+
+-- Reference table for third-party universities / colleges / vocational institutes
+CREATE TABLE educational_institutions (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name TEXT NOT NULL,
+    type TEXT, -- e.g., 'University', 'College', 'Vocational'
+    location TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    row_version INT DEFAULT 1
+);
+
 CREATE TABLE academic_records (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     student_id UUID NOT NULL REFERENCES students(id) ON DELETE RESTRICT,
@@ -381,7 +393,7 @@ CREATE TABLE academic_records (
 );
 
 CREATE TABLE attendance_records (
-    id UUID,
+    id UUID DEFAULT uuid_generate_v4(),
     student_id UUID NOT NULL REFERENCES students(id) ON DELETE RESTRICT,
     year INT NOT NULL CHECK (year > 1900),
     days_present INT NOT NULL CHECK (days_present >= 0),

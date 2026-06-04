@@ -46,7 +46,7 @@ The system uses semantic tokens to support Light and Dark modes seamlessly.
 | **Table Body** | Nunito | 13px | 400 | Mixed |
 | **Path/UID** | Courier | 11px | 700 | UPPER |
 
-## 4. Component Stylings
+## 4. Component Styling
 
 ### 4.1 Modular Cards
 - **Radius:** 8px standard.

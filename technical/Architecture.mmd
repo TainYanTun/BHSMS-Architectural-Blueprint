@@ -1,23 +1,22 @@
 graph TD
     %% --- STREAMLINED FRONTEND LAYER ---
     subgraph ClientLayer ["Client Layer (React + Vite)"]
-        SP["Sponsor Portal <br/> (Public Cloud / SPA)"]
-        ST["Staff Portal <br/> (Tailscale / Sandbox UI Preview Mode)"]
+        SP["Sponsor Portal <br/> (Public Cloud SPA)"]
+        ST["Staff Portal <br/> (On-Premise + PWA Offline Sync)"]
     end
 
     %% --- INFRASTRUCTURE & PROXY ---
-    subgraph RP ["Ingress & Reverse Proxy Layer"]
+    subgraph RP ["Ingress & Reverse Proxy Layer (Self-Hosted)"]
         Proxy["Reverse Proxy <br/> (Nginx: SSL, Rate Limiting)"]
     end
-
-    Cache[("Caching & Queue Broker <br/> (Redis)")]
 
     %% --- CORE APP LAYER ---
     subgraph SL ["Service Layer (Laravel 11 REST API)"]
         Auth["API Gateway <br/> (Sanctum Tokens + RBAC Middleware)"]
         Sched["Laravel Automation Engine <br/> (Artisan Scheduler)"]
         Logic["Domain Logic <br/> (Services / Eloquent Models)"]
-        Jobs["Background Queue <br/> (PDFs, Mail, Sync Workers)"]
+        Cache["File Cache <br/> (Laravel Internal)"]
+        Jobs["Background Queue <br/> (DB-backed: PDFs, Mail, Sync)"]
         
         Auth -->|Validate FormRequests| Logic
         Sched -->|Triggers Periodic| Logic
@@ -39,9 +38,9 @@ graph TD
     Gate[["Sandbox Preview <br/> (Visual UI Evaluation & Confirmation)"]]
 
     %% --- DATA & PERSISTENCE ---
-    subgraph DL ["Data Layer (Persistence)"]
-        DB[("PostgreSQL Production <br/> (Partitioned Audit Logs)")]
-        File["Object Storage <br/> (S3 / Student Photos / PDFs)"]
+    subgraph DL ["Data Layer (PostgreSQL 15+)"]
+        DB[("PostgreSQL Production <br/> ~35 Tables · Partitioned Audit Logs <br/> GIN-Indexed Text Search")]
+        File["Object Storage <br/> (S3 — Photos, PDFs, Documents)"]
     end
 
     %% --- OUTBOUND ---
@@ -52,21 +51,28 @@ graph TD
     %% ==========================================
     
     %% Ingress Flow
+    %% ── Alternative: add Cloudflare Tunnel + Cloudflare Access (Auth Gate) ──
+    %%   If office is behind CGNAT or remote staff access is needed later:
+    %%   1. Install cloudflared on server (outbound tunnel, no open ports)
+    %%   2. Point staff.banglohope.org to the tunnel
+    %%   3. Enable Cloudflare Access for auth before traffic reaches Nginx
+    %%   Diagram: ST -->|HTTPS + Auth| Access --> Tunnel -->|Private link| Proxy
+    %% ─────────────────────────────────────────────────────────────────────────
     SP & ST -->|HTTPS| Proxy
     Proxy -->|PHP-FPM| Auth
 
     %% Migration / ETL Flow with Gatekeeper
     Legacy -.->|Raw Data / OCR| Ext
-    Stage -->|Read Draft Records | Gate
+    Stage -->|Read Draft Records| Gate
     Gate -->|Approved Manual Release| DB
 
-    %% Caching & Queue Brokerage
-    Logic <-->|Read/Write Cache <br/> & Dispatch Jobs| Cache
-    Cache -->|Poll Tasks| Jobs
+    %% Caching & Queue
+    Logic <-->|Read/Write| Cache
+    Logic -->|Dispatch Jobs| Jobs
+    Jobs -->|Poll & Process| DB
 
     %% Persistence & Outbound Pipelines
     Logic -->|ORM Write / Audit Trail| DB
-    Jobs -->|Update State / Log| DB 
     Jobs -->|Store Media| File 
     Jobs -->|Send| ExtS
 
