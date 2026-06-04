@@ -26,12 +26,13 @@ This document defines the system-wide permissions for each user role within the 
 | **Documents** | Create / Edit | Create / Edit² | Full Access | Full Access | View |
 | **Communication Templates** | -- | -- | Manage / Edit | Full Access | -- |
 | **Communications** | Draft | Draft / Edit² | **Approve / Sign-off** | Full Access | View |
-| Thank You Letters / APR | Draft | Draft / Edit² | **Approve / Sign-off** | Full Access | View / Download |
+| Thank You Letters | Create / Edit | Create / Edit² | Full Access | Full Access | View / Download |
+| Annual Progress Report (APR) | Draft | Draft / Edit² | **Approve / Sign-off** | Full Access | View / Download |
 | **▸ Reference & System** | | | | | |
 | **Teachers** | View | Create / Edit² | Full Access | Full Access | -- |
 | **Facilities Registry** | -- | -- | -- | Full Access | -- |
 | **Site & User Registry** | -- | -- | -- | Full Access | -- |
-| **Invitations** | -- | -- | -- | Full Access | -- |
+| **Invitations** | -- | -- | Full Access | Full Access | -- |
 | **Data Migration Staging** | -- | -- | -- | Full Access | -- |
 | **System Health & Backups** | -- | -- | -- | Full Access | -- |
 
