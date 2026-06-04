@@ -36,3 +36,21 @@ We will adopt a monorepo structure to facilitate shared development, consistent 
 *   **Centralized Auth:** The Laravel backend acts as the Single Source of Truth for authentication. Both the Staff and Sponsor frontends will authenticate against the same `/api/v1/login` endpoints using Sanctum tokens.
 *   **Separated Frontends:** Maintaining two distinct frontend projects ensures the Staff portal is not cluttered with Sponsor-specific features and vice versa, while maintaining a lean codebase.
 *   **Offline First:** The Staff portal will prioritize PWA features to meet the "Offline Resilient Operation" requirement.
+
+## 5. Deployment & Operational Enhancements
+
+### 5.1 Secure Connectivity (Secure Tunneling)
+To bridge the gap between the on-premises secure server and remote village schools without exposing the server to the public internet, we will implement **Secure Tunneling** (e.g., Cloudflare Tunnels or Tailscale).
+*   **Purpose:** Allows the secure internal server to be accessible via a dedicated subdomain (e.g., `api.banglahope.org`) without requiring port forwarding or a static IP.
+*   **Security:** Traffic is encrypted and only authorized requests from the Staff and Sponsor portals are allowed through the tunnel.
+
+### 5.2 Monitoring & Health Checks
+Given the heavy reliance on background jobs and Redis for system performance, we will implement integrated monitoring.
+*   **Laravel Pulse/Horizon:** Provides a real-time dashboard to monitor server vitals, queue throughput, and job failure rates.
+*   **Health Check Endpoints:** Implement `/health` endpoints to monitor database connectivity and service availability, integrated with an external uptime monitoring service.
+
+### 5.3 Image Optimization Engine
+To support high-quality student documentation while respecting bandwidth constraints in remote areas, an automated image processing pipeline will be used.
+*   **Logic:** Upon upload, an asynchronous background job (Image Intervention) will automatically resize and compress photos (e.g., resizing to 800px wide, converting to WebP format).
+*   **Efficiency:** This reduces storage costs on S3 and ensures fast page loads for sponsors on mobile devices.
+
