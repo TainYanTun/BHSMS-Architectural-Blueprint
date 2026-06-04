@@ -64,6 +64,16 @@ CREATE TABLE village_sectors (
     row_version INT DEFAULT 1
 );
 
+CREATE TABLE educational_institutions (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name TEXT NOT NULL,
+    type TEXT, -- e.g., 'University', 'College', 'Vocational'
+    location TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    row_version INT DEFAULT 1
+);
+
 CREATE TABLE teachers (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     orphanage_id UUID REFERENCES orphanages(id) ON DELETE SET NULL,
@@ -517,16 +527,6 @@ CREATE TABLE communications (
     delivery_log JSONB, -- Stores SMTP responses, message IDs, or error details
 
     sent_at TIMESTAMPTZ,
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW(),
-    row_version INT DEFAULT 1
-);
-
-CREATE TABLE educational_institutions (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    name TEXT NOT NULL,
-    type TEXT, -- e.g., 'University', 'College', 'Vocational'
-    location TEXT,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW(),
     row_version INT DEFAULT 1
