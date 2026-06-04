@@ -104,11 +104,11 @@ CREATE TABLE roles (
 );
 
 INSERT INTO roles (name, description) VALUES
-('Admin', 'System owner with override powers and account management'),
-('Supervisor', 'Quality control and compliance officer; final gatekeeper'),
-('Coordinator', 'Primary program operator; manages student lifecycle'),
-('Secretary', 'Administrative support; handles data entry and drafting'),
-('Sponsor', 'External stakeholder; restricted view of supported students');
+('Admin', 'System owner. Manages user accounts, system configuration, data migration, backups.'),
+('Director', 'Highest operational authority. Final approver for documents, student status, and financial sign-off.'),
+('Coordinator', 'Program-specific operator. Manages student lifecycle, academics, and financial entries within assigned program(s).'),
+('Secretary', 'Administrative support. Handles data entry, letter drafting, and logging financial transactions.'),
+('Sponsor', 'External stakeholder. Restricted view of supported student(s) and documents.');
 
 CREATE TABLE users (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -130,6 +130,13 @@ CREATE TABLE users (
 -- Support for unique constraints with soft deletes
 CREATE UNIQUE INDEX idx_unique_active_username ON users(username) WHERE (deleted_at IS NULL);
 CREATE UNIQUE INDEX idx_unique_active_email ON users(email) WHERE (deleted_at IS NULL);
+
+-- Program assignment for program-scoped roles (e.g., Coordinator)
+CREATE TABLE user_programs (
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    program_id UUID NOT NULL REFERENCES programs(id) ON DELETE CASCADE,
+    PRIMARY KEY (user_id, program_id)
+);
 
 CREATE TABLE role_permissions (
     role TEXT NOT NULL REFERENCES roles(name) ON DELETE RESTRICT,

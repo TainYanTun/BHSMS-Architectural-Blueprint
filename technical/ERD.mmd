@@ -91,6 +91,11 @@ erDiagram
         uuid permission_id PK, FK
     }
 
+    USER_PROGRAMS {
+        uuid user_id PK, FK
+        uuid program_id PK, FK
+    }
+
     AUDIT_LOGS {
         uuid id PK
         uuid user_id FK
@@ -513,6 +518,9 @@ erDiagram
     
     ORPHANAGES ||--o{ TEACHERS : "employs"
     VILLAGE_SECTORS ||--o{ TEACHERS : "employs"
+    
+    USERS ||--o{ USER_PROGRAMS : "assigned to"
+    PROGRAMS ||--o{ USER_PROGRAMS : "scopes"
     
     STUDENTS ||--o{ GUARDIANS : "has"
     STUDENTS ||--o{ ENROLLMENTS : "enrolled in"
