@@ -1,0 +1,132 @@
+usecaseDiagram
+    %% ==========================================
+    %% ACTORS
+    %% ==========================================
+    actor Secretary as "Secretary"
+    actor Coordinator as "Coordinator²"
+    actor Director as "Director"
+    actor Admin as "Admin"
+    actor Sponsor as "Sponsor"
+
+    %% ==========================================
+    %% NOTES
+    %% ==========================================
+    note right of Coordinator
+        ² Access scoped to assigned
+        program(s) via user_programs
+    end note
+
+    %% ==========================================
+    %% 1. STUDENT LIFECYCLE
+    %% ==========================================
+    rectangle "Student Lifecycle" as StudentLC {
+        usecase SC1 as "Manage Student Records"
+        usecase SC2 as "Manage Academic Records"
+        usecase SC3 as "Manage Attendance"
+        usecase SC4 as "Add Student History / Notes"
+        usecase SC5 as "Request Program Transition"
+        usecase SC6 as "Drop / Complete Student"
+
+        Secretary --> SC1
+        Secretary --> SC2
+        Secretary --> SC3
+        Secretary --> SC4
+        Coordinator --> SC1
+        Coordinator --> SC2
+        Coordinator --> SC3
+        Coordinator --> SC4
+        Coordinator --> SC5
+        Director --> SC6
+        Director --> SC5
+        Sponsor --> SC1
+    }
+
+    %% ==========================================
+    %% 2. SPONSORSHIP
+    %% ==========================================
+    rectangle "Sponsorship" as Spons {
+        usecase SP1 as "Manage Sponsors"
+        usecase SP2 as "Manage Sponsorships"
+        usecase SP3 as "View Sponsorship Income"
+
+        Secretary --> SP1
+        Secretary --> SP2
+        Secretary --> SP3
+        Coordinator --> SP1
+        Coordinator --> SP2
+        Coordinator --> SP3
+        Director --> SP1
+        Director --> SP2
+        Director --> SP3
+        Sponsor --> SP3
+    }
+
+    %% ==========================================
+    %% 3. FINANCIAL
+    %% ==========================================
+    rectangle "Financial" as Fin {
+        usecase FN1 as "Record Contributions"
+        usecase FN2 as "Manage Student Subsidies"
+        usecase FN3 as "Manage Higher Ed Loans"
+        usecase FN4 as "Reconcile Finances"
+        usecase FN5 as "View Audit Logs"
+
+        Secretary --> FN1
+        Secretary --> FN3
+        Coordinator --> FN2
+        Coordinator --> FN3
+        Director --> FN4
+        Director --> FN5
+        Admin --> FN5
+    }
+
+    %% ==========================================
+    %% 4. DOCUMENTS & COMMUNICATIONS
+    %% ==========================================
+    rectangle "Documents & Communications" as DocComm {
+        usecase DC1 as "Upload Documents"
+        usecase DC2 as "Send Thank You Letters"
+        usecase DC3 as "Generate APR"
+        usecase DC4 as "Manage Communications"
+        usecase DC5 as "Manage Templates"
+
+        Secretary --> DC1
+        Secretary --> DC2
+        Coordinator --> DC1
+        Coordinator --> DC2
+        Director --> DC3
+        Director --> DC4
+        Admin --> DC5
+        Sponsor --> DC1
+        Sponsor --> DC2
+        Sponsor --> DC3
+    }
+
+    %% ==========================================
+    %% 5. SYSTEM ADMINISTRATION
+    %% ==========================================
+    rectangle "System Administration" as SysAdmin {
+        usecase SA1 as "Manage Users & Roles"
+        usecase SA2 as "Send Invitations"
+        usecase SA3 as "Manage Facilities"
+        usecase SA4 as "Manage Teachers"
+        usecase SA5 as "Perform Data Migration"
+        usecase SA6 as "View System Health"
+        usecase SA7 as "Manage Backups"
+
+        Admin --> SA1
+        Admin --> SA2
+        Admin --> SA3
+        Admin --> SA5
+        Admin --> SA6
+        Admin --> SA7
+        Director --> SA2
+        Coordinator --> SA4
+    }
+
+    %% ==========================================
+    %% INCLUDE / EXTEND RELATIONSHIPS
+    %% ==========================================
+    SC6 <.. SC5 : <<extends>>
+    DC3 <.. DC1 : <<includes>>
+    DC2 <.. DC4 : <<includes>>
