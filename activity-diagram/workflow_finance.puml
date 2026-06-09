@@ -1,0 +1,28 @@
+@startuml
+|Secretary|
+start
+:Receive donation;
+:Select contribution type;
+:Record amount, currency & received date;
+:Record payment method & reference;
+if (Target?) then (Specific student)
+  :Link to sponsor & student;
+else (General)
+  :Leave as general donation;
+endif
+
+|Coordinator|
+:Select payout type;
+:Record amount, currency & payout date;
+if (Disburse now?) then (Yes)
+  :Set status to Paid;
+  :Hand over to student;
+else (No)
+  :Set status to Pending;
+endif
+
+|System|
+:Log to audit trail;
+:Update contribution balance;
+stop
+@enduml

@@ -251,7 +251,7 @@ erDiagram
     MIGRATION_STAGING_STUDENTS {
         bigint id PK
         jsonb raw_data
-        text validation_errors
+        text[] validation_errors
         text status
         timestamptz created_at
     }
@@ -259,7 +259,7 @@ erDiagram
     MIGRATION_STAGING_SPONSORS {
         bigint id PK
         jsonb raw_data
-        text validation_errors
+        text[] validation_errors
         text status
         timestamptz created_at
     }
@@ -267,7 +267,7 @@ erDiagram
     MIGRATION_STAGING_CONTRIBUTIONS {
         bigint id PK
         jsonb raw_data
-        text validation_errors
+        text[] validation_errors
         text status
         timestamptz created_at
     }
@@ -359,15 +359,21 @@ erDiagram
         uuid student_id FK
         uuid sponsor_id FK
         uuid report_id FK
-        text channel
-        text recipient_email
         text subject
-        uuid template_id FK
-        text category
-        text status
         text message_body
+        text category
+        text workflow_status
+        text return_reason
+        uuid approved_by FK
+        timestamptz approved_at
+        timestamptz archived_at
+        timestamptz deleted_at
+        text channel
+        text recipient
+        uuid template_id FK
         jsonb delivery_log
         timestamptz sent_at
+        timestamptz read_at "NULL = unread"
         timestamptz created_at
         timestamptz updated_at
         int row_version
@@ -379,8 +385,10 @@ erDiagram
     ACADEMIC_RECORDS {
         uuid id PK
         uuid student_id FK
+        uuid program_id FK
         uuid orphanage_id FK
         uuid village_sector_id FK
+        uuid institution_id FK
         int year
         text grade_level
         text result_summary
@@ -391,13 +399,13 @@ erDiagram
     }
 
     ATTENDANCE_RECORDS {
-        uuid id PK
+        uuid id "PK (composite with created_at)"
         uuid student_id FK
         int year
         int days_present
         int total_school_days
         text remarks
-        timestamptz created_at
+        timestamptz created_at "PK (composite)"
         timestamptz updated_at
         int row_version
     }

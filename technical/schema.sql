@@ -539,24 +539,33 @@ CREATE TABLE communications (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     student_id UUID NOT NULL REFERENCES students(id) ON DELETE RESTRICT,
     sponsor_id UUID NOT NULL REFERENCES sponsors(id) ON DELETE RESTRICT,
-    report_id UUID REFERENCES reports(id) ON DELETE SET NULL, -- The document being delivered
 
-    -- Delivery Details
-    channel TEXT DEFAULT 'Email' CHECK (channel IN ('Email', 'Postal Mail', 'SMS')),
-    recipient_email TEXT, -- Snapshot of the email address used
-    subject TEXT, -- Snapshot of the subject line
-
-    template_id UUID REFERENCES communication_templates(id), -- Formatting logic
+    -- Content (captured once at creation, immutable after send)
+    subject TEXT NOT NULL,
+    message_body TEXT NOT NULL,
     category TEXT NOT NULL CHECK (category IN ('Financial', 'Milestone', 'Academic', 'Manual')),
-    status TEXT NOT NULL DEFAULT 'Pending' CHECK (status IN ('Pending', 'Sent', 'Failed')),
 
-    -- Manual notifications or captured snapshot of the final body
-    message_body TEXT,
+    -- Staff workflow state
+    workflow_status TEXT NOT NULL DEFAULT 'Draft'
+        CHECK (workflow_status IN ('Draft', 'Review', 'Approved', 'Returned', 'Sent', 'Archived', 'Deleted')),
+    return_reason TEXT,
+    approved_by UUID REFERENCES users(id) ON DELETE SET NULL,
+    approved_at TIMESTAMPTZ,
+    archived_at TIMESTAMPTZ,
+    deleted_at TIMESTAMPTZ,
 
-    -- Technical Audit Trail
-    delivery_log JSONB, -- Stores SMTP responses, message IDs, or error details
-
+    -- Delivery snapshot (filled on send)
+    channel TEXT,
+    recipient TEXT,
+    template_id UUID REFERENCES communication_templates(id) ON DELETE SET NULL,
+    delivery_log JSONB,
     sent_at TIMESTAMPTZ,
+
+    -- Sponsor read tracking
+    read_at TIMESTAMPTZ,  -- NULL = unread
+
+    report_id UUID REFERENCES reports(id) ON DELETE SET NULL,
+
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW(),
     row_version INT DEFAULT 1
@@ -725,6 +734,9 @@ CREATE INDEX idx_loan_transactions_loan_id ON loan_transactions(loan_id);
 CREATE INDEX idx_enrollments_student_id ON enrollments(student_id);
 CREATE INDEX idx_guardians_student_id ON guardians(student_id);
 CREATE INDEX idx_communications_student_sponsor ON communications(student_id, sponsor_id);
+CREATE INDEX idx_communications_wf_status ON communications(workflow_status);
+CREATE INDEX idx_communications_deleted ON communications(deleted_at) WHERE deleted_at IS NULL;
+CREATE INDEX idx_communications_read ON communications(sponsor_id, read_at) WHERE read_at IS NULL;
 CREATE INDEX idx_loans_student_id ON loans(student_id);
 CREATE INDEX idx_allocation_payouts_student_id ON allocation_payouts(student_id);
 CREATE INDEX idx_reports_student_id ON reports(student_id);

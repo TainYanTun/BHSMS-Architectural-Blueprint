@@ -1,0 +1,26 @@
+@startuml
+|Director|
+start
+:Create invitation;
+:Create sponsor profile;
+if (Specific student?) then (Yes)
+  :Assign to student;
+else (No)
+  :Leave as general donor;
+endif
+:Send invitation link via external email;
+
+|Sponsor|
+:Click link;
+if (Link expired?) then (Yes)
+  :Contact director for new link;
+  stop
+else (No)
+  :Register account;
+endif
+
+|System|
+:Receive first contribution;
+:Trigger welcome;
+stop
+@enduml

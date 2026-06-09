@@ -1,0 +1,29 @@
+@startuml
+|Secretary|
+start
+:Register student;
+:Record intake;
+:Add guardians;
+
+if (Enrollment by Secretary?) then (Yes)
+  :Enroll in any program;
+else (No)
+  |Coordinator|
+  :Enroll in their program;
+endif
+
+|Coordinator|
+:Track academics & attendance;
+
+if (Transition needed?) then (Yes)
+  :Request program change;
+elseif (Drop/Complete?) then (Yes)
+  :Request status change;
+else
+  stop
+endif
+
+|Director|
+:Approve or reject;
+stop
+@enduml

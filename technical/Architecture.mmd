@@ -39,12 +39,12 @@ graph TD
 
     %% --- DATA & PERSISTENCE ---
     subgraph DL ["Data Layer (PostgreSQL 15+)"]
-        DB[("PostgreSQL Production <br/> ~35 Tables · Partitioned Audit Logs <br/> GIN-Indexed Text Search")]
+        DB[("PostgreSQL Production <br/>(Partitioned Audit Logs)")]
         File["Object Storage <br/> (S3 — Photos, PDFs, Documents)"]
     end
 
     %% --- OUTBOUND ---
-    ExtS[(External SMTP <br/> & SMS Gateway)]
+    ExtDelivery[(External SMTP <br> & SMS Gateways)]
 
     %% ==========================================
     %% DATA FLOW PIPELINES
@@ -73,7 +73,7 @@ graph TD
 
     %% Persistence & Outbound Pipelines
     Logic -->|ORM Write / Audit Trail| DB
-    Jobs -->|Store Media| File 
-    Jobs -->|Send| ExtS
+    Jobs -->|send| ExtDelivery
+    Jobs -->|Store Media| File
 
     Logic -->|Transform to UI Preview| Gate

@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bangla Hope – Communication Inbox</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --primary-navy: #1e3a4a;
+      --sidebar-bg: #0a1f35;
+      --sidebar-active: #1e293b;
+      --action-teal: #2B7A9E;
+      --signal-pink: #d17a8e;
+      --success-green: #10b981;
+      --bg-app: #f8fafc;
+      --surface: #ffffff;
+      --surface-subtle: #f1f5f9;
+      --border-neutral: #e2e8f0;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --text-light: #94a3b8;
+      --radius: 8px;
+      --sidebar-w: 252px;
+    }
+    html, body { height: 100%; }
+    body { font-family: 'Nunito', sans-serif; background: var(--bg-app); color: var(--text-main); display: flex; }
+
+    /* ─── SIDEBAR ─── */
+    .sidebar {
+      width: var(--sidebar-w); min-height: 100vh; background: var(--sidebar-bg);
+      display: flex; flex-direction: column; position: fixed; top: 0; left: 0; bottom: 0; z-index: 100;
+    }
+    .sidebar-header {
+      padding: 20px 16px; display: flex; align-items: center; gap: 10px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .sidebar-logo {
+      width: 34px; height: 34px; background: #fff; border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 13px; color: var(--primary-navy); flex-shrink: 0;
+    }
+    .sidebar-title { font-family: 'Lora', serif; font-size: 15px; font-weight: 600; color: #f8fafc; }
+    .sidebar-sub { font-size: 9px; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.08em; }
+
+    .folder-group { flex: 1; padding: 12px 8px; overflow-y: auto; }
+    .folder {
+      display: flex; align-items: center; gap: 10px; padding: 9px 12px;
+      border-radius: 6px; color: var(--text-light); font-size: 13px; font-weight: 500;
+      cursor: pointer; transition: all 0.15s; margin-bottom: 2px;
+    }
+    .folder:hover { background: rgba(255,255,255,0.06); color: #fff; }
+    .folder.active { background: var(--sidebar-active); color: #fff; font-weight: 600; }
+    .folder-icon { font-size: 13px; width: 22px; text-align: center; flex-shrink: 0; opacity: 0.7; font-weight: 700; }
+    .folder.active .folder-icon { opacity: 1; }
+    .folder-label { flex: 1; }
+    .folder-count {
+      font-size: 11px; font-weight: 700; color: var(--text-light);
+      background: rgba(255,255,255,0.08); padding: 1px 8px; border-radius: 10px;
+    }
+    .folder.active .folder-count { background: rgba(255,255,255,0.12); color: #fff; }
+
+    .sidebar-footer {
+      padding: 12px 16px; border-top: 1px solid rgba(255,255,255,0.06);
+      display: flex; align-items: center; gap: 10px;
+    }
+    .sf-avatar {
+      width: 32px; height: 32px; border-radius: 50%; background: var(--action-teal);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 800; color: #fff; flex-shrink: 0;
+    }
+    .sf-name { font-size: 12px; font-weight: 600; color: #e2e8f0; }
+    .sf-role { font-size: 10px; color: var(--text-light); }
+
+    /* ─── TOPBAR ─── */
+    .main { margin-left: var(--sidebar-w); flex: 1; display: flex; flex-direction: column; height: 100vh; }
+    .topbar {
+      height: 56px; background: var(--surface); border-bottom: 1px solid var(--border-neutral);
+      padding: 0 20px; display: flex; align-items: center; gap: 16px; flex-shrink: 0;
+    }
+    .breadcrumb {
+      font-family: 'Courier New', monospace; font-size: 10px; font-weight: 700;
+      color: var(--action-teal); text-transform: uppercase; white-space: nowrap;
+    }
+    .search-wrap { flex: 1; max-width: 360px; position: relative; }
+    .search-wrap input {
+      width: 100%; padding: 6px 12px 6px 28px; border: 1px solid var(--border-neutral);
+      border-radius: 16px; font-size: 12px; font-family: inherit; outline: none;
+      background: var(--surface-subtle); transition: all 0.2s;
+    }
+    .search-wrap input:focus { border-color: var(--action-teal); background: var(--surface); }
+    .search-icon {
+      position: absolute; left: 9px; top: 50%; transform: translateY(-50%);
+      font-size: 11px; color: var(--text-light); pointer-events: none; font-weight: 700;
+    }
+
+
+    /* ─── SPLIT PANE ─── */
+    .split-pane { flex: 1; display: flex; overflow: hidden; }
+
+    /* Message List */
+    .message-list {
+      width: 360px; min-width: 280px; border-right: 1px solid var(--border-neutral);
+      background: var(--surface); display: flex; flex-direction: column;
+    }
+    .filter-pills {
+      display: flex; gap: 4px; padding: 10px 14px 7px; border-bottom: 1px solid var(--border-neutral);
+      flex-wrap: wrap; flex-shrink: 0;
+    }
+    .pill {
+      padding: 3px 10px; border-radius: 12px; font-size: 10px; font-weight: 700;
+      cursor: pointer; transition: all 0.15s; color: var(--text-muted); text-transform: uppercase;
+      background: var(--surface-subtle); border: 1px solid transparent; letter-spacing: 0.02em;
+    }
+    .pill:hover { color: var(--text-main); background: #eef2f6; }
+    .pill.active { background: var(--action-teal); color: #fff; border-color: var(--action-teal); }
+
+    .messages { flex: 1; overflow-y: auto; }
+    .message-item {
+      display: flex; gap: 10px; padding: 11px 14px; cursor: pointer;
+      border-bottom: 1px solid #f1f5f9; transition: all 0.1s;
+    }
+    .message-item:hover { background: var(--surface-subtle); }
+    .message-item.selected { background: #eef6fa; border-left: 3px solid var(--action-teal); padding-left: 11px; }
+    .message-item.unread { background: #fafcfe; }
+    .message-item.unread .msg-subject { font-weight: 700; }
+
+    .msg-avatar {
+      width: 34px; height: 34px; border-radius: 50%; background: var(--surface-subtle);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 800; color: var(--action-teal); flex-shrink: 0;
+    }
+    .msg-body { flex: 1; min-width: 0; }
+    .msg-top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 1px; }
+    .msg-from { font-size: 13px; font-weight: 600; color: var(--text-main); }
+    .msg-date { font-size: 10px; color: var(--text-light); white-space: nowrap; margin-left: 8px; }
+    .msg-subject { font-size: 12px; color: var(--text-main); margin-bottom: 1px; display: flex; align-items: center; gap: 5px; }
+    .msg-snippet { font-size: 11px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .attach-badge { font-size: 10px; color: var(--text-muted); font-weight: 600; }
+    .unread-dot {
+      width: 6px; height: 6px; border-radius: 50%; background: var(--action-teal);
+      flex-shrink: 0; margin-top: 2px;
+    }
+
+    /* ─── RIGHT PANE ─── */
+    .right-pane {
+      flex: 1; background: var(--surface); display: flex; flex-direction: column; overflow: hidden;
+    }
+    .right-pane .empty-state {
+      flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 8px; color: var(--text-light);
+    }
+    .right-pane .empty-state .hint-label {
+      font-size: 10px; font-weight: 800; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: 0.08em;
+    }
+    .right-pane .empty-state .hint-text { font-size: 13px; max-width: 300px; text-align: center; color: var(--text-light); }
+
+    /* Reading Pane */
+    .pane-header {
+      padding: 12px 24px; border-bottom: 1px solid var(--border-neutral);
+      display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; flex-shrink: 0;
+    }
+    .pane-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+    .pane-action-btn {
+      padding: 5px 12px; border-radius: 6px; font-size: 11px; font-weight: 700;
+      cursor: pointer; transition: all 0.15s; border: none; text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .pane-action-btn.approve { background: var(--success-green); color: #fff; }
+    .pane-action-btn.approve:hover { background: #059669; }
+    .pane-action-btn.return { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
+    .pane-action-btn.return:hover { background: #fee2e2; }
+    .pane-action-btn.edit { background: var(--surface-subtle); color: var(--text-main); border: 1px solid var(--border-neutral); }
+    .pane-action-btn.edit:hover { background: #eef2f6; }
+    .pane-action-btn.ghost { background: transparent; color: var(--text-muted); }
+    .pane-action-btn.ghost:hover { color: var(--text-main); }
+
+    .pane-body {
+      flex: 1; overflow-y: auto; padding: 20px 40px; max-width: 720px;
+    }
+    .email-attachments {
+      margin-top: 20px; padding-top: 14px; border-top: 1px solid var(--border-neutral);
+    }
+    .email-attachments-label { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px; }
+    .attach-item {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 4px 10px; background: var(--surface-subtle); border: 1px solid var(--border-neutral);
+      border-radius: 4px; font-size: 12px; color: var(--text-main); margin-right: 8px;
+    }
+
+    .pane-footer {
+      border-top: 1px solid var(--border-neutral); padding: 12px 24px;
+      display: flex; gap: 32px; font-size: 11px; color: var(--text-muted); flex-shrink: 0;
+    }
+    .pane-footer strong { color: var(--text-main); }
+    .timeline-item { display: flex; align-items: center; gap: 5px; margin-bottom: 3px; }
+    .timeline-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+    .timeline-dot.done { background: var(--success-green); }
+    .timeline-dot.pending { background: var(--text-light); }
+
+
+
+    /* ─── TOAST ─── */
+    .toast {
+      position: fixed; bottom: 24px; right: 24px; padding: 10px 18px;
+      border-radius: 6px; font-size: 12px; font-weight: 600; color: #fff;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 300;
+      display: none; animation: fadeUp 0.25s ease;
+    }
+    .toast.show { display: block; }
+    .toast.success { background: var(--success-green); }
+    .toast.info { background: var(--action-teal); }
+    .toast.warning { background: #d97706; }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ─── SCROLL ─── */
+    .messages::-webkit-scrollbar, .pane-body::-webkit-scrollbar,
+    .compose-pane-body::-webkit-scrollbar { width: 5px; }
+    .messages::-webkit-scrollbar-thumb, .pane-body::-webkit-scrollbar-thumb,
+    .compose-pane-body::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 3px; }
+    .messages::-webkit-scrollbar-track, .pane-body::-webkit-scrollbar-track,
+    .compose-pane-body::-webkit-scrollbar-track { background: transparent; }
+
+    .hamburger {
+      display: none; width: 30px; height: 30px; border: none; background: transparent;
+      font-size: 16px; cursor: pointer; color: var(--text-muted); align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .mobile-back {
+      display: none; width: 30px; height: 30px; border: none; background: transparent;
+      font-size: 16px; cursor: pointer; color: var(--text-muted); align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .sidebar-backdrop {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.3); z-index: 99;
+    }
+
+    @media (max-width: 900px) {
+      .message-list { width: 260px; min-width: 180px; }
+      .pane-body { padding: 20px; }
+    }
+    @media (max-width: 640px) {
+      .hamburger { display: flex; }
+      .sidebar {
+        width: 252px; transform: translateX(-100%); transition: transform 0.2s ease;
+      }
+      .sidebar.open { transform: translateX(0); }
+      .sidebar-backdrop.open { display: block; }
+      .main { margin-left: 0; }
+      .topbar { padding: 0 12px; gap: 8px; }
+      .search-wrap { max-width: none; }
+      .breadcrumb { font-size: 9px; }
+      .message-list {
+        width: 100%; min-width: 0; border-right: none;
+      }
+      .message-list.hidden-mobile { display: none; }
+      .right-pane.hidden-mobile { display: none; }
+      .right-pane { width: 100%; }
+      .mobile-back { display: flex; }
+      .pane-header { padding: 10px 14px; }
+      .pane-body { padding: 16px; }
+      .pane-footer { padding: 10px 14px; flex-direction: column; gap: 12px; }
+      .filter-pills { padding: 8px 10px 6px; }
+      .message-item { padding: 9px 10px; }
+      .msg-avatar { width: 28px; height: 28px; font-size: 9px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ─── SIDEBAR ─── -->
+<div class="sidebar-backdrop" id="sidebarBackdrop" onclick="closeSidebar()"></div>
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <div class="sidebar-logo">BH</div>
+    <div>
+      <div class="sidebar-title">Bangla Hope</div>
+      <div class="sidebar-sub">Sponsor Communications</div>
+    </div>
+  </div>
+  <nav class="folder-group">
+    <div class="folder active" data-folder="inbox" onclick="switchFolder('inbox')">
+      <span class="folder-icon">IN</span>
+      <span class="folder-label">Messages</span>
+      <span class="folder-count" id="count-inbox">4</span>
+    </div>
+    <div class="folder" data-folder="sent" onclick="switchFolder('sent')">
+      <span class="folder-icon">SN</span>
+      <span class="folder-label">Sent</span>
+    </div>
+    <div class="folder" data-folder="archive" onclick="switchFolder('archive')">
+      <span class="folder-icon">AR</span>
+      <span class="folder-label">Archive</span>
+    </div>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="sf-avatar">AU</div>
+    <div>
+      <div class="sf-name">Admin User</div>
+      <div class="sf-role">System Administrator</div>
+    </div>
+  </div>
+</aside>
+
+<!-- ─── MAIN ─── -->
+<div class="main">
+
+  <header class="topbar">
+    <button class="hamburger" onclick="toggleSidebar()">=</button>
+    <div class="breadcrumb" id="breadcrumb">SYSTEM_CORE / COMMUNICATIONS / MESSAGES</div>
+    <div class="search-wrap">
+      <span class="search-icon">/</span>
+      <input type="text" id="searchInput" placeholder="Search messages..." oninput="filterMessages()">
+    </div>
+
+  </header>
+
+  <div class="split-pane">
+
+    <!-- Message List -->
+    <section class="message-list" id="messageListSection">
+      <div class="filter-pills" id="filterPills">
+        <span class="pill active" data-pill="all" onclick="switchPill('all')">All</span>
+        <span class="pill" data-pill="financial" onclick="switchPill('financial')">Financial</span>
+        <span class="pill" data-pill="milestone" onclick="switchPill('milestone')">Milestone</span>
+        <span class="pill" data-pill="academic" onclick="switchPill('academic')">Academic</span>
+      </div>
+      <div class="messages" id="messageList"></div>
+    </section>
+
+    <!-- Right Pane: Reading / Compose -->
+    <section class="right-pane" id="rightPane">
+
+      <!-- Empty State -->
+      <div class="empty-state" id="paneEmptyState">
+        <div class="hint-label">[SEC_08: COMM_INBOX]</div>
+        <div class="hint-text">Select a message from the list to read it.</div>
+      </div>
+
+      <!-- Reading Pane -->
+      <div id="paneReading" style="display:none;flex:1;display:none;flex-direction:column;">
+        <div class="pane-header">
+          <button class="mobile-back" onclick="backToList()">&larr;</button>
+          <div class="pane-actions" id="paneActions"></div>
+        </div>
+        <div class="pane-body" id="paneBody"></div>
+        <div class="pane-footer" id="paneFooter"></div>
+      </div>
+
+
+
+    </section>
+
+  </div>
+</div>
+
+<!-- ─── TOAST ─── -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ─── DATA ───
+const communications = [
+  {
+    id: 1, folder: 'inbox', read_at: null,
+    from: 'Miller, John & Sarah', avatar: 'JM',
+    subject: 'Thank you for your gift',
+    snippet: 'Thank you so much for your recent contribution of $50.00 received on May 15, 2026...',
+    date: '27 May 2026', channel: 'email', category: 'financial', workflow_status: 'sent',
+    attachments: [], trigger: '#REC-9921', amount: '$50.00', triggerDate: '15 May 2026',
+    studentName: 'Abdur Rahman', studentId: '#202600124', studentProgram: 'LRC Primary',
+    studentInitials: 'AR',
+    letterBody: `<p style="font-weight:700;margin-bottom:16px;">Dear John & Sarah Miller,</p>
+      <p>Thank you so much for your recent contribution of <b>$50.00</b> received on <b>May 15, 2026</b>. Your continued support makes a world of difference in my life and education.</p>
+      <p>This month at school, I have been studying hard for my mathematics exams. I am also enjoying my time in the gardening club where we are planting new vegetables for the monsoon season.</p>
+      <p>I hope you are doing well and having a blessed month. Thank you for being my sponsor!</p>
+      <div style="margin-top:28px;"><p>Sincerely,</p><p style="font-family:'Lora',serif;font-size:18px;font-weight:600;margin-top:8px;">Abdur Rahman</p></div>`,
+    timeline: [
+      { label: 'Trigger recorded', done: true, detail: 'May 25, 2026 — Contribution entry' },
+      { label: 'Draft generated', done: true, detail: 'May 26, 2026 — Auto-generated from template T-01' },
+      { label: 'Approved', done: false, detail: 'Pending approval' },
+      { label: 'Sent', done: false, detail: '' },
+    ],
+    delivery: { channel: 'Email', recipient: 'john.miller@example.com', sentAt: '—' }
+  },
+  {
+    id: 2, folder: 'inbox', read_at: null,
+    from: 'Wilson, Robert', avatar: 'RW',
+    subject: 'APR 2025 — Annual Progress Report',
+    snippet: 'Comprehensive update on Arif\'s academic performance, health, and social development...',
+    date: '15 Jan 2026', channel: 'email', category: 'academic', workflow_status: 'sent',
+    attachments: ['apr_2025_arif.pdf'],
+    trigger: 'APR_2025_CYC', amount: '—', triggerDate: 'Annual Cycle',
+    studentName: 'Arif Hossain', studentId: '#202600089', studentProgram: 'Boarding School',
+    studentInitials: 'AH',
+    letterBody: `<p style="font-weight:700;margin-bottom:16px;">Dear Robert Wilson,</p>
+      <p>We are pleased to present the 2025 Annual Progress Report for <b>Arif Hossain</b>.</p>
+      <p>This year, Arif has shown remarkable improvement in his academic performance. His mathematics grade has improved from B to A-, and his English reading comprehension has exceeded grade-level expectations.</p>
+      <p>Health-wise, Arif is in excellent condition. He has grown 4cm and gained 3kg over the past year.</p>
+      <p>Thank you for your continued sponsorship that makes this progress possible.</p>
+      <div style="margin-top:28px;"><p>With gratitude,</p><p style="font-family:'Lora',serif;font-size:18px;font-weight:600;margin-top:8px;">Bangla Hope Staff</p></div>`,
+    timeline: [
+      { label: 'Trigger recorded', done: true, detail: 'Jan 1, 2026 — Annual APR cycle' },
+      { label: 'Draft generated', done: true, detail: 'Jan 10, 2026 — Auto-generated from template A-04' },
+      { label: 'Approved', done: false, detail: 'Pending supervisor review' },
+      { label: 'Sent', done: false, detail: '' },
+    ],
+    delivery: { channel: 'Email', recipient: 'robert.wilson@example.com', sentAt: '—' }
+  },
+  {
+    id: 3, folder: 'inbox', read_at: null,
+    from: 'The Baker Family', avatar: 'BF',
+    subject: 'Special Gift Note',
+    snippet: 'I am so excited to thank you for the extra gift of $25.00. With this, I was able to get a new school bag...',
+    date: '18 Jun 2026', channel: 'email', category: 'financial', workflow_status: 'sent',
+    attachments: [], trigger: '#GFT-8812', amount: '$25.00', triggerDate: '10 Jun 2026',
+    studentName: 'Salma Begum', studentId: '#202600212', studentProgram: 'LRC Primary',
+    studentInitials: 'SB',
+    letterBody: `<p style="font-weight:700;margin-bottom:16px;">Dear Baker Family,</p>
+      <p>I am so excited to thank you for the extra gift of <b>$25.00</b>. With this gift, I was able to get <b>a new school bag</b> which I really needed. My old one had a hole in it and my books were getting wet during the monsoon rains.</p>
+      <p>Thank you so much for thinking of me. Your kindness makes me feel very special!</p>
+      <p>I promise to work hard in school and make you proud.</p>
+      <div style="margin-top:28px;"><p>With love,</p><p style="font-family:'Lora',serif;font-size:18px;font-weight:600;margin-top:8px;">Salma Begum</p></div>`,
+    timeline: [
+      { label: 'Trigger recorded', done: true, detail: 'Jun 10, 2026 — Special gift entry' },
+      { label: 'Draft generated', done: true, detail: 'Jun 11, 2026 — Auto-generated from template G-03' },
+      { label: 'Sent', done: false, detail: 'Pending approval' },
+    ],
+    delivery: { channel: 'Email', recipient: 'baker.family@example.com', sentAt: '—' }
+  },
+  {
+    id: 4, folder: 'inbox', read_at: null,
+    from: 'Chen Family', avatar: 'CF',
+    subject: 'Welcome letter — New sponsorship',
+    snippet: 'Welcome to the Bangla Hope family! We are so grateful that you have chosen to sponsor Salma...',
+    date: '2 Jun 2026', channel: 'email', category: 'manual', workflow_status: 'sent',
+    attachments: [], trigger: 'Manual', amount: '—', triggerDate: '1 Jun 2026',
+    studentName: 'Salma Begum', studentId: '#202600212', studentProgram: 'LRC Primary',
+    studentInitials: 'SB',
+    letterBody: `<p style="font-weight:700;margin-bottom:16px;">Dear Chen Family,</p>
+      <p>Welcome to the Bangla Hope family! We are absolutely thrilled that you have chosen to sponsor <b>Salma Begum</b>.</p>
+      <p>Salma is 8 years old and lives at our Love Receiving Center in Hili, Dinajpur. She loves to draw and her favorite subject is mathematics. She dreams of becoming a teacher one day.</p>
+      <p>Over the coming weeks, you will receive a welcome packet with more information about Salma, including her photo and a hand-drawn picture she made just for you.</p>
+      <p>Thank you for opening your heart to Salma. Together, we are changing lives.</p>
+      <div style="margin-top:28px;"><p>With deep gratitude,</p><p style="font-family:'Lora',serif;font-size:18px;font-weight:600;margin-top:8px;">Bangla Hope Staff</p></div>`,
+    timeline: [
+      { label: 'Created', done: true, detail: 'Jun 1, 2026 — Manual entry' },
+      { label: 'Sent', done: false, detail: 'Pending review' },
+    ],
+    delivery: { channel: 'Email', recipient: 'chen.family@example.com', sentAt: '—' }
+  },
+  {
+    id: 5, folder: 'drafts', read_at: '2026-05-12T14:00:00Z',
+    from: 'Global Hope Foundation', avatar: 'GH',
+    subject: 'Birthday Greeting — Fatima',
+    snippet: 'It is my birthday! Thank you so much for being my sponsor. This year I am 10 years old...',
+    date: '12 May 2026', channel: 'email', category: 'milestone', workflow_status: 'draft',
+    attachments: [], trigger: 'JULY_BIRTHDAY', amount: '—', triggerDate: '1 Jul 2026',
+    studentName: 'Fatima Khatun', studentId: '#202600156', studentProgram: 'Village School',
+    studentInitials: 'FK',
+    letterBody: `<p style="font-weight:700;margin-bottom:16px;">Dear Global Hope Foundation,</p>
+      <p>It is my birthday! Thank you so much for being my sponsor. This year I am <b>10 years old</b> and my favorite subject at school is <b>Mathematics</b>.</p>
+      <p>I am so happy to celebrate another year with your support. Thank you for your kindness!</p>
+      <div style="margin-top:28px;"><p>Sincerely,</p><p style="font-family:'Lora',serif;font-size:18px;font-weight:600;margin-top:8px;">Fatima Khatun</p></div>`,
+    timeline: [
+      { label: 'Trigger recorded', done: true, detail: 'Auto-generated — July birthdays' },
+      { label: 'Draft', done: true, detail: 'Saved as draft, not yet submitted' },
+    ],
+    delivery: { channel: 'Email', recipient: 'info@globalhopefoundation.org', sentAt: '—' }
+  },
+  {
+    id: 6, folder: 'drafts', read_at: '2026-05-28T14:00:00Z',
+    from: 'Thompson, Lisa', avatar: 'LT',
+    subject: 'Thank you — May 2026',
+    snippet: 'Thank you for your faithful support this month. Your contribution helps provide food, education...',
+    date: '28 May 2026', channel: 'email', category: 'financial', workflow_status: 'draft',
+    attachments: [], trigger: '#REC-9956', amount: '$75.00', triggerDate: '25 May 2026',
+    studentName: 'Rahim Khan', studentId: '#202600345', studentProgram: 'Higher Study Loan',
+    studentInitials: 'RK',
+    letterBody: `<p style="font-weight:700;margin-bottom:16px;">Dear Lisa Thompson,</p>
+      <p>Thank you for your faithful support of <b>$75.00</b> received on <b>May 25, 2026</b>. Your contribution helps provide food, education, and medical care for Rahim.</p>
+      <p>Rahim is currently in his second year of university, studying Computer Science. He continues to maintain excellent grades.</p>
+      <div style="margin-top:28px;"><p>With thanks,</p><p style="font-family:'Lora',serif;font-size:18px;font-weight:600;margin-top:8px;">Rahim Khan</p></div>`,
+    timeline: [
+      { label: 'Trigger recorded', done: true, detail: 'May 25, 2026 — Contribution entry' },
+      { label: 'Draft', done: true, detail: 'Saved as draft, not yet submitted' },
+    ],
+    delivery: { channel: 'Email', recipient: 'lisa.thompson@example.com', sentAt: '—' }
+  },
+  {
+    id: 7, folder: 'review', read_at: '2026-05-20T14:00:00Z',
+    from: 'Lee, Samuel', avatar: 'SL',
+    subject: 'APR 2025 — Arif Hossain',
+    snippet: 'Comprehensive annual report for Arif Hossain, Boarding School program...',
+    date: '20 May 2026', channel: 'email', category: 'academic', workflow_status: 'review',
+    attachments: ['apr_2025_arif.pdf'], trigger: 'APR_2025_CYC', amount: '—', triggerDate: 'Annual Cycle',
+    studentName: 'Arif Hossain', studentId: '#202600089', studentProgram: 'Boarding School',
+    studentInitials: 'AH',
+    letterBody: `<p style="font-weight:700;margin-bottom:16px;">Dear Samuel Lee,</p>
+      <p>We are pleased to present the 2025 Annual Progress Report for <b>Arif Hossain</b>.</p>
+      <p>This year, Arif has shown remarkable improvement in his academic performance. His mathematics grade has improved from B to A-, and his English reading comprehension has exceeded grade-level expectations.</p>
+      <p>Health-wise, Arif is in excellent condition. He has grown 4cm and gained 3kg over the past year.</p>
+      <p>The attached PDF contains the full report including grade transcripts, teacher comments, and updated photographs.</p>
+      <div style="margin-top:28px;"><p>With gratitude,</p><p style="font-family:'Lora',serif;font-size:18px;font-weight:600;margin-top:8px;">Bangla Hope Staff</p></div>`,
+    timeline: [
+      { label: 'Trigger recorded', done: true, detail: 'Jan 1, 2026 — Annual APR cycle' },
+      { label: 'Draft created', done: true, detail: 'May 18, 2026 — Secretary submitted for review' },
+      { label: 'Pending approval', done: true, detail: 'Awaiting your sign-off' },
+    ],
+    delivery: { channel: 'Email', recipient: 'samuel.lee@example.com', sentAt: '—' }
+  },
+  {
+    id: 8, folder: 'review', read_at: '2026-05-28T14:00:00Z',
+    from: 'Chen Family', avatar: 'CF',
+    subject: 'Case History — Salma Begum',
+    snippet: 'Personal story update for Salma Begum covering her first 6 months at LRC...',
+    date: '28 May 2026', channel: 'email', category: 'academic', workflow_status: 'review',
+    attachments: ['case_history_salma.pdf'], trigger: 'CH-2026-03', amount: '—', triggerDate: '6 Month Review',
+    studentName: 'Salma Begum', studentId: '#202600212', studentProgram: 'LRC Primary',
+    studentInitials: 'SB',
+    letterBody: `<p style="font-weight:700;margin-bottom:16px;">Dear Chen Family,</p>
+      <p>We are delighted to share Salma's progress over the past six months since she joined the Love Receiving Center.</p>
+      <p>When Salma first arrived, she was shy and struggled to trust the staff. Today, she is a confident, smiling child who has made close friends and loves participating in group activities.</p>
+      <p>Her academic progress has been outstanding — she has caught up to grade level in both Bangla and Mathematics, and her teachers report that she is one of the most diligent students in her class.</p>
+      <p>The attached case history document contains more detail, including recent photographs and her latest school report.</p>
+      <div style="margin-top:28px;"><p>With gratitude,</p><p style="font-family:'Lora',serif;font-size:18px;font-weight:600;margin-top:8px;">Bangla Hope Staff</p></div>`,
+    timeline: [
+      { label: 'Trigger recorded', done: true, detail: '6-month review cycle' },
+      { label: 'Draft created', done: true, detail: 'May 27, 2026 — Submitted for review' },
+      { label: 'Pending approval', done: true, detail: 'Awaiting supervisor sign-off' },
+    ],
+    delivery: { channel: 'Email', recipient: 'chen.family@example.com', sentAt: '—' }
+  },
+  {
+    id: 9, folder: 'sent', read_at: '2026-04-20T10:00:00Z',
+    from: 'Miller, John & Sarah', avatar: 'JM',
+    subject: 'Thank you — April 2026',
+    snippet: 'Thank you for your contribution of $50.00 received on April 15, 2026...',
+    date: '20 Apr 2026', channel: 'email', category: 'financial', workflow_status: 'sent',
+    attachments: [], trigger: '#REC-9876', amount: '$50.00', triggerDate: '15 Apr 2026',
+    studentName: 'Abdur Rahman', studentId: '#202600124', studentProgram: 'LRC Primary',
+    studentInitials: 'AR',
+    letterBody: `<p style="font-weight:700;margin-bottom:16px;">Dear John & Sarah Miller,</p>
+      <p>Thank you for your contribution of <b>$50.00</b> received on <b>April 15, 2026</b>.</p>
+      <p>Your continued faithfulness blesses Abdur in so many ways. He is healthy, happy, and working hard in school.</p>
+      <div style="margin-top:28px;"><p>Sincerely,</p><p style="font-family:'Lora',serif;font-size:18px;font-weight:600;margin-top:8px;">Abdur Rahman</p></div>`,
+    timeline: [
+      { label: 'Trigger recorded', done: true, detail: 'Apr 15, 2026' },
+      { label: 'Draft generated', done: true, detail: 'Apr 16, 2026' },
+      { label: 'Approved', done: true, detail: 'Auto-approved (Trust Mode)' },
+      { label: 'Sent', done: true, detail: 'Apr 17, 2026 at 09:34 AM' },
+    ],
+    delivery: { channel: 'Email', recipient: 'john.miller@example.com', sentAt: '17 Apr 2026, 09:34 AM' }
+  },
+  {
+    id: 10, folder: 'sent', read_at: '2026-03-03T10:00:00Z',
+    from: 'Khan, Ayesha', avatar: 'AK',
+    subject: 'Birthday — Rahim',
+    snippet: 'It is my birthday! Thank you for being my sponsor...',
+    date: '3 Mar 2026', channel: 'email', category: 'milestone', workflow_status: 'sent',
+    attachments: [], trigger: 'MAR_BIRTHDAY', amount: '—', triggerDate: '3 Mar 2026',
+    studentName: 'Rahim Khan', studentId: '#202600345', studentProgram: 'Higher Study Loan',
+    studentInitials: 'RK',
+    letterBody: `<p style="font-weight:700;margin-bottom:16px;">Dear Ayesha Khan,</p>
+      <p>It is my birthday! Thank you for being my sponsor. This year I have turned <b>21</b> and I am in my second year of university studying Computer Science.</p>
+      <p>Your support has made it possible for me to pursue my dreams. I am forever grateful.</p>
+      <div style="margin-top:28px;"><p>With thanks,</p><p style="font-family:'Lora',serif;font-size:18px;font-weight:600;margin-top:8px;">Rahim Khan</p></div>`,
+    timeline: [
+      { label: 'Trigger recorded', done: true, detail: 'Mar 1, 2026 — Birthday scheduler' },
+      { label: 'Draft generated', done: true, detail: 'Mar 1, 2026 — Auto-generated' },
+      { label: 'Approved', done: true, detail: 'Mar 2, 2026 — by Director' },
+      { label: 'Sent', done: true, detail: 'Mar 3, 2026 at 08:00 AM' },
+    ],
+    delivery: { channel: 'Email', recipient: 'ayesha.khan@example.com', sentAt: '3 Mar 2026, 08:00 AM' }
+  },
+];
+
+// ─── STATE ───
+let currentFolder = 'inbox';
+let currentPill = 'all';
+let selectedId = null;
+
+// ─── RENDER LIST ───
+function renderMessages() {
+  const list = document.getElementById('messageList');
+  let items = communications.filter(c => c.folder === currentFolder);
+
+  if (currentPill !== 'all') {
+    items = items.filter(c => c.category === currentPill);
+  }
+
+  const search = document.getElementById('searchInput').value.toLowerCase();
+  if (search) {
+    items = items.filter(c =>
+      c.from.toLowerCase().includes(search) ||
+      c.subject.toLowerCase().includes(search) ||
+      c.studentName.toLowerCase().includes(search)
+    );
+  }
+
+  if (items.length === 0) {
+    list.innerHTML = '<div style="padding:40px;text-align:center;color:var(--text-muted);font-size:13px;">No communications found in this folder.</div>';
+    return;
+  }
+
+  list.innerHTML = items.map(c => {
+    const isUnread = c.read_at === null;
+    return `<div class="message-item ${isUnread ? 'unread' : ''} ${selectedId === c.id ? 'selected' : ''}"
+         onclick="selectMessage(${c.id})">
+      <div class="msg-avatar">${c.avatar}</div>
+      <div class="msg-body">
+        <div class="msg-top">
+          <span class="msg-from">${c.from}</span>
+          <span class="msg-date">${c.date}</span>
+        </div>
+        <div class="msg-subject">
+          ${isUnread ? '<span class="unread-dot"></span>' : ''}
+          ${c.subject}
+          ${c.attachments.length ? '<span class="attach-badge">[PDF]</span>' : ''}
+        </div>
+        <div class="msg-snippet">${c.snippet}</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  if (selectedId && items.some(c => c.id === selectedId)) {
+    showReadingPane(selectedId);
+  } else if (items.length > 0) {
+    selectMessage(items[0].id);
+  } else {
+    showPaneEmpty();
+  }
+}
+
+function showReadingPane(id) {
+  const comm = communications.find(c => c.id === id);
+  if (!comm) return;
+
+  document.getElementById('paneEmptyState').style.display = 'none';
+  document.getElementById('paneReading').style.display = 'flex';
+
+  document.getElementById('paneActions').innerHTML =
+    `<span style="font-size:11px;color:var(--text-muted);font-weight:600;">Delivered via ${comm.delivery.channel}</span>`;
+
+  const attachmentsHtml = comm.attachments && comm.attachments.length
+    ? `<div class="email-attachments">
+        <div class="email-attachments-label">Attachments</div>
+        ${comm.attachments.map(a => `<span class="attach-item">[PDF] ${a}</span>`).join('')}
+       </div>`
+    : '';
+
+  const body = document.getElementById('paneBody');
+  body.innerHTML = `
+    <div style="margin-bottom:20px;">
+      <div style="font-size:18px;font-weight:700;color:var(--text-main);margin-bottom:4px;">${comm.subject}</div>
+      <div style="font-size:11px;color:var(--text-light);">
+        ${comm.date} &mdash; Regarding <strong>${comm.studentName}</strong> (${comm.studentId})
+      </div>
+      <div style="font-size:11px;color:var(--text-light);margin-top:2px;">
+        Sponsor: ${comm.from} &nbsp;|&nbsp; ${comm.trigger} ${comm.amount !== '—' ? '| ' + comm.amount : ''} ${comm.triggerDate}
+      </div>
+    </div>
+    <hr style="border:none;border-top:1px solid var(--border-neutral);margin:0 0 20px;">
+    <div style="font-size:15px;line-height:1.8;color:#334155;">
+      ${comm.letterBody}
+    </div>
+    ${attachmentsHtml}
+  `;
+
+  const footer = document.getElementById('paneFooter');
+  const timelineHtml = comm.timeline.map(t =>
+    `<div class="timeline-item"><span class="timeline-dot ${t.done ? 'done' : 'pending'}"></span> <strong>${t.label}</strong> — ${t.detail}</div>`
+  ).join('');
+  footer.innerHTML = `
+    <div>
+      <strong>Timeline</strong>
+      ${timelineHtml}
+    </div>
+    <div>
+      <strong>Delivery</strong><br>
+      Channel: ${comm.delivery.channel}<br>
+      To: ${comm.delivery.recipient}<br>
+      Sent: ${comm.delivery.sentAt}
+    </div>
+  `;
+}
+
+function showPaneEmpty() {
+  selectedId = null;
+  document.getElementById('paneEmptyState').style.display = 'flex';
+  document.getElementById('paneReading').style.display = 'none';
+}
+
+// ─── MOBILE ───
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebarBackdrop').classList.toggle('open');
+}
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebarBackdrop').classList.remove('open');
+}
+
+function isMobile() {
+  return window.innerWidth <= 640;
+}
+
+function selectMessage(id) {
+  selectedId = id;
+  const comm = communications.find(c => c.id === id);
+  if (!comm) return;
+  if (comm.read_at === null) {
+    comm.read_at = new Date().toISOString();
+    updateFolderCounts();
+  }
+  renderMessages();
+  showReadingPane(id);
+  if (isMobile()) {
+    document.querySelector('.message-list').classList.add('hidden-mobile');
+    document.querySelector('.right-pane').classList.remove('hidden-mobile');
+  }
+}
+
+function backToList() {
+  document.querySelector('.message-list').classList.remove('hidden-mobile');
+  document.querySelector('.right-pane').classList.add('hidden-mobile');
+}
+
+// ─── FOLDER ───
+function switchFolder(folder) {
+  currentFolder = folder;
+  document.querySelectorAll('.folder').forEach(f => f.classList.toggle('active', f.dataset.folder === folder));
+  const folderNames = { inbox: 'MESSAGES', sent: 'SENT', archive: 'ARCHIVE' };
+  document.getElementById('breadcrumb').textContent = 'SYSTEM_CORE / COMMUNICATIONS / ' + (folderNames[folder] || folder.toUpperCase());
+  currentPill = 'all';
+  document.querySelectorAll('.pill').forEach(p => p.classList.toggle('active', p.dataset.pill === 'all'));
+  selectedId = null;
+  showPaneEmpty();
+  renderMessages();
+  closeSidebar();
+  if (isMobile()) {
+    document.querySelector('.message-list').classList.remove('hidden-mobile');
+    document.querySelector('.right-pane').classList.add('hidden-mobile');
+  }
+}
+
+function switchPill(pill) {
+  currentPill = pill;
+  document.querySelectorAll('.pill').forEach(p => p.classList.toggle('active', p.dataset.pill === pill));
+  renderMessages();
+}
+
+function filterMessages() {
+  renderMessages();
+}
+
+// ─── FOLDER COUNTS ───
+function updateFolderCounts() {
+  const count = communications.filter(c => c.folder === 'inbox' && c.read_at === null).length;
+  const el = document.getElementById('count-inbox');
+  if (el) {
+    el.textContent = count;
+    el.style.display = count > 0 ? '' : 'none';
+  }
+}
+
+// ─── TOAST ───
+function showToast(msg, type) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast ' + type + ' show';
+  clearTimeout(t._timeout);
+  t._timeout = setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+// ─── INIT ───
+updateFolderCounts();
+renderMessages();
+</script>
+</body>
+</html>

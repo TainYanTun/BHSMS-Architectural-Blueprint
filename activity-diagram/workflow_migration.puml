@@ -1,0 +1,21 @@
+@startuml
+|Admin|
+start
+:Extract data from legacy system;
+:Map fields to new schema;
+:Load into staging tables (status: Pending);
+:Run batch validation\n(marks Validated or Failed);
+
+repeat
+  :Preview staged records in UI;
+  if (Any records failed validation?) then (Yes)
+    :Fix invalid records in UI;
+  else (No)
+    :Approve batch;
+  endif
+repeat while (Batch approved?) is (No)
+
+:Commit to production (status: Imported);
+:Log source→target mappings\nto migration_metadata;
+stop
+@enduml

@@ -1,0 +1,22 @@
+@startuml
+|Coordinator|
+start
+:Identify student needing transfer;
+:Select target program;
+:Submit transition request with reason;
+
+|Director|
+:Review request;
+if (Approve?) then (Yes)
+  :Approve program move;
+else (No)
+  :Reject request;
+  stop
+endif
+
+|System|
+:Create transition record;
+:Update student's current program;
+:Log to audit trail;
+stop
+@enduml

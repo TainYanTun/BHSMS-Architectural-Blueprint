@@ -1,0 +1,30 @@
+@startuml
+|Secretary / Coordinator|
+start
+:Select report type;
+:Link to student;
+if (Thank You?) then (Yes)
+  :Link to contribution;
+endif
+:Write narrative;
+:Submit for review;
+
+|Director|
+if (Approve?) then (Approve)
+  :Sign off;
+else (Return)
+  :Add return reason;
+  |Secretary / Coordinator|
+  :Revise narrative;
+endif
+
+|System|
+:Generate PDF;
+:Create communication record;
+:Send to sponsor;
+
+|Sponsor|
+:Receive & read;
+:Mark read_at;
+stop
+@enduml
