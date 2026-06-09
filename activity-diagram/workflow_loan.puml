@@ -1,24 +1,17 @@
 @startuml
-|Secretary / Coordinator|
+|Secretary|
 start
-if (Student is in loan program?) then (Yes)
-  :Select institution;
-  :Create loan agreement;
-  :Upload agreement document;
-else (No)
-  stop
-endif
-:Record disbursement amount & date;
-if (Overdraft?) then (Blocked)
-  stop
-endif
+:Select student;
+:Create loan agreement;
+:Upload agreement document;
 
+|Coordinator|
+:Record disbursement amount & date;
 :Monitor student until graduation;
-if (Graduated?) then (Yes)
-  :Change status to Refunding;
-else (No)
+if (Graduated?) then (No)
   stop
 endif
+:Change status to Refunding;
 
 repeat
   :Record repayment amount & date;

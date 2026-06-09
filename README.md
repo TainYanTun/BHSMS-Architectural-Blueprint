@@ -1,95 +1,122 @@
 # Bangla Hope Blueprint
 
-**Senior Development Project: Orphanage Sponsorship & Student Management System**
+**Capstone Project: Bangla Hope Sponsorship Management System (Bangla Hope SMS)**
 
-This repository contains the architectural blueprints, database schemas, and high-fidelity prototypes for the **Bangla Hope SMS**, a centralized system designed to manage sponsorship programs for orphans, destitute children, and vulnerable families in Bangladesh.
+This repository contains the architectural blueprints, database schemas, and activity diagrams for the **Bangla Hope SMS**, a centralized web-based system designed to manage sponsorship programs for orphans, destitute children, and underprivileged women in Bangladesh.
 
 ---
 
 ## Project Overview
 
-The Bangla Hope Management System is designed to replace legacy MS Access workflows with a modern, scalable, and secure platform. It consolidates six distinct humanitarian programs into a single source of truth, ensuring data integrity across a student's entire lifecycle—from admission to higher education.
+The Bangla Hope SMS replaces legacy MS Access and paper-based processes with a modern, scalable platform. It consolidates five distinct sponsorship programs into a single source of truth, ensuring data integrity across a student's entire lifecycle — from admission to program transition and sponsorship tracking.
 
-### The Six Core Programs
-1.  **Residential Program (LRC):** Full care for children at the Love Receiving Center.
+### The Five Core Programs
+1.  **Orphanage (Residential Campus / LRC):** Full care for children at the Love Receiving Center.
 2.  **Boarding School Program:** Sponsorship for students in residential education.
 3.  **Village Schools Program:** Community-based day school support for ~550 students.
 4.  **Higher Study Loan Program:** University and vocational training financial support.
 5.  **Employee Children Program:** Benefits management for staff members' families.
-6.  **Archive / Drop System:** Permanent historical records for all former program participants.
 
 ---
 
 ## Architectural Pillars
 
 -   **Master-Relational Data Model:** Every student is assigned a unique, permanent **Master ID**. Program-specific IDs are preserved for historical context, allowing seamless transitions between programs.
--   **Immutable Financial Ledger:** A high-integrity "Battery Model" for tracking USD contributions. The system uses immutable transaction logs and reversing entries to ensure financial transparency without full accounting complexity.
--   **High-Density Design System:** Optimized for "Data-First" humanitarian work. The UI (detailed in `DESIGN.md`) prioritizes information density, structural clarity, and professional utility using a Navy/Teal professional palette.
--   **Role-Based Access Control (RBAC):** Granular permissions for Admins, Supervisors, Coordinators, and Secretaries to ensure data privacy and operational security.
+-   **Immutable Financial Ledger:** A high-integrity system for tracking USD contributions and BDT payouts. Uses dual-currency recording (`local_amount` in BDT, `amount` in USD) with daily auto-fetched exchange rates for accurate reconciliation.
+-   **Role-Based Access Control (RBAC):** Granular permissions for Administrators, Directors, Coordinators, Secretaries, and Sponsors to ensure data privacy and operational security. Coordinator access is scoped to their assigned program.
+-   **Offline Resilience (PWA):** The Staff Portal functions as a Progressive Web App with IndexedDB caching for offline data entry and automatic sync when the network is restored.
+-   **Partitioned Audit Log:** Monthly range partitions on `audit_logs` with automatic partition creation and drop-after-6-months retention. No archive schema — stale partitions are dropped directly.
 
 ---
 
 ## 📂 Project Structure & Index
 
-### 📁 [core/](./core/) - Project Strategy
-*   **[PROPOSAL.md](./core/PROPOSAL.md)**: Original vision, current limitations, and system requirements.
-*   **[DESIGN.md](./core/DESIGN.md)**: Visual DNA, typography, color palettes, and component standards.
-*   **[CLIENT_CLARIFICATIONS.md](./core/CLIENT_CLARIFICATIONS.md)**: Business rules and edge-case decisions.
-*   **[PROGRAM_PARADIGM.md](./core/PROGRAM_PARADIGM.md)**: The underlying logic of the program structures.
-*   **[IT483_REPORT.md](./core/IT483_REPORT.md)**: Academic project report and formal documentation.
+### 📁 [activity-diagram/](./activity-diagram/) — Workflow Diagrams
+PlantUML source files for 7 activity diagrams with swimlanes, plus rendered PNG/SVG outputs:
+- **student** — Student intake, enrollment, lifecycle
+- **sponsor** — Sponsor onboarding and registration
+- **finance** — Contributions (income) and payouts (expenditure), including exchange rate lookup
+- **loan** — Loan agreement, disbursement, repayment loop
+- **report** — APR, Thank You letters, communications approval workflow
+- **transition** — Student program transfers (including institution selection for Loan Program)
+- **migration** — Legacy data ETL with sandbox preview, validation, fix-retry, and approval pipeline
 
-### 📁 [technical/](./technical/) - System Blueprints
-*   **[schema.sql](./technical/schema.sql)**: Production-ready PostgreSQL schema including triggers for auto-ID generation.
-*   **[DATA_ARCHITECTURE.md](./technical/DATA_ARCHITECTURE.md)**: Logical domain mapping and sync logic.
-*   **[ERD.mmd](./technical/ERD.mmd)**: Entity Relationship Diagram (Mermaid).
-*   **[Architecture.mmd](./technical/Architecture.mmd)**: High-level system architecture diagram.
-*   **[PERMISSIONS.md](./technical/PERMISSIONS.md)**: RBAC matrix mapping roles to system actions.
-*   **[schema_explain.md](./technical/schema_explain.md)**: Detailed breakdown of table relationships.
-*   **[OPTIONAL_FEATURES.md](./technical/OPTIONAL_FEATURES.md)**: Roadmap for future system enhancements.
+### 📁 [technical/](./technical/) — System Blueprints
+- **[schema.sql](./technical/schema.sql):** PostgreSQL schema — 30+ tables, triggers, audit log partition functions, dual-currency payouts, exchange rates, LIST-partitioned business data by status
+- **[DATA_ARCHITECTURE.md](./technical/DATA_ARCHITECTURE.md):** Logical domain mapping and sync logic
+- **[ERD.mmd](./technical/ERD.mmd):** Entity Relationship Diagram (Mermaid) covering all 7 domains
+- **[Architecture.mmd](./technical/Architecture.mmd):** System architecture diagram (FrankenPHP + Laravel + PostgreSQL)
+- **[PERMISSIONS.md](./technical/PERMISSIONS.md):** RBAC matrix mapping 5 roles to system actions
+- **[schema_explain.md](./technical/schema_explain.md):** Detailed breakdown of table relationships and conventions
+- **[OPTIONAL_FEATURES.md](./technical/OPTIONAL_FEATURES.md):** Future enhancement roadmap
 
-### 📁 [financial/](./financial/) - Money & Ledger
-*   **[FINANCIAL_WORKFLOW.md](./financial/FINANCIAL_WORKFLOW.md)**: Logic for subsidies, pocket money, and loans.
-*   **[FINANCIAL_GUIDE.md](./financial/FINANCIAL_GUIDE.md)**: Strategic financial management policies.
-*   **[bangla_hope_table_guide.md](./financial/bangla_hope_table_guide.md)**: Field-level definitions for financial tables.
+### 📁 [financial/](./financial/) — Money & Ledger
+- **[FINANCIAL_WORKFLOW.md](./financial/FINANCIAL_WORKFLOW.md):** Logic for subsidies, pocket money, and loans
+- **[FINANCIAL_GUIDE.md](./financial/FINANCIAL_GUIDE.md):** Currency handling policies (dual-currency, daily auto-fetched exchange rates), audit trail, reconciliation
+- **[bangla_hope_table_guide.md](./financial/bangla_hope_table_guide.md):** Field-level definitions for financial tables
 
-### 📁 [communication/](./communication/) - Sponsor Relations
-*   **[COMMUNICATION_HUB_GUIDE.md](./communication/COMMUNICATION_HUB_GUIDE.md)**: Templates and trigger logic for comms.
-*   **[CHART.md](./communication/CHART.md)**: Communication flow and reporting charts.
-*   **[COMMUNICATION_DECISION_MATRIX.md](./communication/COMMUNICATION_DECISION_MATRIX.md)**: Routing logic for different message types.
+### 📁 [core/](./core/) — Project Strategy
+- **[PROPOSAL.md](./core/PROPOSAL.md):** Original vision, current limitations, and system requirements
+- **[DESIGN.md](./core/DESIGN.md):** Visual DNA, typography, color palettes, component standards
+- **[CLIENT_CLARIFICATIONS.md](./core/CLIENT_CLARIFICATIONS.md):** Business rules and edge-case decisions
+- **[PROGRAM_PARADIGM.md](./core/PROGRAM_PARADIGM.md):** The underlying logic of the program structures
 
-### 📁 [findings/](./findings/) - Research & Analysis
-*   **[ui_ux_standards.md](./findings/ui_ux_standards.md)**: Research on humanitarian UI best practices.
-*   **[student_transition.md](./findings/student_transition.md)**: Analysis of student movement between programs.
-*   **[higher_education_tracking.md](./findings/higher_education_tracking.md)**: Research on long-term loan tracking.
+### 📁 [communication/](./communication/) — Sponsor Relations
+- **[COMMUNICATION_HUB_GUIDE.md](./communication/COMMUNICATION_HUB_GUIDE.md):** Templates, trigger logic, and delivery rules
+- **[CHART.md](./communication/CHART.md):** Communication flow and reporting charts
+- **[COMMUNICATION_DECISION_MATRIX.md](./communication/COMMUNICATION_DECISION_MATRIX.md):** Routing logic for different message types
 
-### 📁 [plans/](./plans/) - Implementation Roadmap
-*   **[technical-architecture.md](./plans/technical-architecture.md)**: Detailed server and network strategy.
-*   **[system-separation-architecture.md](./plans/system-separation-architecture.md)**: Logic for multi-site operations.
-*   **[automation-paradigm.md](./plans/automation-paradigm.md)**: Strategy for automated reports and alerts.
-*   **[financial-flow.md](./plans/financial-flow.md)**: Detailed breakdown of the transaction lifecycle.
-*   **[job_queue.md](./plans/job_queue.md)**: Background processing and task scheduling design.
-*   **[queue-prioritization.md](./plans/queue-prioritization.md)**: Handling high-volume report generation.
-*   **[audit-log-partitioning.md](./plans/audit-log-partitioning.md)**: Performance strategy for large-scale logging.
+### 📁 [findings/](./findings/) — Research & Analysis
+- **[ui_ux_standards.md](./findings/ui_ux_standards.md):** Research on humanitarian UI best practices
+- **[student_transition.md](./findings/student_transition.md):** Analysis of student movement between programs
+- **[higher_education_tracking.md](./findings/higher_education_tracking.md):** Research on long-term loan tracking
 
-### 📁 [ui/](./ui/) - Interface Prototypes
-*   **[prototype/](./ui/prototype/)**: Interactive HTML/CSS/JS prototypes (Admin Dashboard, Ledger, etc.).
-*   **[wireframe/](./ui/wireframe/)**: Low-fidelity structural blueprints for all system screens.
-*   **[assets/](./assets/)**: SVG patterns and visual elements.
+### 📁 [plans/](./plans/) — Implementation Architecture
+- **[audit-log-partitioning.md](./plans/audit-log-partitioning.md):** Monthly partition strategy with 6-month drop retention
+- **[job_queue.md](./plans/job_queue.md):** Background processing and task scheduling design
+- **[queue-prioritization.md](./plans/queue-prioritization.md):** Handling high-volume report generation
+- **[technical-architecture.md](./plans/technical-architecture.md):** Server, network, and deployment strategy (FrankenPHP)
+- **[system-separation-architecture.md](./plans/system-separation-architecture.md):** Multi-site operations logic
+- **[automation-paradigm.md](./plans/automation-paradigm.md):** Automated reports and alerts strategy
+- **[financial-flow.md](./plans/financial-flow.md):** Transaction lifecycle breakdown
+
+### 📁 [ui/](./ui/) — Interface Prototypes
+- **[prototype/](./ui/prototype/):** Interactive HTML/CSS/JS prototypes (Admin Dashboard, Ledger, etc.)
+- **[wireframe/](./ui/wireframe/):** Low-fidelity structural blueprints for all system screens
+- **[assets/](./assets/):** SVG patterns and visual elements
 
 ---
 
 ## 🛠️ Technical Stack (Blueprint Phase)
 
-*   **Database:** PostgreSQL 15+ (with GIN indexing and UUID support).
-*   **Front-end Style:** Vanilla CSS (Themed with CSS Variables).
-*   **Design Framework:** Nunito (Sans) for data, Lora (Serif) for branding.
-*   **Diagramming:** Mermaid.js (`.mmd`).
+| Component | Technology |
+|-----------|-----------|
+| **Frontend** | React + Vite (TypeScript, TailwindCSS) |
+| **Backend** | Laravel 11 (PHP) |
+| **Application Server** | FrankenPHP (Caddy-based, auto-TLS) |
+| **Database** | PostgreSQL 15+ (UUID, GIN indexing, partitioning) |
+| **Authentication** | Laravel Sanctum (Token-based) |
+| **Offline Storage** | IndexedDB (PWA Staff Portal) |
+| **Object Storage** | S3-compatible (Photos, PDFs, Documents) |
+| **Diagramming** | PlantUML (activity diagrams), Mermaid.js (ERD, architecture) |
 
 ---
 
-## 📈 Project Status
+## Key Design Decisions
 
-This repository represents the **Architectural Completion Phase**. All schemas, data models, and high-fidelity interface prototypes have been finalized to serve as the foundation for full-scale development.
+- **FrankenPHP** replaces Nginx + PHP-FPM — single binary, auto HTTPS, HTTP/2/3
+- **Dual-currency payouts** — `local_amount` (BDT) + `exchange_rate` → USD equivalent. Industry standard for NGOs with foreign donors
+- **Exchange rates** — Daily UPSERT by cron from free FX API. Manual override available with audit trail
+- **Audit logs** — Monthly range partitions, dropped after 6 months, no archive schema
+- **Business data** — LIST partition by status (Active vs Inactive) — no cold storage at ~10k rows
+- **Migration pipeline** — ETL with sandbox preview, batch validation, fix-retry before approval commit
 
 ---
-*Developed as part of the Senior Development Project curriculum.*
+
+## Project Status
+
+Active development. Blueprint phase covers schema, workflows, architecture, and interface prototypes as the foundation for full-scale implementation.
+
+---
+
+*Developed as part of Capstone Project 1 — Bangla Hope SMS*

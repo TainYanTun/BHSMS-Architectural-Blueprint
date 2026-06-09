@@ -20,6 +20,7 @@ This document defines the system-wide permissions for each user role within the 
 | **Sponsorship Income (USD)**     | Create / Edit | View²          | Full Access            | Full Access | View (Personal) |
 | **Student Subsidies (USD)**      | View          | Create / Edit² | Full Access            | Full Access | --              |
 | **Higher Ed Loan Program**       | Create / Edit | Create / Edit² | Full Access            | Full Access | --              |
+| **Exchange Rates (Monthly BDT→USD)** | View / Edit | View²      | Full Access             | Full Access | --              |
 | **Reconciliations**              | --            | --             | Full Access            | Full Access | --              |
 | **Financial Audit Logs**         | View          | View²          | View                   | Full Access | --              |
 | **▸ Documents & Communications** |               |                |                        |             |                 |
@@ -63,4 +64,4 @@ This document defines the system-wide permissions for each user role within the 
 - **Sponsor:** External stakeholder. Read-only access to their sponsored child's information and documents. Can browse unsponsored children (redacted).
 
 ---
-*Last Updated: 2026-06-04 | Part of the Bangla Hope SMS Technical Blueprint*
+*Last Updated: 2026-06-09 | Part of the Bangla Hope SMS Technical Blueprint*

@@ -97,7 +97,7 @@ erDiagram
     }
 
     AUDIT_LOGS {
-        uuid id PK
+        uuid id PK "composite with created_at"
         uuid user_id FK
         text module
         text action
@@ -105,7 +105,7 @@ erDiagram
         text target_type
         jsonb mutation_detail "gin_path_ops"
         inet ip_address
-        timestamptz created_at
+        timestamptz created_at PK "monthly range partition, 6-month retention"
     }
 
     BACKUPS {
@@ -443,8 +443,10 @@ erDiagram
         uuid id PK
         uuid student_id FK
         text type "IMMUTABLE"
-        numeric amount
-        char currency
+        numeric amount "USD equivalent"
+        numeric local_amount "actual BDT disbursed"
+        char local_currency "default BDT"
+        numeric exchange_rate "at time of payout"
         date payout_date
         uuid recorded_by FK
         text status
@@ -452,6 +454,17 @@ erDiagram
         timestamptz created_at
         timestamptz updated_at
         int row_version
+    }
+
+    EXCHANGE_RATES {
+        uuid id PK
+        char currency_from "default BDT"
+        char currency_to "default USD"
+        numeric rate
+        date effective_month "month-start, e.g. 2026-06-01"
+        boolean auto_fetched "true=cron, false=manual override"
+        timestamptz last_fetched_at "cron fetch timestamp"
+        timestamptz created_at
     }
 
     RECONCILIATIONS {

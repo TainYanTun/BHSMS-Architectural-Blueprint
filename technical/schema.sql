@@ -475,10 +475,17 @@ CREATE TABLE allocation_payouts (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     student_id UUID NOT NULL REFERENCES students(id) ON DELETE RESTRICT,
     type TEXT NOT NULL CHECK (type IN ('Subsidy', 'Pocket Money', 'Stipend', 'One-time Grant')),
+
+    -- USD equivalent (local_amount / exchange_rate) for sponsor reporting
     amount NUMERIC(12, 2) NOT NULL CHECK (amount > 0),
-    currency CHAR(3) DEFAULT 'USD', -- Fix: Added currency context
+
+    -- Local currency details for accurate Bangladesh accounting
+    local_amount NUMERIC(12, 2) NOT NULL CHECK (local_amount > 0),
+    local_currency CHAR(3) DEFAULT 'BDT',
+    exchange_rate NUMERIC(10, 4) NOT NULL CHECK (exchange_rate > 0),
+
     payout_date DATE DEFAULT CURRENT_DATE,
-    recorded_by UUID REFERENCES users(id) ON DELETE SET NULL, -- Fix: Handle user deletion
+    recorded_by UUID REFERENCES users(id) ON DELETE SET NULL,
     status TEXT DEFAULT 'Paid' CHECK (status IN ('Paid', 'Pending', 'Cancelled')),
     notes TEXT,
     created_at TIMESTAMPTZ DEFAULT NOW(),
@@ -604,6 +611,29 @@ CREATE TABLE loan_transactions (
 );
 
 -- ==========================================
+-- 6.5. EXCHANGE RATES
+-- ==========================================
+-- Monthly exchange rates for BDT→USD conversion on payouts.
+-- The Director sets the rate at month-start using the Bangladesh Bank
+-- published rate. All allocation_payouts in that month use this rate.
+CREATE TABLE exchange_rates (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    currency_from CHAR(3) DEFAULT 'BDT',
+    currency_to CHAR(3) DEFAULT 'USD',
+    rate NUMERIC(10, 4) NOT NULL CHECK (rate > 0),
+    effective_month DATE NOT NULL,             -- First day of the month, e.g. '2026-06-01'
+    auto_fetched BOOLEAN DEFAULT false,        -- true if set by cron job, false if set by staff
+    last_fetched_at TIMESTAMPTZ,               -- when the cron last fetched this rate
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    CONSTRAINT uq_exchange_rate_month UNIQUE (currency_from, currency_to, effective_month)
+);
+
+-- Rate is auto-fetched daily by cron. Each successful fetch UPSERTs the current month's row
+-- (updates rate + last_fetched_at). If the API is down, yesterday's rate remains available.
+-- Staff can manually override if the auto-fetched value is incorrect; set auto_fetched = false.
+-- The Coordinator is only blocked if no rate exists at all for the current month.
+
+-- ==========================================
 -- 7. BACKUP & FINANCIAL RECONCILIATION
 -- ==========================================
 CREATE TABLE backups (
@@ -678,6 +708,57 @@ CREATE TABLE audit_logs (
     created_at TIMESTAMPTZ DEFAULT NOW(),
     PRIMARY KEY (id, created_at)
 ) PARTITION BY RANGE (created_at);
+
+-- Audit log lifecycle:
+--   - Monthly partition auto-created by fn_create_audit_partition()
+--   - Partitions older than 6 months dropped by fn_drop_audit_partitions()
+-- Both scheduled via Laravel artisan command.
+
+CREATE OR REPLACE FUNCTION fn_create_audit_partition()
+RETURNS void AS $$
+DECLARE
+    partition_name TEXT;
+    start_date TEXT;
+    end_date TEXT;
+BEGIN
+    partition_name := 'audit_logs_' || TO_CHAR(NOW(), 'YYYY_MM');
+    start_date := DATE_TRUNC('month', NOW())::TEXT;
+    end_date := (DATE_TRUNC('month', NOW()) + INTERVAL '1 month')::TEXT;
+
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_class WHERE relname = partition_name
+    ) THEN
+        EXECUTE format(
+            'CREATE TABLE %I PARTITION OF audit_logs
+             FOR VALUES FROM (%L) TO (%L)',
+            partition_name, start_date, end_date
+        );
+    END IF;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION fn_drop_audit_partitions()
+RETURNS void AS $$
+DECLARE
+    part RECORD;
+BEGIN
+    FOR part IN
+        SELECT inhrelid::regclass::text AS partition_name
+        FROM pg_inherits
+        WHERE inhparent = 'audit_logs'::regclass
+    LOOP
+        IF part.partition_name ~ '^audit_logs_\d{4}_\d{2}$'
+           AND TO_DATE(SPLIT_PART(part.partition_name, '_', 3) || '_01', 'YYYY_MM_DD')
+               < DATE_TRUNC('month', NOW()) - INTERVAL '6 months'
+        THEN
+            EXECUTE format('DROP TABLE IF EXISTS %I', part.partition_name);
+        END IF;
+    END LOOP;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Create the first partition for the current month
+SELECT fn_create_audit_partition();
 
 -- ==========================================
 -- 8. VIEWS FOR REPORTING

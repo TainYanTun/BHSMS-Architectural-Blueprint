@@ -12,11 +12,19 @@ else (General)
 endif
 
 |Coordinator|
-:Select payout type;
-:Record amount, currency & payout date;
+:Select payout type\n(Subsidy / Pocket Money / Stipend);
+:Enter local_amount in BDT;
+:Look up monthly exchange rate\nfrom exchange_rates table;
+if (Rate found?) then (Yes)
+  :Calculate USD equivalent\n(= local_amount / rate);
+else (No)
+  :Show error:\nRate unavailable — contact IT;
+  stop
+endif
+:Record payout date & notes;
 if (Disburse now?) then (Yes)
+  :Hand over BDT to student;
   :Set status to Paid;
-  :Hand over to student;
 else (No)
   :Set status to Pending;
 endif

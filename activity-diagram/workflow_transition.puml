@@ -3,6 +3,9 @@
 start
 :Identify student needing transfer;
 :Select target program;
+if (Target is Loan Program?) then (Yes)
+  :Select institution;
+endif
 :Submit transition request with reason;
 
 |Director|
