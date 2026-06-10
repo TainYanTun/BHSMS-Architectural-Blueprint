@@ -57,15 +57,8 @@ rectangle "Sponsor Portal" {
   usecase "View / Download\nReports" as S5
 }
 
-Admin --> UC7
-Admin --> UC9
-Admin --> UC1
-Admin --> UC2
-Admin --> UC10
-Admin --> UC3
-Admin --> UC4
-Admin --> UC5
 Admin --> UC6
+Admin --> UC7
 Admin --> UC11
 
 Director --> UC7

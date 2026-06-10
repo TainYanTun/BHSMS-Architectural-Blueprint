@@ -7,33 +7,32 @@ This document defines the system-wide permissions for each user role within the 
 | Module / Action                  | Secretary     | School Coordinator¹ | Program Coordinator² | Director               | Admin       | Sponsor         |
 | :---------------------------------| :-------------:| :-------------------:| :--------------------:| :----------------------:| :-----------:| :---------------:|
 | **▸ Student Lifecycle**          |               |                      |                      |                        |             |                 |
-| **Student Master Records**       | View / Edit   | View / Edit¹        | View / Edit²         | Full Access            | Full Access | View (Limited)  |
-| **Academic & Results**           | View / Edit   | Create / Edit¹      | Create / Edit²       | Full Access            | Full Access | View            |
-| **Attendance Records**           | View / Edit   | Create / Edit¹      | Create / Edit²       | Full Access            | Full Access | View            |
-| **Student History / Notes**      | Create / Edit | Create / Edit¹      | Create / Edit²       | Full Access            | Full Access | --              |
-| **Program Transitions**          | --            | --                  | Request²             | **Approve / Move**     | Full Access | --              |
-| **Drop / Complete Student**      | --            | Request¹³          | Request²             | **Approve / Move**     | Full Access | --              |
+| **Student Master Records**       | View / Edit   | View / Edit¹        | View / Edit²         | Full Access            | --          | View (Limited)  |
+| **Academic & Results**           | View / Edit   | Create / Edit¹      | Create / Edit²       | Full Access            | --          | View            |
+| **Attendance Records**           | View / Edit   | Create / Edit¹      | Create / Edit²       | Full Access            | --          | View            |
+| **Student History / Notes**      | Create / Edit | Create / Edit¹      | Create / Edit²       | Full Access            | --          | --              |
+| **Program Transitions**          | --            | --                  | Request²             | **Approve / Move**     | --          | --              |
+| **Drop / Complete Student**      | --            | Request¹³          | Request²             | **Approve / Move**     | --          | --              |
 | **▸ Sponsorship**                |               |                      |                      |                        |             |                 |
-| **Sponsors**                     | Create / Edit | View¹               | View²                | Full Access            | Full Access | --              |
-| **Sponsorships**                 | Create / Edit | View¹               | View²                | Full Access            | Full Access | --              |
+| **Sponsors**                     | Create / Edit | View¹               | View²                | Full Access            | --          | --              |
+| **Sponsorships**                 | Create / Edit | View¹               | View²                | Full Access            | --          | --              |
 | **▸ Financial**                  |               |                      |                      |                        |             |                 |
-| **Sponsorship Income (USD)**     | Create / Edit | View¹               | View²                | Full Access            | Full Access | View (Personal) |
-| **Payouts**                      | View          | Create / Edit¹      | Create / Edit²       | Full Access            | Full Access | --              |
-| **Program Funding**              | --            | View¹               | Create / Edit²       | Full Access            | Full Access | --              |
-| **Higher Ed Loan Program**       | Create / Edit | --                  | Create / Edit²       | Full Access            | Full Access | --              |
-| **Exchange Rates (Monthly BDT→USD)** | View / Edit | View              | View²                | Full Access            | Full Access | --              |
-| **Financial Audit Logs**         | View          | View¹               | View²                | View                   | Full Access | --              |
+| **Sponsorship Income (USD)**     | Create / Edit | View¹               | View²                | Full Access            | --          | View (Personal) |
+| **Payouts**                      | View          | Create / Edit¹      | Create / Edit²       | Full Access            | --          | --              |
+| **Program Funding**              | --            | View¹               | Create / Edit²       | Full Access            | --          | --              |
+| **Higher Ed Loan Program**       | Create / Edit | --                  | Create / Edit²       | Full Access            | --          | --              |
+| **Exchange Rates (Monthly BDT→USD)** | View / Edit | View              | View²                | Full Access            | --          | --              |
 | **Financial Audit Logs**         | View          | View¹               | View²                | View                   | Full Access | --              |
 | **▸ Documents & Communications** |               |                      |                      |                        |             |                 |
-| **Documents**                    | Create / Edit | Create / Edit¹      | Create / Edit²       | Full Access            | Full Access | View            |
+| **Documents**                    | Create / Edit | Create / Edit¹      | Create / Edit²       | Full Access            | --          | View            |
 | **Communication Templates**      | --            | --                  | --                   | Manage / Edit          | Full Access | --              |
-| **Broadcast**                    | Create / Send | --                  | --                   | Full Access            | Full Access | View            |
-| Thank You Letters                | Create / Edit | Create / Edit¹      | Create / Edit²       | Full Access            | Full Access | View / Download |
-| Annual Progress Report (APR)     | Draft         | Draft / Edit¹       | Draft / Edit²        | **Approve / Sign-off** | Full Access | View / Download |
-| Case History                     | Draft         | Draft / Edit¹       | Draft / Edit²        | **Approve / Sign-off** | Full Access | View / Download |
-| General Letter             | Create / Edit | Create / Edit¹      | Create / Edit²       | Full Access            | Full Access | View / Download |
+| **Broadcast**                    | Create / Send | --                  | --                   | Full Access            | --          | View            |
+| Thank You Letters                | Create / Edit | Create / Edit¹      | Create / Edit²       | Full Access            | --          | View / Download |
+| Annual Progress Report (APR)     | Draft         | Draft / Edit¹       | Draft / Edit²        | **Approve / Sign-off** | --          | View / Download |
+| Case History                     | Draft         | Draft / Edit¹       | Draft / Edit²        | **Approve / Sign-off** | --          | View / Download |
+| General Letter             | Create / Edit | Create / Edit¹      | Create / Edit²       | Full Access            | --          | View / Download |
 | **▸ Reference & System**         |               |                      |                      |                        |             |                 |
-| **Teachers**                     | View          | Create / Edit¹      | Create / Edit²       | Full Access            | Full Access | --              |
+| **Teachers**                     | View          | Create / Edit¹      | Create / Edit²       | Full Access            | --          | --              |
 | **Facilities Registry**          | --            | --                  | --                   | --                     | Full Access | --              |
 | **Site & User Registry**         | --            | --                  | --                   | --                     | Full Access | --              |
 | **Invitations**                  | --            | --                  | --                   | Full Access            | Full Access | --              |
