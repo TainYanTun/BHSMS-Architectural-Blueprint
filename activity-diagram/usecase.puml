@@ -1,0 +1,110 @@
+@startuml
+skinparam backgroundColor #f8fafc
+skinparam usecase {
+  BackgroundColor #ffffff
+  BorderColor #0288d1
+  FontStyle bold
+  FontSize 11
+}
+skinparam actor {
+  BorderColor #0288d1
+  FontColor #01579b
+  FontStyle bold
+}
+skinparam rectangle {
+  BackgroundColor #f0f4ff
+  BorderColor #0288d1
+  BorderStyle dashed
+  FontColor #01579b
+  FontStyle bold
+}
+
+actor "System Admin" as Admin
+actor Director
+actor "Program\nCoordinator" as PC
+actor "School\nCoordinator" as SC
+actor "Admin.\nSecretary" as Sec
+actor "External\nSponsor" as Sponsor
+
+rectangle "Communications" {
+  usecase "Communication\nTemplates" as UC7
+  usecase "Draft Letters\n/ APRs" as UC8
+  usecase "Approve &\nSign-off" as UC9
+}
+
+rectangle "Student Lifecycle" {
+  usecase "Student Master\nRecords" as UC1
+  usecase "Academic &\nAttendance Logs" as UC2
+  usecase "Archive /\nDrop Student" as UC10
+}
+
+rectangle "Financial Operations" {
+  usecase "Program\nFunding" as UC3
+  usecase "Student\nPayouts" as UC4
+  usecase "Higher Education\nLoans" as UC5
+}
+
+rectangle "System & Audit" {
+  usecase "Financial\nAudit Logs" as UC6
+  usecase "System Admin\n(RBAC, Backup)" as UC11
+}
+
+rectangle "Sponsor Portal" {
+  usecase "View Sponsored\nStudent" as S1
+  usecase "View Academic\nRecords" as S2
+  usecase "View Sponsorship\nIncome" as S3
+  usecase "Update\nPreferences" as S4
+  usecase "View / Download\nReports" as S5
+}
+
+Admin --> UC7
+Admin --> UC9
+Admin --> UC1
+Admin --> UC2
+Admin --> UC10
+Admin --> UC3
+Admin --> UC4
+Admin --> UC5
+Admin --> UC6
+Admin --> UC11
+
+Director --> UC7
+Director --> UC9
+Director --> UC1
+Director --> UC2
+Director --> UC10
+Director --> UC3
+Director --> UC4
+Director --> UC5
+Director --> UC6
+
+PC --> UC8
+PC --> UC1
+PC --> UC2
+PC --> UC10
+PC --> UC3
+PC --> UC4
+PC --> UC5
+PC --> UC6
+
+SC --> UC8
+SC --> UC1
+SC --> UC2
+SC --> UC4
+SC --> UC6
+
+Sec --> UC8
+Sec --> UC4
+Sec --> UC5
+Sec --> UC1
+Sec --> UC2
+
+Sponsor --> S1
+Sponsor --> S2
+Sponsor --> S3
+Sponsor --> S4
+Sponsor --> S5
+
+UC8 .> UC9 : submit
+UC9 .> S5 : publish
+@enduml
