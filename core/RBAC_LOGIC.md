@@ -11,7 +11,9 @@ Admin ─── System owner, account management, full override
   │
 Director ─── Highest operational authority, final approver
   │
-Coordinator ─── Program-specific, daily operations
+Program Coordinator ─── Program-wide, daily operations
+  │
+School Coordinator ─── Single school, daily operations
   │
 Secretary ─── Data entry, letter drafting
   │
@@ -28,10 +30,10 @@ The name "Supervisor" was misleading — it connotes middle-management, but the 
 
 ## 2. Role Boundary Issues
 
-### Secretary vs Coordinator — where is the line?
+### Secretary vs Program Coordinator — where is the line?
 
-| Module | Secretary | Coordinator |
-|---|---|---|
+| Module | Secretary | Program Coordinator |
+|---|---|---|---|
 | Student Master Records | View / Edit | View / Edit |
 | Academic & Results | Edit | Full Access |
 | Attendance | Edit | Full Access |
@@ -43,8 +45,8 @@ The name "Supervisor" was misleading — it connotes middle-management, but the 
 
 **Questions:**
 - Can a Secretary register a new student, or only update existing ones?
-- Can a Secretary record a financial payout, or only view what Coordinators entered?
-- Is there a workflow where Secretary drafts → Coordinator reviews → Director approves?
+- Can a Secretary record a financial payout, or only view what Program Coordinators entered?
+- Is there a workflow where Secretary drafts → Program Coordinator reviews → Director approves?
 
 > **Status:** Needs definition.
 
@@ -58,21 +60,22 @@ Director has **Full Access** on financial modules (Sponsorship Income, Subsidies
 
 ---
 
-## 3. Program Scoping — Coordinator is Program-Specific
+## 3. Program Scoping — Role Scope Design
 
-### Decision: Coordinators are scoped by program
+### Decision: Two coordinator tiers with different scope levels
 
-A Coordinator is assigned to one or more specific programs. Their access is restricted to data within their assigned programs only.
+The original single "Coordinator" role has been split into **Program Coordinator** (program-scoped) and **School Coordinator** (facility-scoped). See Section 8 for full details.
 
-**Model:** A `user_programs` junction table links a Coordinator to specific programs (LRC, BRD, VLG, LON, STF). Every query is filtered by `WHERE program_id IN (user's assigned programs)`.
+A Program Coordinator is assigned to one or more specific programs. Their access is restricted to data within their assigned programs only.
+
+**Model:** The `user_programs` junction table links a user to programs, with an optional `village_sector_id` for School Coordinators. Queries filter by `WHERE program_id IN (user's assigned programs)` and optionally by `village_sector_id`.
 
 ### Open questions:
-- Can a Coordinator be assigned to multiple programs? (e.g., manages both LRC and Boarding)
-- Can a Coordinator be scoped further — to a specific facility within a program? (e.g., one person manages 3 of the 11 village schools, not all 11)
+- Can a Program Coordinator be assigned to multiple programs? (e.g., manages both LRC and Boarding)
 - Does program scoping apply to **all** modules? (Student Records, Academics, Attendance, Finance — all scoped)
-- How do cross-program transitions work? If a student moves from VLG → LON, which Coordinator handles them at each stage?
+- How do cross-program transitions work? If a student moves from VLG → LON, which Program Coordinator handles them at each stage?
 
-> **Status:** ✅ **Program-specific is decided.** Facility-level granularity within a program is still open.
+> **Status:** ✅ **Program-specific is decided.** Facility-level granularity within the VLG program is resolved via the School Coordinator role (see Section 8).
 
 ---
 
@@ -95,16 +98,23 @@ A Coordinator is assigned to one or more specific programs. Their access is rest
 ### Currently defined:
 | Workflow | Drafted by | Reviewed by | Approved by |
 |---|---|---|---|
-| Thank You Letters / APR | Secretary (Draft) | Coordinator (Edit) | **Director** |
-| Archive / Drop Student | Coordinator (Request) | -- | **Director** |
+| Thank You Letters / APR | Secretary (Draft) | Program Coordinator (Edit) | **Director** |
+| Archive / Drop Student | Program Coordinator (Request) | -- | **Director** |
+
+### Updated with School Coordinator:
+| Workflow | Drafted by | Reviewed by | Approved by |
+|---|---|---|---|
+| Archive / Drop Student | School Coordinator (Request) | **Program Coordinator** | Director |
+| Communications / Letters | School Coordinator (Draft / Send) | -- | Director (if cross-village) |
+| Thank You Letters / APR | School Coordinator (Create/Edit) | -- | Director (final sign-off) |
 
 ### Not yet defined:
 | Workflow | Who initiates? | Who approves? |
 |---|---|---|
-| Loan disbursement | Coordinator? | ? |
+| Loan disbursement | Program Coordinator? | ? |
 | Large subsidy payout (threshold?) | ? | ? |
 | Sponsor communication (manual) | Secretary? | ? |
-| Student transfer between programs | ? | ? |
+| Student transfer between programs | Program Coordinator? | ? |
 | Write-off / adjustment of financial records | ? | ? |
 
 ### Questions:
@@ -138,13 +148,67 @@ They are **separate roles** — Admin handles the system, Director runs the oper
 |---|---|---|---|
 | 1 | Supervisor → Director rename | ✅ **Done** | Updated throughout |
 | 2 | Secretary create permission | ❌ Open | Can Secretary create students or edit only? |
-| 3 | Program-level scoping | ✅ **Decided** | Coordinator is program-specific via `user_programs` |
-| 4 | Facility-level granularity within a program | ❌ Open | e.g., one coordinator covers 3 of 11 village schools |
+| 3 | Program-level scoping | ✅ **Resolved** | Split into Program Coordinator (program scope) and School Coordinator (facility scope) via `user_programs` |
+| 4 | Facility-level granularity within a program | ✅ **Resolved** | School Coordinator role added (see Section 8) |
 | 5 | Director self-approval | ❌ Open | Allowed or blocked? |
 | 6 | Sponsor portal auth | ❌ Open | Login required or public visitor allowed? |
 | 7 | Financial approval thresholds | ❌ Open | None / Dollar threshold / Two-person rule |
 | 8 | Admin vs Director boundary | ✅ **Decided** | Admin = tech, Director = operational |
 | 9 | Secretary financial permissions | ✅ **Resolved** | Create/Edit on income & subsidies |
-| 10 | Cross-program transitions | ❌ Open | Which Coordinator handles a moving student? |
+| 10 | Cross-program transitions | ❌ Open | Which Program Coordinator handles a moving student? |
 
-*This document is a working draft. Each decision should be moved to `CLIENT_CLARIFICATIONS.md` once finalized and reflected in `technical/PERMISSIONS.md` (the permission matrix) and `technical/schema.sql` (the `user_programs` table if applicable).*
+*This document is a working draft. Each decision should be moved to `CLIENT_CLARIFICATIONS.md` once finalized and reflected in `technical/PERMISSIONS.md` (the permission matrix) and `technical/schema.sql` (the `user_programs` table if applicable).
+
+---
+
+## 8. School Coordinator — Facility-Level Role
+
+### Decision: School Coordinator as a distinct role below Program Coordinator
+
+The single "Coordinator" role has been split into two distinct roles with a hierarchical relationship:
+
+| Role | Scope | Reports To |
+|------|-------|------------|
+| **Program Coordinator** | Entire program (e.g., all 11 village schools) | Director |
+| **School Coordinator** | Single `village_sector` (one specific school) | Program Coordinator |
+
+### Scoping model
+
+Both roles use the `user_programs` junction table, but the School Coordinator record includes a `village_sector_id`:
+
+- **Program Coordinator:** `(user_id, program_id='VLG', village_sector_id=NULL)` — sees all VLG data
+- **School Coordinator:** `(user_id, program_id='VLG', village_sector_id=<uuid>)` — sees only that village's data
+
+### Enforcement
+
+Queries filter by:
+
+```
+WHERE program_id IN (SELECT program_id FROM user_programs WHERE user_id = ? AND village_sector_id IS NULL)
+   OR village_sector_id IN (SELECT village_sector_id FROM user_programs WHERE user_id = ? AND village_sector_id IS NOT NULL)
+```
+
+### Permission deltas vs Program Coordinator
+
+| Module | Program Coordinator | School Coordinator | Rationale |
+|--------|:------------------:|:-------------------:|-----------|
+| Program Transitions | Request | **--** | Village Coord lacks cross-program visibility |
+| Higher Ed Loan | Create / Edit (if assigned) | **--** | Village Coord is VLG-only, no loan access |
+| Communications | Draft / Edit | **Draft / Send** | Village Coord can finalize village-level comms directly |
+| Drop / Complete | Request | Request¹ | Requires Program Coordinator review before Director |
+
+> ¹ School Coordinator's drop request is reviewed by the Program Coordinator before reaching the Director.
+
+### Approval chain
+
+| Workflow | Drafted by | Reviewed by | Approved by |
+|----------|-----------|-------------|-------------|
+| Archive / Drop Student | School Coordinator (Request) | **Program Coordinator** | Director |
+| Communications / Letters | School Coordinator (Draft / Send) | -- | Director (if cross-village) |
+| Thank You Letters / APR | School Coordinator (Create/Edit) | -- | Director (final sign-off) |
+| Student Program Transition | Program Coordinator (Request) | -- | Director |
+
+### Constraints
+
+- **Mutually exclusive:** A user cannot hold both Program Coordinator and School Coordinator roles simultaneously. Their `user_programs` entry defines which scope they operate under.
+- **VLG-only:** School Coordinator assignment is only valid for the VLG program. The schema enforces this via a trigger on `user_programs`.*

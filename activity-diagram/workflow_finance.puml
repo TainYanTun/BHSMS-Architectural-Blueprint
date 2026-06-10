@@ -11,7 +11,7 @@ else (General)
   :Leave as general donation;
 endif
 
-|Coordinator|
+|Program Coordinator|
 :Select payout type\n(Subsidy / Pocket Money / Stipend);
 :Enter local_amount in BDT;
 :Look up monthly exchange rate\nfrom exchange_rates table;

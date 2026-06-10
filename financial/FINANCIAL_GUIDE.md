@@ -36,7 +36,8 @@ Designed to assist students through university via a revolving fund model.
 ### B. Internal Support/Subsidies (Non-Repayable)
 For ongoing assistance (e.g., boarding school fees, pocket money, staff child aid).
 
-*   **`financial_allocations` (The Grant):** Records fixed, non-repayable amounts allocated to a student. Because these are gifts, they do not create debt and are strictly separated from the loan ledger.
+*   **`program_funding` (Program Allocation):** Records that a contribution has been allocated to fund a program (e.g., BDT 420,000 yearly subsidy for VLG).
+*   **`payouts` (Per-Student):** Records every individual payout to a student — whether from a direct contribution or a program funding pool. Because these are gifts, they do not create debt.
 
 ---
 
@@ -49,7 +50,7 @@ To maintain strict ledger integrity while supporting accurate local accounting, 
 *   **Exchange Rates:** A monthly `exchange_rates` table stores the BDT→USD rate for each month. Rates are auto-fetched daily by a Laravel scheduled command (`php artisan exchange-rates:fetch`). Each successful fetch **UPSERTs** the row for the current month — if a row exists, the `rate` and `last_fetched_at` are updated; if not, a new row is created. This means each payout uses the most recent rate available, and the rate can change within the month if the market moves.
 *   **Fallback Behavior:** If the API fails, the cron retries the next day. The existing row (from the last successful fetch) remains in place — the Coordinator always has a rate to use. Only if no row exists at all (e.g., API has been down since month start) does the system block with "Rate unavailable — contact IT".
 *   **Manual Override:** If the auto-fetched rate is incorrect (e.g., outdated FX market rate vs Bangladesh Bank official rate), a Secretary or Director can edit the rate directly. The `auto_fetched` flag is set to `false` to indicate manual intervention. Overrides are logged in the audit trail.
-*   **Local Accuracy:** Each `allocation_payout` stores `local_amount`, `local_currency` (BDT), `exchange_rate`, and `amount` (USD equivalent). This preserves accurate local accounting while enabling sponsor-facing USD reports.
+*   **Local Accuracy:** Each `payout` stores `local_amount`, `local_currency` (BDT), `exchange_rate`, and `amount` (USD equivalent). This preserves accurate local accounting while enabling sponsor-facing USD reports.
 
 ### The Audit Trail (`audit_logs`)
 The system follows a policy of **non-deletion**. Financial records must never be deleted. 
@@ -64,7 +65,8 @@ The system follows a policy of **non-deletion**. Financial records must never be
 | :--- | :--- | :--- | :--- |
 | **Income** | Sponsorships | **USD ($)** | Recency of Support |
 | **Expenditure** | Higher Education | **USD ($)** | Disbursements vs. Refunds |
-| **Expenditure** | Subsidies/Grants | **BDT / USD ($)** | Dual-currency (monthly exchange rate) |
+| **Expenditure** | Payouts (Per-Student) | **BDT / USD ($)** | Dual-currency (monthly exchange rate) |
+| **Allocation** | Program Funding | **USD ($)** | Allocates contribution amount to a program |
 | **Reference** | Exchange Rates | **BDT → USD** | Auto-fetched daily (cron), UPSERTs current-month row |
 
 ---

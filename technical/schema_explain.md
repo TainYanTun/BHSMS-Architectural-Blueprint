@@ -147,15 +147,16 @@ Dedicated accounting instruments optimized for tracking long-term repayable fina
 
 ---
 
-## 7. Reconciliations, Safeguards & Staging Engines
-Guarantees double-entry book accuracy, prevents financial overdrafts, and safely manages bulk old data migrations.
+## 7. Safeguards & Staging Engines
+Guarantees financial integrity and safely manages bulk old data migrations.
 
-### `reconciliations`
-* **Purpose:** The critical matching mechanism connecting an unallocated contribution directly against a precise local field expenditure (`allocation_payouts`).
-* **Key Logic (`fn_enforce_contribution_limits`):** Implements a robust **anti-overdraft engine**. Before a allocation entry can finalize, it explicitly executes a `FOR UPDATE` row lock on the parent contribution. This serializes concurrent incoming requests, forces them to execute sequentially, computes real-time usage balances, and crashes the database transaction with an explicit error exception if a caseworker attempts to allocate more capital than the donor actually provided.
+### `program_funding`
+* **Purpose:** Allocates a portion of a contribution to fund a program (e.g., sponsor X's $5,000 goes to VLG school). Individual student payouts draw from this pool.
 
-### `allocation_payouts`
-* **Purpose:** Captures outgoing organizational disbursements paid directly to field locations or individual students for pocket allowances, specialized grants, or monthly subsidies.
+### `payouts`
+* **Purpose:** Records every individual payout to a student, whether funded directly from a contribution or through a program funding pool. Provides a complete per-student expenditure trail.
+
+### `backups`
 
 ### `backups`
 * **Purpose:** An administrative execution log detailing internal snapshot states, sizing weights, and file storage locations.

@@ -4,26 +4,25 @@ start
 :Register student;
 :Record intake;
 :Add guardians;
+:Enroll in program;
 
-if (Enrollment by Secretary?) then (Yes)
-  :Enroll in any program;
-else (No)
-  |Coordinator|
-  :Enroll in their program;
-endif
-
-|Coordinator|
+|School Coordinator|
 :Track academics & attendance;
 
-if (Transition needed?) then (Yes)
-  :Request program change;
-elseif (Drop/Complete?) then (Yes)
+if (Drop or Complete?) then (Yes)
   :Request status change;
-else
+  |Program Coordinator|
+  :Review drop request;
+  |Director|
+  :Approve or reject;
+  stop
+else (No)
+  |Program Coordinator|
+  if (Transition needed?) then (Yes)
+    :Request program change;
+    |Director|
+    :Approve or reject;
+  endif
   stop
 endif
-
-|Director|
-:Approve or reject;
-stop
 @enduml

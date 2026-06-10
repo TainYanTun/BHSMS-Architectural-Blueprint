@@ -141,16 +141,15 @@ The system operates under a strict **Role-Based Access Control (RBAC)** model de
 *   **Postconditions:** The contribution is recorded as an **immutable ledger row** (cannot be updated or deleted).
 *   **Schema References:** [contributions](file:///c:/Users/Pann/Documents/New%20folder%20(5)/Bangla_Hope_Blueprint/technical/schema.sql#L268).
 
-#### UC-11: Reconcile Unallocated Sponsor Contributions to Expenditures
+#### UC-11: Record Payout to Student
 *   **Primary Actor:** Supervisor / Coordinator
-*   **Preconditions:** Unallocated contributions exist, and field expenditures are logged.
+*   **Preconditions:** A contribution or program funding pool exists.
 *   **Main Flow:**
-    1. The operator opens the **Reconciliation Console**.
-    2. Selects an unallocated contribution balance and matches it with a specific field allocation payout.
-    3. Clicks **Settle Reconciliation**.
-    4. The database triggers `fn_enforce_contribution_limits`, which locks the target contribution row (`FOR UPDATE`), calculates the usage balance, and rejects the write if the payout exceeds the contribution's USD amount.
-*   **Postconditions:** The reconciliation is written to the ledger, and the contribution balance is reduced.
-*   **Schema References:** [reconciliations](file:///c:/Users/Pann/Documents/New%20folder%20(5)/Bangla_Hope_Blueprint/technical/schema.sql#L330).
+    1. The operator opens the **Payout Console**.
+    2. Selects the student, selects the source (direct contribution or program funding pool), and enters the amount.
+    3. Clicks **Record Payout**.
+    4. The database triggers `fn_enforce_payout_limits` / `fn_enforce_funding_limits`, which locks the parent record (`FOR UPDATE`), calculates the remaining balance, and rejects if the payout exceeds the available amount.
+*   **Postconditions:** The payout is recorded, and the source balance is reduced.
 
 #### UC-12: Disburse Monthly Student Subsidy
 *   **Primary Actor:** Supervisor
@@ -158,9 +157,9 @@ The system operates under a strict **Role-Based Access Control (RBAC)** model de
 *   **Main Flow:**
     1. The Supervisor opens the financial dashboard and selects **Disburse Monthly Subsidies**.
     2. Selects the target school or village sector, sets the month/year, and confirms the disbursement.
-    3. The system generates allocation records in `allocation_payouts` tracking funding for children's tuitions and local logistics.
+     3. The system creates a `program_funding` record allocating the contribution to the program.
 *   **Postconditions:** Subsidies are registered as field expenses.
-*   **Schema References:** [allocation_payouts](file:///c:/Users/Pann/Documents/New%20folder%20(5)/Bangla_Hope_Blueprint/technical/schema.sql#L343).
+*   **Schema References:** [program_funding](file:///c:/Users/Pann/Documents/New%20folder%20(5)/Bangla_Hope_Blueprint/technical/schema.sql#L343).
 
 #### UC-13: Distribute Boarding Student Pocket Money
 *   **Primary Actor:** Secretary / Coordinator
@@ -169,9 +168,9 @@ The system operates under a strict **Role-Based Access Control (RBAC)** model de
     1. The Secretary opens the Boarding School module and selects a school registry.
     2. Clicks **Distribute Pocket Allowance** and enters the monthly or yearly USD amount per child.
     3. Saves the bulk payouts.
-    4. System creates payout records in `allocation_payouts` with a category tag of `Pocket Money`.
+     4. System creates per-student payout records in `payouts`.
 *   **Postconditions:** Allowances are recorded as individual student liabilities.
-*   **Schema References:** [allocation_payouts](file:///c:/Users/Pann/Documents/New%20folder%20(5)/Bangla_Hope_Blueprint/technical/schema.sql#L343).
+*   **Schema References:** [payouts](file:///c:/Users/Pann/Documents/New%20folder%20(5)/Bangla_Hope_Blueprint/technical/schema.sql#L343).
 
 #### UC-14: Audit Financial Transaction History
 *   **Primary Actor:** Supervisor / Admin
@@ -654,17 +653,12 @@ sequenceDiagram
     Database-->>Coordinator: Insertion Confirmed (Immutable Record)
     
     Note over Coordinator: Field payout needed for student pocket money or subsidy
-    Coordinator->>Database: Insert allocation record to `allocation_payouts`
+    Coordinator->>Database: Insert payout record to `payouts`
     Database-->>Coordinator: Allocation Recorded (Pending state)
     
-    Supervisor->>Database: UC-11: Trigger Reconciliation matching Contribution & Allocation
-    activate Database
-    Note over Database: DB locks contribution row using SELECT FOR UPDATE
-    Note over Database: DB executes fn_enforce_contribution_limits()
+    Note over Database: Triggers fn_enforce_payout_limits / fn_enforce_funding_limits
     alt Balance is Sufficient
-        Database->>Database: Deduct payout allocation from contribution balance
-        Database->>Database: Write record to `reconciliations`
-        Database-->>Supervisor: Reconciliation Approved & Settled
+        Database-->>Supervisor: Payout Recorded
     else Overdraft / Insufficient Balance
         Database-->>Supervisor: Crash transaction & Rollback (Raise Exception)
     end

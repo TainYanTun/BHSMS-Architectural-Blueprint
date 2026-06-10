@@ -23,7 +23,7 @@ graph LR
 
     %% Tier 3: Impact (The Payout)
     %% Tier 3: Impact (The Payout)
-    StudentAcc -- "Record Disbursement" --> Payout[ALLOCATION_PAYOUTS<br/>'Tuition Paid']
+    StudentAcc -- "Record Disbursement" --> Payout[PAYOUTS<br/>'Tuition Paid']
     end
 
     %% Styling
@@ -36,7 +36,7 @@ graph LR
     ### Description
     *   **Intake:** Money is received by the organization.
     *   **The Ledger:** Money is placed in a **"Restricted Envelope"** (Contribution Table) labeled for a specific student.
-    *   **Impact:** When a student has a need (tuition, food, etc.), money is disbursed directly and recorded in **ALLOCATION_PAYOUTS**.
+    *   **Impact:** When a student has a need (tuition, food, etc.), money is disbursed directly and recorded in **PAYOUTS**.
 
 
 ---

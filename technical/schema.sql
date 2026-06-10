@@ -106,7 +106,8 @@ CREATE TABLE roles (
 INSERT INTO roles (name, description) VALUES
 ('Admin', 'System owner. Manages user accounts, system configuration, data migration, backups.'),
 ('Director', 'Highest operational authority. Final approver for documents, student status, and financial sign-off.'),
-('Coordinator', 'Program-specific operator. Manages student lifecycle, academics, and financial entries within assigned program(s).'),
+('Program Coordinator', 'Program-wide operator. Manages student lifecycle, academics, and financial entries within assigned program(s). Oversees School Coordinators.'),
+('School Coordinator', 'Single-site operator. Manages student lifecycle, academics, and financial entries at one school. Reports to Program Coordinator.'),
 ('Secretary', 'Administrative support. Handles data entry, letter drafting, and logging financial transactions.'),
 ('Sponsor', 'External stakeholder. Restricted view of supported student(s) and documents.');
 
@@ -131,12 +132,18 @@ CREATE TABLE users (
 CREATE UNIQUE INDEX idx_unique_active_username ON users(username) WHERE (deleted_at IS NULL);
 CREATE UNIQUE INDEX idx_unique_active_email ON users(email) WHERE (deleted_at IS NULL);
 
--- Program assignment for program-scoped roles (e.g., Coordinator)
+-- Program assignment for program-scoped and facility-scoped roles
+-- Program Coordinator: (user_id, program_id, village_sector_id = NULL)
+-- School Coordinator: (user_id, program_id = VLG, village_sector_id = <uuid>)
 CREATE TABLE user_programs (
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     program_id UUID NOT NULL REFERENCES programs(id) ON DELETE CASCADE,
-    PRIMARY KEY (user_id, program_id)
+    village_sector_id UUID REFERENCES village_sectors(id), -- NULL for Program Coord, set for Village Coord
+    PRIMARY KEY (user_id, program_id),
+    CONSTRAINT chk_unique_user_scope UNIQUE (user_id, COALESCE(village_sector_id, '00000000-0000-0000-0000-000000000000'))
 );
+-- Application enforces: village_sector_id IS NOT NULL only when program_id = VLG
+-- A village coordinator trigger ensures this constraint at the database level.
 
 CREATE TABLE role_permissions (
     role TEXT NOT NULL REFERENCES roles(name) ON DELETE RESTRICT,
@@ -471,10 +478,24 @@ CREATE TABLE student_history (
     row_version INT DEFAULT 1
 );
 
-CREATE TABLE allocation_payouts (
+CREATE TABLE program_funding (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    contribution_id UUID NOT NULL REFERENCES contributions(id) ON DELETE RESTRICT,
+    program_id UUID NOT NULL REFERENCES programs(id) ON DELETE RESTRICT,
+    amount NUMERIC(12, 2) NOT NULL CHECK (amount > 0),
+    period TEXT,
+    notes TEXT,
+    recorded_by UUID REFERENCES users(id) ON DELETE SET NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    row_version INT DEFAULT 1
+);
+
+CREATE TABLE payouts (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     student_id UUID NOT NULL REFERENCES students(id) ON DELETE RESTRICT,
-    type TEXT NOT NULL CHECK (type IN ('Subsidy', 'Pocket Money', 'Stipend', 'One-time Grant')),
+    contribution_id UUID REFERENCES contributions(id) ON DELETE RESTRICT,
+    program_funding_id UUID REFERENCES program_funding(id) ON DELETE RESTRICT,
 
     -- USD equivalent (local_amount / exchange_rate) for sponsor reporting
     amount NUMERIC(12, 2) NOT NULL CHECK (amount > 0),
@@ -490,7 +511,11 @@ CREATE TABLE allocation_payouts (
     notes TEXT,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW(),
-    row_version INT DEFAULT 1
+    row_version INT DEFAULT 1,
+    CONSTRAINT chk_payout_source CHECK (
+        (contribution_id IS NOT NULL AND program_funding_id IS NULL) OR
+        (contribution_id IS NULL AND program_funding_id IS NOT NULL)
+    )
 );
 
 CREATE TABLE migration_metadata (
@@ -544,13 +569,13 @@ CREATE TABLE communication_templates (
 
 CREATE TABLE communications (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    student_id UUID NOT NULL REFERENCES students(id) ON DELETE RESTRICT,
-    sponsor_id UUID NOT NULL REFERENCES sponsors(id) ON DELETE RESTRICT,
+    student_id UUID REFERENCES students(id) ON DELETE RESTRICT,
+    sponsor_id UUID REFERENCES sponsors(id) ON DELETE RESTRICT,
 
     -- Content (captured once at creation, immutable after send)
     subject TEXT NOT NULL,
     message_body TEXT NOT NULL,
-    category TEXT NOT NULL CHECK (category IN ('Financial', 'Milestone', 'Academic', 'Manual')),
+    category TEXT NOT NULL CHECK (category IN ('Financial', 'Milestone', 'Academic', 'Manual', 'Broadcast')),
 
     -- Staff workflow state
     workflow_status TEXT NOT NULL DEFAULT 'Draft'
@@ -572,6 +597,12 @@ CREATE TABLE communications (
     read_at TIMESTAMPTZ,  -- NULL = unread
 
     report_id UUID REFERENCES reports(id) ON DELETE SET NULL,
+
+    CONSTRAINT chk_comm_owner CHECK (
+        (category = 'Broadcast' AND student_id IS NULL AND sponsor_id IS NULL) 
+        OR 
+        (category != 'Broadcast' AND student_id IS NOT NULL AND sponsor_id IS NOT NULL)
+    ),
 
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW(),
@@ -615,7 +646,7 @@ CREATE TABLE loan_transactions (
 -- ==========================================
 -- Monthly exchange rates for BDT→USD conversion on payouts.
 -- The Director sets the rate at month-start using the Bangladesh Bank
--- published rate. All allocation_payouts in that month use this rate.
+-- published rate. All payouts in that month use this rate.
 CREATE TABLE exchange_rates (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     currency_from CHAR(3) DEFAULT 'BDT',
@@ -634,7 +665,7 @@ CREATE TABLE exchange_rates (
 -- The Coordinator is only blocked if no rate exists at all for the current month.
 
 -- ==========================================
--- 7. BACKUP & FINANCIAL RECONCILIATION
+-- 7. BACKUP & FINANCIAL INTEGRITY
 -- ==========================================
 CREATE TABLE backups (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -648,50 +679,72 @@ CREATE TABLE backups (
     row_version INT DEFAULT 1 -- Fix: Added for trigger support
 );
 
-CREATE TABLE reconciliations (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    contribution_id UUID NOT NULL REFERENCES contributions(id) ON DELETE RESTRICT,
-    allocation_payout_id UUID NOT NULL REFERENCES allocation_payouts(id) ON DELETE RESTRICT,
-    amount NUMERIC(12, 2) NOT NULL CHECK (amount > 0), -- Specifying how much of the gift was used
-    reconciled_at TIMESTAMPTZ DEFAULT NOW(),
-    reconciled_by UUID REFERENCES users(id) ON DELETE SET NULL, -- Fix: Handle user deletion
-    notes TEXT
-);
-
 -- Overdraft Prevention Logic
-CREATE OR REPLACE FUNCTION fn_enforce_contribution_limits()
+-- Direct payouts: sum of direct payouts + sum of program fundings from a contribution ≤ contribution amount
+CREATE OR REPLACE FUNCTION fn_enforce_payout_limits()
 RETURNS TRIGGER AS $$
 DECLARE
-    v_total_allocated NUMERIC(12,2);
-    v_original_limit NUMERIC(12,2);
+    v_total_used NUMERIC(12,2);
+    v_limit NUMERIC(12,2);
 BEGIN
-    -- Force incoming concurrent requests targeting the same parent contribution to queue sequentially.
-    -- Locking the parent record serializes all child inserts/updates, guaranteeing consistency.
-    PERFORM 1 
-    FROM contributions 
-    WHERE id = NEW.contribution_id 
-    FOR UPDATE;
-    
-    SELECT amount INTO v_original_limit 
-    FROM contributions 
-    WHERE id = NEW.contribution_id;
-    
-    SELECT COALESCE(SUM(amount), 0) INTO v_total_allocated 
-    FROM reconciliations 
-    WHERE contribution_id = NEW.contribution_id 
-      AND (TG_OP = 'INSERT' OR id <> NEW.id);
+    IF NEW.contribution_id IS NOT NULL THEN
+        SELECT amount INTO v_limit FROM contributions WHERE id = NEW.contribution_id;
 
-    IF (v_total_allocated + NEW.amount) > v_original_limit THEN
-        RAISE EXCEPTION 'Allocation Overdraft: Attempted to allocate %, but only % remains available.', 
-            NEW.amount, (v_original_limit - v_total_allocated);
+        SELECT COALESCE(SUM(p.amount), 0) INTO v_total_used
+        FROM payouts p
+        WHERE p.contribution_id = NEW.contribution_id
+          AND (TG_OP = 'INSERT' OR p.id <> NEW.id);
+
+        IF (v_total_used + NEW.amount) > v_limit THEN
+            RAISE EXCEPTION 'Payout Overdraft: Attempted to pay out %, but only % remains from contribution %.',
+                NEW.amount, (v_limit - v_total_used), NEW.contribution_id;
+        END IF;
+    ELSIF NEW.program_funding_id IS NOT NULL THEN
+        SELECT amount INTO v_limit FROM program_funding WHERE id = NEW.program_funding_id;
+
+        SELECT COALESCE(SUM(p.amount), 0) INTO v_total_used
+        FROM payouts p
+        WHERE p.program_funding_id = NEW.program_funding_id
+          AND (TG_OP = 'INSERT' OR p.id <> NEW.id);
+
+        IF (v_total_used + NEW.amount) > v_limit THEN
+            RAISE EXCEPTION 'Payout Overdraft: Attempted to pay out %, but only % remains in program funding %.',
+                NEW.amount, (v_limit - v_total_used), NEW.program_funding_id;
+        END IF;
     END IF;
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER trg_limit_reconciliation_overdraft
-BEFORE INSERT OR UPDATE ON reconciliations
-FOR EACH ROW EXECUTE FUNCTION fn_enforce_contribution_limits();
+CREATE TRIGGER trg_limit_payout_overdraft
+BEFORE INSERT OR UPDATE ON payouts
+FOR EACH ROW EXECUTE FUNCTION fn_enforce_payout_limits();
+
+-- Program funding overdraft: sum of all fundings from a contribution ≤ contribution amount
+CREATE OR REPLACE FUNCTION fn_enforce_funding_limits()
+RETURNS TRIGGER AS $$
+DECLARE
+    v_total_used NUMERIC(12,2);
+    v_limit NUMERIC(12,2);
+BEGIN
+    SELECT amount INTO v_limit FROM contributions WHERE id = NEW.contribution_id;
+
+    SELECT COALESCE(SUM(pf.amount), 0) INTO v_total_used
+    FROM program_funding pf
+    WHERE pf.contribution_id = NEW.contribution_id
+      AND (TG_OP = 'INSERT' OR pf.id <> NEW.id);
+
+    IF (v_total_used + NEW.amount) > v_limit THEN
+        RAISE EXCEPTION 'Funding Overdraft: Attempted to allocate %, but only % remains from contribution %.',
+            NEW.amount, (v_limit - v_total_used), NEW.contribution_id;
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_limit_funding_overdraft
+BEFORE INSERT OR UPDATE ON program_funding
+FOR EACH ROW EXECUTE FUNCTION fn_enforce_funding_limits();
 
 -- ==========================================
 -- 8. AUDIT & LOGGING
@@ -763,17 +816,27 @@ SELECT fn_create_audit_partition();
 -- ==========================================
 -- 8. VIEWS FOR REPORTING
 -- ==========================================
-CREATE VIEW view_contribution_balances AS
+CREATE VIEW view_student_payouts AS
 SELECT 
-    c.id AS contribution_id,
-    c.student_id,
-    c.sponsor_id,
-    c.amount AS original_amount,
-    COALESCE(SUM(r.amount), 0) AS amount_used,
-    c.amount - COALESCE(SUM(r.amount), 0) AS remaining_balance
-FROM contributions c
-LEFT JOIN reconciliations r ON c.id = r.contribution_id
-GROUP BY c.id, c.student_id, c.sponsor_id, c.amount;
+    p.id AS payout_id,
+    p.student_id,
+    s.full_name AS student_name,
+    s.master_id_number,
+    p.contribution_id,
+    p.program_funding_id,
+    COALESCE(p.contribution_id::text, pf.contribution_id::text) AS source_contribution_id,
+    CASE 
+        WHEN p.contribution_id IS NOT NULL THEN 'Direct'
+        ELSE 'Program'
+    END AS source_type,
+    p.amount,
+    p.local_amount,
+    p.local_currency,
+    p.payout_date,
+    p.status
+FROM payouts p
+LEFT JOIN program_funding pf ON p.program_funding_id = pf.id
+LEFT JOIN students s ON p.student_id = s.id;
 
 CREATE VIEW view_loan_balances AS
 SELECT 
@@ -809,8 +872,6 @@ CREATE INDEX idx_academic_records_village_sector_id ON academic_records(village_
 CREATE INDEX idx_loans_institution_id ON loans(institution_id);
 
 -- Fix: Additional Foreign Key Indexes for Reporting Performance
-CREATE INDEX idx_reconciliations_contribution_id ON reconciliations(contribution_id);
-CREATE INDEX idx_reconciliations_allocation_payout_id ON reconciliations(allocation_payout_id);
 CREATE INDEX idx_loan_transactions_loan_id ON loan_transactions(loan_id);
 CREATE INDEX idx_enrollments_student_id ON enrollments(student_id);
 CREATE INDEX idx_guardians_student_id ON guardians(student_id);
@@ -819,7 +880,10 @@ CREATE INDEX idx_communications_wf_status ON communications(workflow_status);
 CREATE INDEX idx_communications_deleted ON communications(deleted_at) WHERE deleted_at IS NULL;
 CREATE INDEX idx_communications_read ON communications(sponsor_id, read_at) WHERE read_at IS NULL;
 CREATE INDEX idx_loans_student_id ON loans(student_id);
-CREATE INDEX idx_allocation_payouts_student_id ON allocation_payouts(student_id);
+CREATE INDEX idx_payouts_student_id ON payouts(student_id);
+CREATE INDEX idx_payouts_contribution_id ON payouts(contribution_id);
+CREATE INDEX idx_payouts_program_funding_id ON payouts(program_funding_id);
+CREATE INDEX idx_program_funding_contribution_id ON program_funding(contribution_id);
 CREATE INDEX idx_reports_student_id ON reports(student_id);
 
 CREATE TRIGGER trg_upd_programs BEFORE UPDATE ON programs FOR EACH ROW EXECUTE FUNCTION fn_update_timestamp();
@@ -836,7 +900,8 @@ CREATE TRIGGER trg_upd_attendance_records BEFORE UPDATE ON attendance_records FO
 CREATE TRIGGER trg_upd_documents BEFORE UPDATE ON documents FOR EACH ROW EXECUTE FUNCTION fn_update_timestamp();
 CREATE TRIGGER trg_upd_reports BEFORE UPDATE ON reports FOR EACH ROW EXECUTE FUNCTION fn_update_timestamp();
 CREATE TRIGGER trg_upd_student_history BEFORE UPDATE ON student_history FOR EACH ROW EXECUTE FUNCTION fn_update_timestamp();
--- allocation_payouts is immutable
+-- payouts is immutable
+-- program_funding is immutable
 CREATE TRIGGER trg_upd_communication_templates BEFORE UPDATE ON communication_templates FOR EACH ROW EXECUTE FUNCTION fn_update_timestamp();
 CREATE TRIGGER trg_upd_communications BEFORE UPDATE ON communications FOR EACH ROW EXECUTE FUNCTION fn_update_timestamp();
 CREATE TRIGGER trg_upd_loans BEFORE UPDATE ON loans FOR EACH ROW EXECUTE FUNCTION fn_update_timestamp();

@@ -1,5 +1,5 @@
 @startuml
-|Coordinator|
+|Program Coordinator|
 start
 :Identify student needing transfer;
 :Select target program;

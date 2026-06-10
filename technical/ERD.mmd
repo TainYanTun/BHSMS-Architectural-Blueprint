@@ -94,6 +94,7 @@ erDiagram
     USER_PROGRAMS {
         uuid user_id PK, FK
         uuid program_id PK, FK
+        uuid village_sector_id FK "NULL for Program Coord, set for School Coord"
     }
 
     AUDIT_LOGS {
@@ -439,21 +440,36 @@ erDiagram
         int row_version
     }
 
-    ALLOCATION_PAYOUTS {
+    PROGRAM_FUNDING {
         uuid id PK
-        uuid student_id FK
-        text type "IMMUTABLE"
+        uuid contribution_id FK
+        uuid program_id FK
+        numeric amount
+        text period
+        text notes
+        uuid recorded_by FK
+        timestamptz created_at
+        timestamptz updated_at
+        int row_version
+    }
+
+    PAYOUTS {
+        uuid id PK
+        uuid student_id FK "NOT NULL"
+        uuid contribution_id FK "NULL if via program"
+        uuid program_funding_id FK "NULL if direct"
         numeric amount "USD equivalent"
         numeric local_amount "actual BDT disbursed"
         char local_currency "default BDT"
         numeric exchange_rate "at time of payout"
         date payout_date
         uuid recorded_by FK
-        text status
+        text status "Paid | Pending | Cancelled"
         text notes
         timestamptz created_at
         timestamptz updated_at
         int row_version
+        "chk_payout_source: exactly one of contribution_id / program_funding_id"
     }
 
     EXCHANGE_RATES {
@@ -467,15 +483,7 @@ erDiagram
         timestamptz created_at
     }
 
-    RECONCILIATIONS {
-        uuid id PK
-        uuid contribution_id FK
-        uuid allocation_payout_id FK
-        numeric amount
-        timestamptz reconciled_at
-        uuid reconciled_by FK
-        text notes
-    }
+
 
     %% ==========================================
     %% 6. LOAN SYSTEM
@@ -524,7 +532,8 @@ erDiagram
     USERS ||--o{ AUDIT_LOGS : "generates"
     USERS ||--o{ LOAN_TRANSACTIONS : "records"
     USERS ||--o{ DOCUMENTS : "uploads"
-    USERS ||--o{ ALLOCATION_PAYOUTS : "records"
+    USERS ||--o{ PROGRAM_FUNDING : "records"
+    USERS ||--o{ PAYOUTS : "records"
     USERS ||--o{ STUDENTS : "parent of (Staff Child)"
     USERS ||--o{ PROGRAM_TRANSITIONS : "records"
     USERS ||--o{ REPORTS : "approves"
@@ -542,6 +551,8 @@ erDiagram
     
     USERS ||--o{ USER_PROGRAMS : "assigned to"
     PROGRAMS ||--o{ USER_PROGRAMS : "scopes"
+    VILLAGE_SECTORS ||--o{ USER_PROGRAMS : "scopes (School Coord)"
+    PROGRAMS ||--o{ PROGRAM_FUNDING : "funds"
     
     STUDENTS ||--o{ GUARDIANS : "has"
     STUDENTS ||--o{ ENROLLMENTS : "enrolled in"
@@ -554,6 +565,7 @@ erDiagram
     STUDENTS ||--o{ STUDENT_REFERENCES : "referred by"
     STUDENTS ||--o{ PROGRAM_TRANSITIONS : "undergoes"
     STUDENTS ||--o{ COMMUNICATIONS : "subject of"
+    STUDENTS ||--o{ PAYOUTS : "receives"
     STUDENTS ||--o{ LOANS : "holds"
 
     ORPHANAGES ||--o{ ENROLLMENTS : "hosts"
@@ -568,8 +580,9 @@ erDiagram
     SPONSORS ||--o{ COMMUNICATIONS : "receives"
     SPONSORSHIPS ||--o{ CONTRIBUTIONS : "fulfills"
 
-    CONTRIBUTIONS ||--o{ RECONCILIATIONS : "reconciled by"
-    ALLOCATION_PAYOUTS ||--o{ RECONCILIATIONS : "reconciled by"
+    CONTRIBUTIONS ||--o{ PROGRAM_FUNDING : "funds"
+    CONTRIBUTIONS ||--o{ PAYOUTS : "funds (direct)"
+    PROGRAM_FUNDING ||--o{ PAYOUTS : "funds (per-student)"
 
     LOANS ||--o{ LOAN_TRANSACTIONS : "tracks"
     EDUCATIONAL_INSTITUTIONS ||--o{ LOANS : "hosts"

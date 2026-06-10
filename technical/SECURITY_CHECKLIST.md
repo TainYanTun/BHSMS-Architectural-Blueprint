@@ -71,7 +71,7 @@ This document lists security considerations for the Bangla Hope SMS. Use it duri
 | 6.1 | All mutating actions logged to `audit_logs` | `schema.sql` → `audit_logs` table. Implement via Eloquent events |
 | 6.2 | JSONB mutation details with GIN index | `schema.sql` → `mutation_detail JSONB` + `idx_audit_details` |
 | 6.3 | Audit logs partitioned by month | `schema.sql` → `PARTITION BY RANGE (created_at)`. Strategy in `plans/audit-log-partitioning.md` |
-| 6.4 | Financial tables are immutable | `schema.sql` → `contributions`, `allocation_payouts`, `loan_transactions` have no update triggers |
+| 6.4 | Financial tables are immutable | `schema.sql` → `contributions`, `payouts`, `program_funding`, `loan_transactions` have no update triggers |
 | 6.5 | Corrections use reversing entries | Design pattern — adjustments logged as new entries, not edits |
 | 6.6 | Optimistic concurrency via `row_version` | `schema.sql` → `fn_update_timestamp()` trigger on all mutable tables |
 
@@ -81,8 +81,8 @@ This document lists security considerations for the Bangla Hope SMS. Use it duri
 
 | # | Check | Blueprint Reference |
 |---|---|---|
-| 7.1 | Anti-overdraft on reconciliations | `schema.sql` → `fn_enforce_contribution_limits()` with `SELECT ... FOR UPDATE` |
-| 7.2 | Reconciliation links contributions to payouts | `schema.sql` → `reconciliations` table with FK to both sides |
+| 7.1 | Anti-overdraft on payouts & program funding | `schema.sql` → `fn_enforce_payout_limits()` + `fn_enforce_funding_limits()` with `SELECT ... FOR UPDATE` |
+| 7.2 | Contribution↔payout link via direct FK or program funding FK | `schema.sql` → `payouts.contribution_id` / `payouts.program_funding_id` → `program_funding.contribution_id` |
 | 7.3 | Financial approval workflow | Not designed — define who approves large subsidies / loan disbursements |
 | 7.4 | Two-person rule for financial operations | Not designed — separate initiator and approver roles |
 

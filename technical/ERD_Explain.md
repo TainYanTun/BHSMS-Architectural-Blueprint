@@ -91,8 +91,8 @@ Monitors student growth, performance, field expenses, and double-entry financial
   * Academic records are linked to **`PROGRAMS`**, **`ORPHANAGES`**, **`VILLAGE_SECTORS`**, and **`EDUCATIONAL_INSTITUTIONS`** to provide a continuous academic history as a student moves between care models.
   * Attendance records are partitioned by date for database performance.
 * **`REPORTS`:** Tracks annual progress reports (APRs), case narratives, and birthday letters. Reports require supervisor approval before generating final outbound PDFs.
-* **`ALLOCATION_PAYOUTS`:** Tracks outbound funds distributed directly to the field or students for stipends and pocket allowances. This ledger is also structurally immutable.
-* **`RECONCILIATIONS`:** The matching mechanism connecting incoming donor gifts (**`CONTRIBUTIONS`**) to actual outgoing field expenditures (**`ALLOCATION_PAYOUTS`**).
+* **`PAYOUTS`:** Tracks every individual payout to a student — whether from a direct contribution or a program funding pool. Each row links back to its source via `contribution_id` or `program_funding_id`. This ledger is structurally immutable.
+* **`PROGRAM_FUNDING`:** Allocates a portion of a contribution to fund a program. Individual student payouts draw from this pool.
 
 ---
 
@@ -112,10 +112,10 @@ A specialized financing system for older students who transition from direct spo
 * **`ON DELETE SET NULL`:** Used for non-destructive relational fields (e.g., if a staff member's account in **`USERS`** is deleted, their recorded actions in transitions or document uploads remain intact, with the author field cleanly set to `NULL`).
 
 ### 3.2 Financial Overdraft Protection
-* The schema implements an automated safeguard on the **`RECONCILIATIONS`** table:
-  1. When a reconciliation row is inserted or updated, a database trigger (**`trg_limit_reconciliation_overdraft`**) is fired.
+* The schema implements automated safeguards on the **`PAYOUTS`** and **`PROGRAM_FUNDING`** tables:
+  1. When a payout or program funding row is inserted or updated, a database trigger (**`trg_limit_payout_overdraft`** or **`trg_limit_funding_overdraft`**) is fired.
   2. The trigger executes a **`FOR UPDATE` row lock** on the parent contribution. This serializes concurrent writes and prevents race conditions.
-  3. It aggregates all existing allocations and ensures the new total does not exceed the original donation amount. If it does, the transaction is rejected with an `Allocation Overdraft` database exception.
+  3. It aggregates all existing allocations and ensures the new total does not exceed the original donation amount. If it does, the transaction is rejected with an `Overdraft` database exception.
 
 ### 3.3 Optimistic Concurrency Control (OCC)
 * System tables include a `row_version` integer and an `updated_at` timestamp.

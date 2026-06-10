@@ -49,7 +49,8 @@ Used for programs that do not require repayment (Boarding Schools, Subsidies, Po
 ### Tables
 | Table | Role | Key Fields |
 | :--- | :--- | :--- |
-| `allocation_payouts` | **Direct Impact Log** | `type` (Subsidy/Pocket Money), `amount`, `payout_date` |
+| `program_funding` | **Program Allocation Log** | `contribution_id`, `program_id`, `amount`, `period` |
+| `payouts` | **Per-Student Payout Log** | `student_id`, `amount`, `payout_date`, source via `contribution_id` or `program_funding_id` |
 
 ### Logic
 - **Direct Recording:** Instead of complex budgeting rules, admins simply record the actual payout when it occurs.

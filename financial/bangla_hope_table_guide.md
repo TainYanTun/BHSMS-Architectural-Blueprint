@@ -34,8 +34,8 @@ This guide provides a simple, plain-English breakdown of what every single table
 * **`STUDENT_HISTORY`**: A timeline of major life events or milestones for the student (e.g., "Moved to a new home", "Won an award").
 
 ## 6. Financial Subsidies (Regular Allowances)
-* **`FINANCIAL_ALLOCATIONS`**: The setup rules for a student's regular allowance or subsidy (e.g., "Student qualifies for 2,000 Taka a month for food"). **This is free financial aid that the student does not pay back.**
-* **`ALLOCATION_PAYOUTS`**: Records the exact date and amount whenever a staff member hands over the monthly subsidy cash or stipend to the student.
+* **`PROGRAM_FUNDING`**: Allocates a portion of a contribution to fund a program (e.g., "Sponsor X's $5,000 goes to VLG school for yearly supplies").
+* **`PAYOUTS`**: Records the exact date and amount whenever a staff member hands over cash or supplies to a specific student — whether funded directly from a contribution or from a program funding pool.
 
 ## 7. Loan System (Higher Education Funding)
 * **`LOANS`**: The master agreement for older students borrowing money for college. **This is structural funding that the student must pay back later.**

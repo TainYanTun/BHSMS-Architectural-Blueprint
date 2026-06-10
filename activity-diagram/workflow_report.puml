@@ -1,12 +1,16 @@
 @startuml
 |Secretary / Coordinator|
 start
-:Select report type;
-:Link to student;
-if (Thank You?) then (Yes)
-  :Link to contribution;
+:Select communication type;
+if (Broadcast?) then (Yes)
+  :Write announcement; 
+else (No)
+  :Link to student;
+  if (Thank You Letter?) then (Yes)
+    :Link to contribution;
+  endif
+  :Write narrative;
 endif
-:Write narrative;
 :Submit for review;
 
 |Director|
