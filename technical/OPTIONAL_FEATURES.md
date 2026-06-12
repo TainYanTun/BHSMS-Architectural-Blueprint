@@ -43,9 +43,9 @@ To ensure a Site Token cannot be copied from one laptop to another.
 
 ## 4. Multi-Currency Support (Local Ledgering)
 
-**Status:** Deferred  
-**Current Strategy:** Strict USD-only tracking for audit integrity.
+**Status:** Resolved (June 2026)  
+**Current Setup:** BDT-only tracking. No dual-currency or exchange rate system needed — Bangla Hope receives funds pre-converted to BDT from the sponsor's US office.
 
-### Proposed Upgrade: Real-Time BDT Tracking
-1.  **Dual Ledger:** Recording transactions in both BDT (Local) and USD (Audit).
-2.  **Live Conversion:** Integrating an external API for daily exchange rate updates.
+### Proposed Upgrade: Real-Time BDT Tracking (No longer applicable)
+1.  **~~Dual Ledger:~~** Not needed — all accounting is BDT-only.
+2.  **~~Live Conversion:~~** Not needed — no exchange rate tracking required.

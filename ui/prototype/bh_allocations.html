@@ -7,107 +7,143 @@
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&family=Lora:wght@600&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #1e3a4a;
-            --accent-teal: #2B7A9E;
-            --accent-pink: #d17a8e;
+            --primary-navy: #1e3a4a;
+            --sidebar-bg: #0a1f35;
+            --action-teal: #2B7A9E;
+            --signal-pink: #d17a8e;
+            --success-green: #10b981;
             --bg-app: #f8fafc;
             --surface: #ffffff;
             --surface-subtle: #f1f5f9;
-            --border: #e2e8f0;
+            --border-neutral: #e2e8f0;
             --border-soft: #f1f5f9;
             --text-main: #0f172a;
             --text-muted: #64748b;
-            --success: #10b981;
-            --danger: #ef4444;
-            --warning: #f59e0b;
             --radius: 8px;
             --radius-sm: 6px;
             --shadow: 0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.02);
+            --shadow-lg: 0 4px 6px -1px rgba(0,0,0,0.1);
+            --sidebar-w: 252px;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'Nunito', sans-serif; background: var(--bg-app); color: var(--text-main); font-size: 14px; min-height: 100vh; }
-        .app { display: flex; }
+        body { font-family: 'Nunito', sans-serif; background: var(--bg-app); color: var(--text-main); font-size: 14px; }
 
-        .sidebar { width: 252px; background: #0a1f35; display: flex; flex-direction: column; position: fixed; top: 0; left: 0; bottom: 0; z-index: 100; }
+        .app { display: flex; min-height: 100vh; }
+
+        /* ── Sidebar (252px, collapsible Icon Dock) ── */
+        .sidebar { width: var(--sidebar-w); background: var(--sidebar-bg); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; bottom: 0; z-index: 100; }
         .sidebar-logo { padding: 24px 20px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); }
-        .logo-box { width: 36px; height: 36px; background: #fff; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-family: 'Lora', serif; font-weight: 800; color: var(--primary); font-size: 20px; }
+        .logo-box { width: 36px; height: 36px; background: #fff; border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; font-family: 'Lora', serif; font-weight: 800; color: var(--primary-navy); font-size: 20px; }
         .logo-text h1 { font-family: 'Lora', serif; font-size: 15px; font-weight: 600; color: #f8fafc; line-height: 1.2; }
         .logo-text span { display: block; font-size: 10px; color: #94a3b8; letter-spacing: 0.05em; text-transform: uppercase; margin-top: 2px; }
-        .sidebar-section { padding: 16px 12px 4px; }
-        .sidebar-label { font-size: 10px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: #475569; padding: 0 12px; margin-bottom: 8px; }
+        .sidebar-sections { flex: 1; overflow-y: auto; padding: 8px 0; }
+        .sidebar-sections::-webkit-scrollbar { width: 4px; }
+        .sidebar-sections::-webkit-scrollbar-track { background: transparent; }
+        .sidebar-sections::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 2px; }
+        .sidebar-section { padding: 8px 12px 4px; }
+        .sidebar-label { font-size: 10px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: #475569; padding: 0 12px; margin-bottom: 6px; }
         .nav-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: var(--radius-sm); color: #94a3b8; font-size: 13px; font-weight: 500; text-decoration: none; margin-bottom: 2px; transition: all 0.2s; cursor: pointer; }
         .nav-item:hover { background: rgba(255,255,255,0.05); color: #f1f5f9; }
         .nav-item.active { background: #1e293b; color: #fff; font-weight: 600; }
         .nav-icon { width: 18px; height: 18px; opacity: 0.8; display: inline-flex; align-items: center; justify-content: center; font-size: 14px; }
 
-        .main { margin-left: 252px; flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
-        .topbar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 32px; height: 64px; display: flex; align-items: center; position: sticky; top: 0; z-index: 50; }
+        /* ── Main ── */
+        .main { margin-left: var(--sidebar-w); flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
+
+        .topbar { background: var(--surface); border-bottom: 1px solid var(--border-neutral); padding: 0 32px; height: 64px; display: flex; align-items: center; position: sticky; top: 0; z-index: 50; }
         .breadcrumb { font-family: 'Courier New', monospace; font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
-        .breadcrumb strong { color: var(--accent-teal); }
+        .breadcrumb strong { color: var(--action-teal); }
+
         .content { padding: 32px; flex: 1; }
-        .page-header { margin-bottom: 24px; display: flex; justify-content: space-between; align-items: flex-start; }
-        .page-title { font-family: 'Lora', serif; font-size: 28px; font-weight: 600; color: var(--primary); }
-        .page-subtitle { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
-        .btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; border: none; cursor: pointer; transition: all 0.2s; }
-        .btn-primary { background: var(--accent-teal); color: #fff; }
-        .btn-primary:hover { background: #236a8a; }
-        .btn-primary-sm { background: var(--accent-teal); color: #fff; padding: 6px 14px; font-size: 11px; border-radius: var(--radius-sm); border: none; cursor: pointer; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
-        .btn-pink { background: #d17a8e; color: #fff; }
-        .btn-pink:hover { background: #b86579; }
-        .btn-outline { background: transparent; color: var(--accent-teal); border: 1.5px solid var(--accent-teal); }
-        .btn-outline:hover { background: var(--surface-subtle); }
 
-        .metrics-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
-        .metric-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow); }
-        .metric-label { font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; }
-        .metric-value { font-family: 'Lora', serif; font-size: 24px; font-weight: 600; color: var(--primary); line-height: 1; }
-        .metric-meta { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
-        .metric-card.metric-funding { border-left: 3px solid #d17a8e; }
-        .metric-card.metric-payouts { border-left: 3px solid #2B7A9E; }
+        .page-title { font-family: 'Lora', serif; font-size: 28px; font-weight: 600; color: var(--primary-navy); margin-bottom: 24px; }
 
-        .tabs { display: flex; gap: 0; border-bottom: 2px solid var(--border); margin-bottom: 24px; }
+        /* ── Stats ── */
+        .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px; }
+        .stat { background: var(--surface); border: 1px solid var(--border-neutral); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow); }
+        .stat-label { font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; }
+        .stat-num { font-family: 'Courier New', monospace; font-size: 24px; font-weight: 700; color: var(--primary-navy); line-height: 1; }
+        .stat-meta { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+
+        /* ── Tabs ── */
+        .tab-bar { display: flex; gap: 0; border-bottom: 2px solid var(--border-neutral); margin-bottom: 20px; }
         .tab { padding: 10px 24px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all 0.2s; }
         .tab:hover { color: var(--text-main); }
-        .tab.active { color: var(--accent-teal); border-bottom-color: var(--accent-teal); }
+        .tab.active { color: var(--action-teal); border-bottom-color: var(--action-teal); }
 
-        .card { background: var(--surface); border: 1.5px solid var(--border-soft); border-radius: var(--radius); box-shadow: var(--shadow); margin-bottom: 24px; }
-        .card-header { padding: 14px 20px; border-bottom: 1px solid var(--border-soft); background: linear-gradient(90deg, var(--surface) 0%, var(--surface-subtle) 100%); display: flex; justify-content: space-between; align-items: center; }
-        .card-title { font-size: 11px; font-weight: 800; color: var(--text-main); text-transform: uppercase; letter-spacing: 0.08em; }
-        .card-title span { font-family: 'Courier New', monospace; font-size: 10px; margin-left: 6px; }
-        .card-body { padding: 20px; }
+        /* ── Buttons ── */
+        .toolbar { display: flex; gap: 8px; margin-bottom: 16px; }
+        .btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; border: none; cursor: pointer; transition: all 0.2s; }
+        .btn-teal { background: var(--action-teal); color: #fff; }
+        .btn-teal:hover { background: #236a8a; }
+        .btn-outline { background: transparent; color: var(--action-teal); border: 1.5px solid var(--action-teal); }
+        .btn-outline:hover { background: var(--surface-subtle); }
 
+        /* ── Panels (Modular Cards) ── */
+        .panel { background: var(--surface); border: 1.5px solid var(--border-soft); border-radius: var(--radius); box-shadow: var(--shadow); margin-bottom: 20px; }
+        .panel-head { padding: 14px 20px; border-bottom: 1px solid var(--border-soft); background: linear-gradient(90deg, var(--surface) 0%, var(--surface-subtle) 100%); display: flex; justify-content: space-between; align-items: center; }
+        .panel-title { font-family: 'Courier New', monospace; font-size: 10px; font-weight: 800; color: var(--text-main); text-transform: uppercase; letter-spacing: 0.08em; }
+        .panel-title span.tag { font-size: 10px; }
+        .panel-body { padding: 0; }
+        .panel-body.padded { padding: 20px; }
+
+        /* ── Tables ── */
         table { width: 100%; border-collapse: collapse; }
-        th { text-align: left; padding: 10px 12px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); background: var(--surface-subtle); border-bottom: 1.5px solid var(--border); }
-        td { padding: 10px 12px; font-size: 13px; border-bottom: 1px solid var(--border-soft); }
-        tr:hover td { background: var(--surface-subtle); }
-        .badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 700; }
-        .badge-paid { background: #d1fae5; color: #065f46; }
-        .badge-pending { background: #fef3c7; color: #92400e; }
-        .badge-cancelled { background: #fee2e2; color: #991b1b; }
-        .badge-type { background: #e0f2fe; color: #0369a1; }
-        .badge-direct { background: #e0f2fe; color: #0369a1; }
-        .badge-program { background: #fce7f3; color: #9d174d; }
-        .tag-program { font-size: 11px; color: #d17a8e; font-weight: 600; }
-        .tag-student { font-size: 11px; color: var(--accent-teal); font-weight: 600; }
-        .amount-usd { font-family: 'Courier New', monospace; font-size: 13px; font-weight: 700; color: var(--text-main); }
-        .amount-bdt { font-size: 11px; color: var(--text-muted); }
-        .tag-general { background: var(--surface-subtle); padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+        thead th { text-align: left; padding: 10px 12px; font-size: 10px; font-weight: 700; color: var(--text-muted); background: var(--surface-subtle); border-bottom: 1.5px solid var(--border-neutral); text-transform: uppercase; letter-spacing: 0.05em; line-height: 1.3; height: 40px; }
+        thead th.num { text-align: right; }
+        tbody td { padding: 10px 12px; font-size: 13px; border-bottom: 1px solid var(--border-soft); line-height: 1.4; vertical-align: middle; }
+        tbody tr:hover td { background: var(--surface-subtle); }
+        td.num { text-align: right; font-family: 'Courier New', monospace; font-size: 13px; font-weight: 700; color: var(--text-main); }
+        td.sub { font-size: 11px; color: var(--text-muted); }
 
+        /* ── Tags / Badges ── */
+        .tag { display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; line-height: 1.5; }
+        .tag-teal { background: #e0f2fe; color: #0369a1; }
+        .tag-pink { background: #fce7f3; color: #9d174d; }
+        .tag-gray { background: var(--surface-subtle); color: var(--text-muted); }
+        .tag-green { background: #d1fae5; color: #065f46; }
+        .tag-amber { background: #fef3c7; color: #92400e; }
+        .tag-red { background: #fee2e2; color: #991b1b; }
+        .tag-purple { background: #f4f3ff; color: #5925dc; }
+        .tag-label { background: var(--surface-subtle); padding: 2px 8px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+
+        .sub { font-size: 11px; color: var(--text-muted); }
+        .ref { font-family: 'Courier New', monospace; font-size: 11px; color: var(--text-muted); }
+
+        /* ── Form ── */
         .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .form-grid .full { grid-column: 1 / -1; }
         .form-group { margin-bottom: 4px; }
-        .form-group.full { grid-column: 1 / -1; }
         label { display: block; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 4px; }
-        input, select, textarea { width: 100%; padding: 8px 10px; border: 1.5px solid var(--border); border-radius: var(--radius-sm); font-size: 13px; font-family: 'Nunito', sans-serif; background: var(--surface); color: var(--text-main); }
-        input:focus, select:focus { outline: none; border-color: var(--accent-teal); box-shadow: 0 0 0 3px rgba(43, 122, 158, 0.1); }
-
-        .funding-icon { display: inline-block; width: 10px; height: 10px; border-radius: 2px; background: #d17a8e; margin-right: 4px; }
-        .payout-icon { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: var(--accent-teal); margin-right: 4px; }
+        input, select, textarea { width: 100%; padding: 8px 10px; border: 1.5px solid var(--border-neutral); border-radius: var(--radius-sm); font-size: 13px; font-family: 'Nunito', sans-serif; background: var(--surface); color: var(--text-main); min-height: 40px; }
+        input:focus, select:focus { outline: none; border-color: var(--action-teal); box-shadow: 0 0 0 3px rgba(43, 122, 158, 0.1); }
+        input[readonly] { background: var(--surface-subtle); }
+        textarea { resize: vertical; }
+        .checkbox-row { display: flex; align-items: center; gap: 8px; padding-top: 6px; }
+        .checkbox-row input[type=checkbox] { width: auto; min-height: auto; }
+        .checkbox-row label { text-transform: none; letter-spacing: 0; font-weight: 400; font-size: 13px; cursor: pointer; }
+        .form-actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 16px; }
 
         .hidden { display: none; }
+
+        /* ── Modal ── */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(15,23,42,0.5); z-index: 200; display: flex; align-items: center; justify-content: center; }
+        .modal-box { background: var(--surface); border-radius: var(--radius); width: 720px; max-width: 94vw; max-height: 80vh; overflow-y: auto; box-shadow: var(--shadow-lg); }
+        .modal-head { padding: 16px 24px; border-bottom: 1px solid var(--border-neutral); display: flex; justify-content: space-between; align-items: center; }
+        .modal-title { font-family: 'Lora', serif; font-size: 18px; font-weight: 600; color: var(--primary-navy); }
+        .modal-close { background: none; border: none; font-size: 22px; cursor: pointer; padding: 4px 10px; font-weight: 700; color: var(--text-muted); line-height: 1; }
+        .modal-close:hover { color: var(--text-main); }
+        .modal-body { padding: 20px 24px; }
+        .drill-summary { display: flex; gap: 24px; margin-bottom: 16px; }
+        .drill-summary .lbl { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); }
+        .drill-summary .val { font-family: 'Courier New', monospace; font-size: 18px; font-weight: 700; color: var(--primary-navy); }
+
+        tr.clickable { cursor: pointer; }
     </style>
 </head>
 <body>
 <div class="app">
+    <!-- ── SIDEBAR ── -->
     <div class="sidebar">
         <div class="sidebar-logo">
             <div class="logo-box">BH</div>
@@ -116,75 +152,72 @@
                 <span>Sponsorship Management</span>
             </div>
         </div>
-        <div class="sidebar-section">
-            <div class="sidebar-label">Financial</div>
-            <div class="nav-item"><span class="nav-icon">📊</span> Dashboard</div>
-            <div class="nav-item"><span class="nav-icon">💳</span> Contributions</div>
-            <div class="nav-item active"><span class="nav-icon">📤</span> Allocations</div>
-            <div class="nav-item"><span class="nav-icon">🔄</span> Exchange Rates</div>
+        <div class="sidebar-sections">
+            <div class="sidebar-section">
+                <div class="sidebar-label">Financial</div>
+                <div class="nav-item">📊 Dashboard</div>
+                <div class="nav-item">💳 Contributions</div>
+                <div class="nav-item active">📤 Allocations</div>
+                <div class="nav-item">🔄 Exchange Rates</div>
+            </div>
         </div>
     </div>
 
+    <!-- ── MAIN ── -->
     <div class="main">
         <div class="topbar">
             <div class="breadcrumb">[SEC_01: FINANCE] / <strong>ALLOCATIONS</strong></div>
         </div>
+
         <div class="content">
-            <div class="page-header">
-                <div>
-                    <div class="page-title">Financial Allocations</div>
-                    <div class="page-subtitle"><span class="funding-icon"></span> <code>program_funding</code> — allocate contributions to programs &nbsp;|&nbsp; <span class="payout-icon"></span> <code>payouts</code> — pay out to students</div>
+            <div class="page-title">Financial Allocations</div>
+
+            <!-- ── Stats ── -->
+            <div class="stats">
+                <div class="stat">
+                    <div class="stat-label">Program Funding (MTD)</div>
+                    <div class="stat-num">$3,750.00</div>
+                    <div class="stat-meta">4 programs funded</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-label">Student Payouts (MTD)</div>
+                    <div class="stat-num">$2,210.00</div>
+                    <div class="stat-meta">31 payouts &middot; 12 students</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-label">Exchange Rate</div>
+                    <div class="stat-num">BDT 121.50</div>
+                    <div class="stat-meta">Updated Jun 10</div>
                 </div>
             </div>
 
-            <div class="metrics-row">
-                <div class="metric-card metric-funding">
-                    <div class="metric-label"><span class="funding-icon"></span> Program Funding (MTD)</div>
-                    <div class="metric-value">$3,750.00</div>
-                    <div class="metric-meta">4 programs funded</div>
-                </div>
-                <div class="metric-card metric-payouts">
-                    <div class="metric-label"><span class="payout-icon"></span> Student Payouts (MTD)</div>
-                    <div class="metric-value">$2,210.00</div>
-                    <div class="metric-meta">31 payouts · 12 students</div>
-                </div>
-                <div class="metric-card">
-                    <div class="metric-label">Direct vs Program</div>
-                    <div class="metric-value" style="font-size:16px">
-                        <span style="color:#2B7A9E">$890</span> / <span style="color:#d17a8e">$1,320</span>
-                    </div>
-                    <div class="metric-meta">Direct · From Program</div>
-                </div>
-                <div class="metric-card">
-                    <div class="metric-label">Exchange Rate</div>
-                    <div class="metric-value">BDT 121.50</div>
-                    <div class="metric-meta">Updated Jun 10</div>
-                </div>
+            <!-- ── Tabs ── -->
+            <div class="tab-bar">
+                <div class="tab active" onclick="switchTab('funding')">Program Funding</div>
+                <div class="tab" onclick="switchTab('payouts')">Student Payouts</div>
             </div>
 
-            <div class="tabs">
-                <div class="tab active" onclick="switchTab('funding')"><span class="funding-icon"></span> Program Funding</div>
-                <div class="tab" onclick="switchTab('payouts')"><span class="payout-icon"></span> Student Payouts</div>
-            </div>
-
-            <!-- === PROGRAM FUNDING TAB === -->
+            <!-- ════════════════════════════════════════════════
+                 TAB 1: PROGRAM FUNDING
+                 ════════════════════════════════════════════════ -->
             <div id="tabFunding">
-                <div style="display:flex; gap:8px; margin-bottom:16px">
-                    <button class="btn btn-pink" onclick="showFundingForm()">+ Allocate Contribution to Program</button>
+                <div class="toolbar">
+                    <button class="btn btn-teal" onclick="showFundingForm()">+ Allocate</button>
                 </div>
 
-                <div id="formFunding" class="card hidden">
-                    <div class="card-header">
-                        <div class="card-title">[SEC_02: NEW_PROGRAM_FUNDING] <span>program_funding INSERT</span></div>
+                <!-- New Funding Form -->
+                <div id="formFunding" class="panel hidden">
+                    <div class="panel-head">
+                        <span class="panel-title">[SEC_02: NEW_ALLOCATION] <span class="tag">payouts INSERT</span></span>
                     </div>
-                    <div class="card-body" style="border-left:3px solid #d17a8e">
+                    <div class="panel-body padded" style="border-left:3px solid var(--signal-pink)">
                         <div class="form-grid">
                             <div class="form-group">
                                 <label>Contribution</label>
                                 <select>
-                                    <option>#C-0042 · Susan Jones · $5,000.00</option>
-                                    <option>#C-0041 · John Smith · $100.00</option>
-                                    <option>#C-0039 · Amy Chen · $250.00</option>
+                                    <option>#C-0042 &middot; Susan Jones &middot; $5,000</option>
+                                    <option>#C-0041 &middot; John Smith &middot; $100</option>
+                                    <option>#C-0039 &middot; Amy Chen &middot; $250</option>
                                 </select>
                             </div>
                             <div class="form-group">
@@ -198,14 +231,14 @@
                             </div>
                             <div class="form-group">
                                 <label>Amount (USD)</label>
-                                <input type="number" value="5000" placeholder="USD amount">
+                                <input type="number" value="5000" placeholder="0.00">
                             </div>
                             <div class="form-group">
-                                <label>Period</label>
+                                <label>Period (optional)</label>
                                 <select>
-                                    <option>Monthly – Jun 2026</option>
-                                    <option>Quarterly – Q2 2026</option>
-                                    <option>Yearly – 2026</option>
+                                    <option>Monthly &ndash; Jun 2026</option>
+                                    <option>Quarterly &ndash; Q2 2026</option>
+                                    <option>Yearly &ndash; 2026</option>
                                     <option>One-time</option>
                                 </select>
                             </div>
@@ -214,17 +247,18 @@
                                 <textarea rows="2" placeholder="Optional notes...">Annual subsidy for VLG school supplies</textarea>
                             </div>
                         </div>
-                        <div style="display:flex; gap:12px; justify-content:flex-end; margin-top:16px">
+                        <div class="form-actions">
                             <button class="btn btn-outline" onclick="hideFundingForm()">Cancel</button>
-                            <button class="btn btn-pink">Record Funding</button>
+                            <button class="btn btn-teal">Record</button>
                         </div>
                     </div>
                 </div>
 
-                <div class="card">
-                    <div class="card-header">
-                        <div class="card-title">[SEC_03: PROGRAM_FUNDING_LIST] <span>program_funding</span></div>
-                        <select style="font-size:11px; padding:4px 8px; border:1px solid var(--border); border-radius:4px">
+                <!-- Funding List -->
+                <div class="panel">
+                    <div class="panel-head">
+                        <span class="panel-title">[SEC_03: CONTRIBUTION_LIST] <span class="tag">contributions</span></span>
+                        <select style="font-size:11px; padding:4px 8px; border:1px solid var(--border-neutral); border-radius:4px">
                             <option>All Programs</option>
                             <option>VLG</option>
                             <option>LRC</option>
@@ -232,40 +266,40 @@
                             <option>STF</option>
                         </select>
                     </div>
-                    <div class="card-body" style="padding:0">
+                    <div class="panel-body">
                         <table>
                             <thead>
                                 <tr>
                                     <th>Contribution</th>
                                     <th>Program</th>
-                                    <th>Amount (USD)</th>
+                                    <th class="num">Amount (USD)</th>
                                     <th>Period</th>
                                     <th>Date</th>
                                     <th>Recorded By</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr>
-                                    <td><span class="tag-general">#C-0042</span><br><span class="amount-bdt">Susan Jones</span></td>
-                                    <td><span class="tag-program">Village Schools (VLG)</span></td>
-                                    <td><span class="amount-usd">$5,000.00</span></td>
-                                    <td><span class="badge badge-type">Yearly – 2026</span></td>
+                                <tr class="clickable" onclick="openDrill('Susan Jones','#C-0042','5000.00','3450.00')">
+                                    <td><span class="ref">#C-0042</span><br><span class="sub">Susan Jones</span></td>
+                                    <td><span class="tag tag-teal">VLG</span> Village Schools</td>
+                                    <td class="num">$5,000.00</td>
+                                    <td><span class="tag tag-gray">Yearly 2026</span></td>
                                     <td>Jun 10, 2026</td>
                                     <td>Director Kamal</td>
                                 </tr>
-                                <tr>
-                                    <td><span class="tag-general">#C-0035</span><br><span class="amount-bdt">Robert Miller</span></td>
-                                    <td><span class="tag-program">Boarding School (BRD)</span></td>
-                                    <td><span class="amount-usd">$2,500.00</span></td>
-                                    <td><span class="badge badge-type">Quarterly – Q2 2026</span></td>
+                                <tr class="clickable" onclick="openDrill('Robert Miller','#C-0035','2500.00','1800.00')">
+                                    <td><span class="ref">#C-0035</span><br><span class="sub">Robert Miller</span></td>
+                                    <td><span class="tag tag-purple">BRD</span> Boarding School</td>
+                                    <td class="num">$2,500.00</td>
+                                    <td><span class="tag tag-gray">Q2 2026</span></td>
                                     <td>Apr 1, 2026</td>
                                     <td>Director Kamal</td>
                                 </tr>
-                                <tr>
-                                    <td><span class="tag-general">#C-0028</span><br><span class="amount-bdt">General Fund</span></td>
-                                    <td><span class="tag-program">Love Receiving Center (LRC)</span></td>
-                                    <td><span class="amount-usd">$1,200.00</span></td>
-                                    <td><span class="badge badge-type">Monthly – Jun 2026</span></td>
+                                <tr class="clickable" onclick="openDrill('General Fund','#C-0028','1200.00','800.00')">
+                                    <td><span class="ref">#C-0028</span><br><span class="sub">General Fund</span></td>
+                                    <td><span class="tag tag-pink">LRC</span> Love Receiving Center</td>
+                                    <td class="num">$1,200.00</td>
+                                    <td><span class="tag tag-gray">Jun 2026</span></td>
                                     <td>Jun 1, 2026</td>
                                     <td>Director Kamal</td>
                                 </tr>
@@ -275,54 +309,83 @@
                 </div>
             </div>
 
-            <!-- === STUDENT PAYOUTS TAB === -->
+            <!-- ════════════════════════════════════════════════
+                 TAB 2: STUDENT PAYOUTS
+                 ════════════════════════════════════════════════ -->
             <div id="tabPayouts" class="hidden">
-                <div style="display:flex; gap:8px; margin-bottom:16px">
-                    <button class="btn btn-primary" onclick="showPayoutForm('direct')">+ Direct Payout (Sponsor→Student)</button>
-                    <button class="btn btn-pink" onclick="showPayoutForm('program')">+ Program Payout (Fund→Student)</button>
+                <div class="toolbar">
+                    <button class="btn btn-teal" onclick="showPayoutForm()">+ New Payout</button>
                 </div>
 
-                <div id="formPayout" class="card hidden">
-                    <div class="card-header">
-                        <div class="card-title">[SEC_04: NEW_PAYOUT] <span>payouts INSERT</span></div>
+                <!-- New Payout Form -->
+                <div id="formPayout" class="panel hidden">
+                    <div class="panel-head">
+                        <span class="panel-title">[SEC_04: NEW_PAYOUT] <span class="tag">payouts INSERT</span></span>
                     </div>
-                    <div class="card-body">
-                        <div id="payoutSourceIndicator" style="margin-bottom:16px; padding:10px 14px; border-radius:6px; font-size:12px; font-weight:700"></div>
+                    <div class="panel-body padded" style="border-left:3px solid var(--action-teal)">
+                        <div id="payoutSourceIndicator" style="margin-bottom:14px; padding:10px 14px; border-radius:6px; font-size:12px; font-weight:700; background:#fce7f3; color:#9d174d">Source: Program Funding &rarr; Student</div>
                         <div class="form-grid">
                             <div class="form-group">
                                 <label>Student</label>
                                 <select>
+                                    <option>Shahina Akhter (VLG-089)</option>
                                     <option>Rahim Ahmed (LRC-042)</option>
                                     <option>Fatima Begum (VLG-113)</option>
                                     <option>Karim Hasan (BRD-207)</option>
-                                    <option selected>Shahina Akhter (VLG-089)</option>
                                 </select>
                             </div>
-                            <div class="form-group" id="directSourceGroup">
-                                <label>Source Contribution</label>
-                                <select>
-                                    <option>#C-0041 · John Smith · $100.00</option>
-                                    <option>#C-0037 · Emily Davis · $50.00</option>
-                                </select>
-                            </div>
-                            <div class="form-group hidden" id="programSourceGroup">
+                            <div class="form-group">
                                 <label>Source Program Funding</label>
                                 <select>
-                                    <option>VLG Yearly 2026 · $5,000.00 (Remaining: $3,450.00)</option>
-                                    <option>BRD Q2 2026 · $2,500.00 (Remaining: $1,800.00)</option>
+                                    <option>VLG Yearly 2026 &middot; $5,000 (Remaining: $3,450)</option>
+                                    <option>BRD Q2 2026 &middot; $2,500 (Remaining: $1,800)</option>
                                 </select>
                             </div>
                             <div class="form-group">
-                                <label>Amount (BDT)</label>
-                                <input type="number" value="2000" placeholder="Enter amount in BDT">
+                                <label>Tracking Category</label>
+                                <select id="trackingCategory" onchange="onCategoryChange()">
+                                    <option value="pocket_money">Pocket Money</option>
+                                    <option value="subsidy" selected>Subsidy</option>
+                                    <option value="loan">Loan Disbursement</option>
+                                </select>
+                            </div>
+                            <div class="form-group"></div>
+
+                            <div class="form-group hidden" id="subsidyPurposeGroup">
+                                <label>Subsidy Purpose</label>
+                                <select>
+                                    <option>Tuition</option><option>Medical</option><option>School Supplies</option><option>Transportation</option><option>Other</option>
+                                </select>
+                            </div>
+                            <div class="form-group hidden" id="subsidyReceiptsGroup">
+                                <label>Receipts Verified</label>
+                                <div class="checkbox-row">
+                                    <input type="checkbox" id="receiptsVerified">
+                                    <label for="receiptsVerified">Physical receipts on file</label>
+                                </div>
+                            </div>
+                            <div class="form-group hidden" id="subsidyVerifiedAmountGroup">
+                                <label>Verified Amount (BDT)</label>
+                                <input type="number" value="2000" placeholder="0.00">
+                            </div>
+                            <div class="form-group hidden" id="loanSelectorGroup">
+                                <label>Loan Agreement</label>
+                                <select>
+                                    <option>Rahim Ahmed &ndash; Univ. of Dhaka (Studying)</option>
+                                    <option>Karim Hasan &ndash; BUET (Studying)</option>
+                                </select>
                             </div>
                             <div class="form-group">
-                                <label>USD Equivalent</label>
-                                <input type="number" value="16.46" readonly style="background:var(--surface-subtle)">
+                                <label>Local Amount (BDT)</label>
+                                <input type="number" value="2000" placeholder="0.00">
                             </div>
                             <div class="form-group">
-                                <label>Exchange Rate</label>
-                                <input type="number" value="121.50" readonly style="background:var(--surface-subtle)">
+                                <label>USD Amount <span class="sub">(frozen at entry)</span></label>
+                                <input type="number" value="16.46" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label>Exchange Rate <span class="sub">(copied, never recalculated)</span></label>
+                                <input type="number" value="121.50" readonly>
                             </div>
                             <div class="form-group">
                                 <label>Payout Date</label>
@@ -330,49 +393,42 @@
                             </div>
                             <div class="form-group">
                                 <label>Status</label>
-                                <select>
-                                    <option>Paid</option>
-                                    <option>Pending</option>
-                                </select>
+                                <select><option>Paid</option><option>Pending</option></select>
                             </div>
                             <div class="form-group full">
                                 <label>Notes</label>
                                 <textarea rows="2" placeholder="Optional notes...">Monthly pocket allowance</textarea>
                             </div>
                         </div>
-                        <div style="display:flex; gap:12px; justify-content:flex-end; margin-top:16px">
+                        <div class="form-actions">
                             <button class="btn btn-outline" onclick="hidePayoutForm()">Cancel</button>
-                            <button class="btn btn-primary">Record Payout</button>
+                            <button class="btn btn-teal">Record</button>
                         </div>
                     </div>
                 </div>
 
-                <div class="card">
-                    <div class="card-header">
-                        <div class="card-title">[SEC_05: PAYOUT_LIST] <span>payouts</span></div>
-                        <div style="display:flex; gap:8px">
-                            <select style="font-size:11px; padding:4px 8px; border:1px solid var(--border); border-radius:4px">
-                                <option>All Sources</option>
-                                <option>Direct</option>
-                                <option>From Program</option>
-                            </select>
-                            <select style="font-size:11px; padding:4px 8px; border:1px solid var(--border); border-radius:4px">
-                                <option>All Programs</option>
-                                <option>VLG</option>
-                                <option>LRC</option>
-                                <option>BRD</option>
-                            </select>
-                        </div>
+                <!-- Payout List -->
+                <div class="panel">
+                    <div class="panel-head">
+                        <span class="panel-title">[SEC_05: PAYOUT_LIST] <span class="tag">payouts</span></span>
+                        <select style="font-size:11px; padding:4px 8px; border:1px solid var(--border-neutral); border-radius:4px">
+                            <option>All Programs</option>
+                            <option>VLG</option>
+                            <option>LRC</option>
+                            <option>BRD</option>
+                        </select>
                     </div>
-                    <div class="card-body" style="padding:0">
+                    <div class="panel-body">
                         <table>
                             <thead>
                                 <tr>
                                     <th>Student</th>
                                     <th>Source</th>
-                                    <th>BDT Amount</th>
-                                    <th>USD</th>
-                                    <th>Rate</th>
+                                    <th>Category</th>
+                                    <th>Details</th>
+                                    <th class="num">BDT</th>
+                                    <th class="num">USD</th>
+                                    <th class="num">Rate</th>
                                     <th>Date</th>
                                     <th>Status</th>
                                     <th>Recorded By</th>
@@ -380,68 +436,63 @@
                             </thead>
                             <tbody>
                                 <tr>
-                                    <td>
-                                        <span class="tag-student">Shahina Akhter</span>
-                                        <br><span class="tag-general">VLG-089</span>
-                                    </td>
-                                    <td><span class="badge badge-program">VLG Subsidy</span></td>
-                                    <td><span class="amount-bdt">BDT 700.00</span></td>
-                                    <td><span class="amount-usd">$5.76</span></td>
-                                    <td><span class="amount-bdt">121.50</span></td>
+                                    <td><span class="ref">VLG-089</span><br><strong>Shahina Akhter</strong></td>
+                                    <td><span class="tag tag-teal">VLG</span></td>
+                                    <td><span class="tag tag-pink">Subsidy</span></td>
+                                    <td><span class="sub">School Supplies</span></td>
+                                    <td class="num">BDT 700.00</td>
+                                    <td class="num">$5.76</td>
+                                    <td class="num">121.50</td>
                                     <td>Jun 10, 2026</td>
-                                    <td><span class="badge badge-paid">Paid</span></td>
+                                    <td><span class="tag tag-green">Paid</span></td>
                                     <td>School Coord</td>
                                 </tr>
                                 <tr>
-                                    <td>
-                                        <span class="tag-student">Rahim Ahmed</span>
-                                        <br><span class="tag-general">LRC-042</span>
-                                    </td>
-                                    <td><span class="badge badge-direct">Direct: John Smith</span></td>
-                                    <td><span class="amount-bdt">BDT 2,000.00</span></td>
-                                    <td><span class="amount-usd">$16.46</span></td>
-                                    <td><span class="amount-bdt">121.50</span></td>
+                                    <td><span class="ref">LRC-042</span><br><strong>Rahim Ahmed</strong></td>
+                                    <td><span class="tag tag-pink">LRC</span></td>
+                                    <td><span class="tag tag-gray">Pocket</span></td>
+                                    <td><span class="sub">&mdash;</span></td>
+                                    <td class="num">BDT 2,000.00</td>
+                                    <td class="num">$16.46</td>
+                                    <td class="num">121.50</td>
                                     <td>Jun 10, 2026</td>
-                                    <td><span class="badge badge-paid">Paid</span></td>
+                                    <td><span class="tag tag-green">Paid</span></td>
                                     <td>Shamima S.</td>
                                 </tr>
                                 <tr>
-                                    <td>
-                                        <span class="tag-student">Fatima Begum</span>
-                                        <br><span class="tag-general">VLG-113</span>
-                                    </td>
-                                    <td><span class="badge badge-program">VLG Subsidy</span></td>
-                                    <td><span class="amount-bdt">BDT 700.00</span></td>
-                                    <td><span class="amount-usd">$5.76</span></td>
-                                    <td><span class="amount-bdt">121.50</span></td>
+                                    <td><span class="ref">VLG-113</span><br><strong>Fatima Begum</strong></td>
+                                    <td><span class="tag tag-teal">VLG</span></td>
+                                    <td><span class="tag tag-pink">Subsidy</span></td>
+                                    <td><span class="sub">Tuition</span></td>
+                                    <td class="num">BDT 700.00</td>
+                                    <td class="num">$5.76</td>
+                                    <td class="num">121.50</td>
                                     <td>Jun 8, 2026</td>
-                                    <td><span class="badge badge-paid">Paid</span></td>
+                                    <td><span class="tag tag-green">Paid</span></td>
                                     <td>School Coord</td>
                                 </tr>
                                 <tr>
-                                    <td>
-                                        <span class="tag-student">Karim Hasan</span>
-                                        <br><span class="tag-general">BRD-207</span>
-                                    </td>
-                                    <td><span class="badge badge-direct">Direct: Emily Davis</span></td>
-                                    <td><span class="amount-bdt">BDT 3,000.00</span></td>
-                                    <td><span class="amount-usd">$24.69</span></td>
-                                    <td><span class="amount-bdt">121.50</span></td>
+                                    <td><span class="ref">BRD-207</span><br><strong>Karim Hasan</strong></td>
+                                    <td><span class="tag tag-purple">BRD</span></td>
+                                    <td><span class="tag tag-teal">Loan</span></td>
+                                    <td><span class="sub">BUET &middot; Tuition</span></td>
+                                    <td class="num">BDT 3,000.00</td>
+                                    <td class="num">$24.69</td>
+                                    <td class="num">121.50</td>
                                     <td>Jun 5, 2026</td>
-                                    <td><span class="badge badge-pending">Pending</span></td>
+                                    <td><span class="tag tag-amber">Pending</span></td>
                                     <td>Rafiq H.</td>
                                 </tr>
                                 <tr>
-                                    <td>
-                                        <span class="tag-student">Shahina Akhter</span>
-                                        <br><span class="tag-general">VLG-089</span>
-                                    </td>
-                                    <td><span class="badge badge-direct">Direct: John Smith</span></td>
-                                    <td><span class="amount-bdt">BDT 1,500.00</span></td>
-                                    <td><span class="amount-usd">$12.35</span></td>
-                                    <td><span class="amount-bdt">121.50</span></td>
+                                    <td><span class="ref">VLG-089</span><br><strong>Shahina Akhter</strong></td>
+                                    <td><span class="tag tag-teal">VLG</span></td>
+                                    <td><span class="tag tag-gray">Pocket</span></td>
+                                    <td><span class="sub">&mdash;</span></td>
+                                    <td class="num">BDT 1,500.00</td>
+                                    <td class="num">$12.35</td>
+                                    <td class="num">121.50</td>
                                     <td>May 28, 2026</td>
-                                    <td><span class="badge badge-paid">Paid</span></td>
+                                    <td><span class="tag tag-green">Paid</span></td>
                                     <td>Rafiq H.</td>
                                 </tr>
                             </tbody>
@@ -453,9 +504,54 @@
     </div>
 </div>
 
-<script>
-let payoutMode = 'direct';
+<!-- ── Drill-Down Modal ── -->
+<div id="drillModal" class="modal-overlay hidden" onclick="if(event.target===this)this.classList.add('hidden')">
+    <div class="modal-box">
+        <div class="modal-head" style="display:flex;justify-content:space-between;align-items:center">
+            <span class="modal-title" id="drillTitle">Funding Detail</span>
+            <button class="modal-close" onclick="document.getElementById('drillModal').classList.add('hidden')" style="background:none;border:none;font-size:22px;cursor:pointer;padding:4px 10px;font-weight:700;color:#64748b">&#x2715;</button>
+        </div>
+        <div class="modal-body">
+            <div class="drill-summary">
+                <div><span class="lbl">Contribution</span><br><span class="val" id="drillContribution">#C-0042</span></div>
+                <div><span class="lbl">Allocated</span><br><span class="val" id="drillAmount">$5,000.00</span></div>
+                <div><span class="lbl">Remaining</span><br><span class="val" id="drillRemaining">$3,450.00</span></div>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Student</th>
+                        <th>Category</th>
+                        <th class="num">BDT</th>
+                        <th class="num">USD</th>
+                        <th>Date</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="drillBody">
+                    <tr>
+                        <td><span class="ref">VLG-089</span><br><strong>Shahina Akhter</strong></td>
+                        <td><span class="tag tag-pink">Subsidy</span></td>
+                        <td class="num">BDT 700.00</td>
+                        <td class="num">$5.76</td>
+                        <td>Jun 10, 2026</td>
+                        <td><span class="tag tag-green">Paid</span></td>
+                    </tr>
+                    <tr>
+                        <td><span class="ref">VLG-113</span><br><strong>Fatima Begum</strong></td>
+                        <td><span class="tag tag-pink">Subsidy</span></td>
+                        <td class="num">BDT 700.00</td>
+                        <td class="num">$5.76</td>
+                        <td>Jun 8, 2026</td>
+                        <td><span class="tag tag-green">Paid</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
 
+<script>
 function switchTab(tab) {
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
     document.getElementById('tabFunding').classList.add('hidden');
@@ -469,35 +565,25 @@ function switchTab(tab) {
     }
 }
 
-function showFundingForm() {
-    document.getElementById('formFunding').classList.remove('hidden');
+function showFundingForm() { document.getElementById('formFunding').classList.remove('hidden'); }
+function hideFundingForm() { document.getElementById('formFunding').classList.add('hidden'); }
+function showPayoutForm() { document.getElementById('formPayout').classList.remove('hidden'); onCategoryChange(); }
+function hidePayoutForm() { document.getElementById('formPayout').classList.add('hidden'); }
+
+function onCategoryChange() {
+    var cat = document.getElementById('trackingCategory').value;
+    ['subsidyPurposeGroup','subsidyReceiptsGroup','subsidyVerifiedAmountGroup'].forEach(function(id) {
+        document.getElementById(id).classList.toggle('hidden', cat !== 'subsidy');
+    });
+    document.getElementById('loanSelectorGroup').classList.toggle('hidden', cat !== 'loan');
 }
 
-function hideFundingForm() {
-    document.getElementById('formFunding').classList.add('hidden');
-}
-
-function showPayoutForm(mode) {
-    payoutMode = mode;
-    document.getElementById('formPayout').classList.remove('hidden');
-    const indicator = document.getElementById('payoutSourceIndicator');
-    if (mode === 'direct') {
-        indicator.style.background = '#e0f2fe';
-        indicator.style.color = '#0369a1';
-        indicator.textContent = 'Source: Direct Contribution → Student';
-        document.getElementById('directSourceGroup').classList.remove('hidden');
-        document.getElementById('programSourceGroup').classList.add('hidden');
-    } else {
-        indicator.style.background = '#fce7f3';
-        indicator.style.color = '#9d174d';
-        indicator.textContent = 'Source: Program Funding → Student';
-        document.getElementById('directSourceGroup').classList.add('hidden');
-        document.getElementById('programSourceGroup').classList.remove('hidden');
-    }
-}
-
-function hidePayoutForm() {
-    document.getElementById('formPayout').classList.add('hidden');
+function openDrill(sponsor, ref, amount, remaining) {
+    document.getElementById('drillTitle').textContent = sponsor + ' \u2013 ' + ref;
+    document.getElementById('drillContribution').textContent = ref;
+    document.getElementById('drillAmount').textContent = '$' + parseFloat(amount).toLocaleString('en-US', {minimumFractionDigits:2});
+    document.getElementById('drillRemaining').textContent = '$' + parseFloat(remaining).toLocaleString('en-US', {minimumFractionDigits:2});
+    document.getElementById('drillModal').classList.remove('hidden');
 }
 </script>
 </body>

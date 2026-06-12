@@ -58,10 +58,10 @@ When a staff member logs in and performs an action, the application automaticall
 ## 5. Financial Ledger Integrity
 
 ### A. Immutability
-Financial transaction tables (`CONTRIBUTIONS`, `PAYOUTS`, `PROGRAM_FUNDING`, `LOAN_TRANSACTIONS`) are defined as **immutable**. They do not use auto-update triggers. Changes must be made via explicit reversing entries (adjustments).
+Financial transaction tables (`CONTRIBUTIONS`, `PAYOUTS`, `LOAN_TRANSACTIONS`) are defined as **immutable**. They do not use auto-update triggers. Changes must be made via explicit reversing entries (adjustments).
 
 ### B. Overdraft Prevention
-The system uses two triggers: `fn_enforce_payout_limits` on `PAYOUTS` and `fn_enforce_funding_limits` on `PROGRAM_FUNDING`. Each performs a **parent-level write lock** (`FOR UPDATE`) on the source contribution or program funding record to serialize allocation attempts, preventing phantom read race conditions.
+The system uses two triggers: `fn_enforce_payout_limits` on `PAYOUTS` (locks parent `CONTRIBUTION`, enforces `SUM(payouts.amount) ≤ contribution.amount`), and `fn_enforce_loan_consistency` on `PAYOUTS` (checks `payment_category.is_repayable`). Each performs a **parent-level write lock** (`SELECT ... FOR UPDATE`) to serialize allocation attempts.
 
 ### C. Cascading Deletion
 All child relationships are defined with **`ON DELETE RESTRICT`** to prevent accidental orphan records and ensure financial/academic data trail integrity.

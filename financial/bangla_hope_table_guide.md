@@ -25,7 +25,7 @@ This guide provides a simple, plain-English breakdown of what every single table
 ## 4. Sponsorship System (The Donors)
 * **`SPONSORS`**: Profiles of the donors, keeping track of their contact info, address, and how they prefer to be contacted.
 * **`SPONSORSHIPS`**: Links a specific donor to a specific student, showing when the sponsorship started and if it is currently active.
-* **`CONTRIBUTIONS`**: The donation ledger. It records every time a donor sends money, what currency they used, and what month/year the payment is for.
+* **`CONTRIBUTIONS`**: The donation ledger. It records every time a donor sends money, the amount in BDT, and what month/year the payment is for.
 
 ## 5. Records & History (School & Life Tracking)
 * **`ACADEMIC_RECORDS`**: Tracks how well a student did in school each year, their final grades, and which school they went to.
@@ -34,7 +34,7 @@ This guide provides a simple, plain-English breakdown of what every single table
 * **`STUDENT_HISTORY`**: A timeline of major life events or milestones for the student (e.g., "Moved to a new home", "Won an award").
 
 ## 6. Financial Subsidies (Regular Allowances)
-* **`PROGRAM_FUNDING`**: Allocates a portion of a contribution to fund a program (e.g., "Sponsor X's $5,000 goes to VLG school for yearly supplies").
+* **`PROGRAM_ALLOCATIONS`**: Splits a contribution across programs (e.g., Director allocates 60,000 BDT of Sponsor X's 100,000 BDT to LRC and 40,000 BDT to VLG).
 * **`PAYOUTS`**: Records the exact date and amount whenever a staff member hands over cash or supplies to a specific student — whether funded directly from a contribution or from a program funding pool.
 
 ## 7. Loan System (Higher Education Funding)

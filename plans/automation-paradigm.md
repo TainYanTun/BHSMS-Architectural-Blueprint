@@ -61,7 +61,7 @@ To ensure long-term stability and security without human intervention, the `Lara
 
 ### 2. Data Integrity (Preventing Rot)
 *   **Failed Job Cleanup:** Automatically removes stale, failed entries from the `job_queue` to keep the system view focused on active errors.
-*   **Orphaned File Cleanup:** Detects and deletes "orphaned" files in S3 that lack corresponding database records (e.g., failed uploads), preventing storage waste.
+*   **Orphaned File Cleanup:** Detects and deletes "orphaned" files in MinIO that lack corresponding database records (e.g., failed uploads), preventing storage waste.
 
 ### 3. System "Self-Healing"
-*   **Heartbeat Checks:** Periodically verifies connectivity to critical dependencies (PostgreSQL, S3) and dispatches alerts if any service is unresponsive, enabling proactive recovery.
+*   **Heartbeat Checks:** Periodically verifies connectivity to critical dependencies (PostgreSQL, MinIO) and dispatches alerts if any service is unresponsive, enabling proactive recovery.

@@ -1,35 +1,28 @@
-# Sponsor Communication Decision Matrix
+# Sponsor Communication Decision Matrix (Finalized)
 
-This document is a tool for the client meeting to finalize how the system handles letters and reports.
+> **Note:** These decisions have been finalized with the client (June 2026). Student-specific report delivery is handled outside the system. The Communication Hub is for broadcast messages only.
 
 ## 1. Core Document Types
-| Document Type | Purpose | Current Trigger | Recommended Frequency | Approval Level | Format |
+| Document Type | Purpose | Trigger | Frequency | Approval | Format |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **Thank You Letter** | Acknowledge Support | Financial Receipt | **Client Choice:** (Every payment? Quarterly?) | **Client Choice:** (Secretary? Supervisor?) | Official PDF |
-| **Birthday Greeting**| Relationship | Student's Birthday | Once a Year | Secretary | Official PDF |
-| **APR (Progress)** | Academic Update | Annual Milestone | Once a Year | **Mandatory:** Supervisor | Official PDF |
-| **Case History** | Personal Story | Admission/Update | Every 1-2 Years | **Mandatory:** Supervisor | Official PDF |
+| **Broadcast Announcement** | Organizational updates | Manual | As needed | Supervisor | Logged in system |
+| **Holiday Greeting** | Seasonal message | Calendar | Annual | Supervisor | Logged in system |
 
 ---
 
-## 2. Decision Points (Discussion Guide)
+## 2. Finalized Decisions
 
-### Decision A: Thank You Letter Frequency
-*   **Option 1: Individual (Monthly)** - *12 letters/year.* High personal touch, but very high workload for staff.
-*   **Option 2: Quarterly** - *4 letters/year.* Good balance. Summarizes 3 months of gifts into one nice update.
-*   **Option 3: Bi-Annual** - *2 letters/year.* Low workload, but sponsors might feel disconnected from their monthly giving.
+### Decision A: Student Report Delivery
+*   **Finalized:** Student-specific communications (APRs, Thank You letters, Birthday cards, Case Histories) are generated as PDFs within the **Reports** module and emailed manually by staff. The system does not auto-send them.
 
-### Decision B: Approval Workflow (Efficiency vs. Quality)
-*   **Strict Mode:** Every single letter (including monthly ones) must be read and clicked "Approve" by the Supervisor.
-*   **Trust Mode:** The Secretary can send "Standard Thank You" notes using templates immediately. Only "High-Impact" items (APR, Birthday, Case History) go to the Supervisor.
+### Decision B: Broadcast Communications
+*   **Finalized:** The `communications` module is retained for broadcast messages only — organizational announcements, holiday greetings, and general updates to sponsors.
 
-### Decision C: The "Manual Message" Gap
-*   Does the office ever send quick, non-official emails? (e.g., "Rina has the flu and will miss school for 3 days").
-*   **System Choice:** Should these be stored in the `COMMUNICATIONS` audit log, or are they "off-the-books"?
+### Decision C: Template Usage
+*   **Finalized:** Templates are for broadcast messages only (no student-specific variable substitution). Staff can maintain re-usable announcement templates.
 
-### Decision D: Physical vs. Digital Delivery
-*   When a letter is finalized, does the office **Print & Mail** them, or **Email as PDF**? 
-*   *Note: The system supports both, but knowing the primary method helps us design the dashboard buttons.*
+### Decision D: Delivery Method
+*   **Finalized:** All delivery is manual. Staff use their external email client to send communications. The system logs what was sent for record-keeping.
 
 ---
-*Created: 2026-05-29 for Client Workflow Finalization*
+*Last Updated: 2026-06-13 | Finalized*

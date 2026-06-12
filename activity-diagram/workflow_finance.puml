@@ -3,7 +3,7 @@
 start
 :Receive donation;
 :Select contribution type;
-:Record amount, currency & received date;
+:Record amount (BDT) & received date;
 :Record payment method & reference;
 if (Target?) then (Specific student)
   :Link to sponsor & student;
@@ -13,14 +13,7 @@ endif
 
 |Program Coordinator|
 :Select payout type\n(Subsidy / Pocket Money / Stipend);
-:Enter local_amount in BDT;
-:Look up monthly exchange rate\nfrom exchange_rates table;
-if (Rate found?) then (Yes)
-  :Calculate USD equivalent\n(= local_amount / rate);
-else (No)
-  :Show error:\nRate unavailable — contact IT;
-  stop
-endif
+:Enter amount in BDT;
 :Record payout date & notes;
 if (Disburse now?) then (Yes)
   :Hand over BDT to student;

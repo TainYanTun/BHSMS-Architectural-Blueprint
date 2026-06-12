@@ -62,8 +62,8 @@ This document defines the centralized archive model for the Bangla Hope SMS. Rec
 | `student_identifiers` | `is_current = FALSE` | Student gets a new Program ID on transition | Auto-set on transition |
 | `communications` | `'Sent'`, `'Failed'` | Delivery complete or permanently failed | Auto-set by queue worker |
 | `reports` | `'Complete'` | Approval workflow finalized | Auto-set on Director approval |
+| `payment_categories` | (not applicable) | Reference data, no status | N/A |
 | `payouts` | `'Paid'`, `'Cancelled'` | Financial transaction finalized | Auto-set on record |
-| `program_funding` | (not applicable) | Allocation record, no status | N/A |
 | `loans` | `'Complete'`, `'Expired'` | Loan lifecycle ends | Auto-set on final payment or expiry |
 
 ### 2.3 Infrastructure Cleanup (Not in Archive VIEW)

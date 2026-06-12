@@ -28,7 +28,7 @@ Old partitions (e.g., older than 2 years) can be detached and archived. The stor
 
 1.  **Format:** Export detached partitions to a compressed format (e.g., `pg_dump` to `.sql.gz` or Apache Parquet for better analytics compatibility).
 3. **Storage:** 
-    *   **Cloud (Recommended for Production):** AWS S3 (with lifecycle policy to move to Glacier for long-term, low-cost storage).
+    *   **On-Premise (MinIO):** Self-hosted S3-compatible storage. Optionally sync cold data to external drive for long-term retention.
     *   **On-Premise (Recommended for Production):** Dedicated cold-storage server or encrypted network-attached storage (NAS).
     *   **Local Testing:** Use a local directory (e.g., `storage/app/backups/audit_archives/`) to test the export/verify/delete workflow.
 

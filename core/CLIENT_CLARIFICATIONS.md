@@ -8,7 +8,7 @@ This document tracks pending questions and strategic decisions that need to be f
 **Context:** For programs like Boarding Schools and Staff Children, the system tracks "Pocket Money" and "Subsidies" (non-repayable).
 
 - **Question:** Does the client want to track the **"Policy"** (how much the student *should* get per month) or the **"Payout History"** (a record of every time they *actually received* the money)?
-- **Current implementation:** The `financial_allocations` table can support both, but the workflow needs to be defined (e.g., does an admin "Post" a payment every month?).
+- **Current implementation:** `payouts` records actual disbursements. The workflow needs to be defined (e.g., does an admin "Post" a payment every month?).
 
 ---
 
@@ -61,7 +61,27 @@ This document tracks pending questions and strategic decisions that need to be f
 
 ---
 
-## 8. Communication & Letter Workflow
+## 8. Currency Standardization (Revised — BDT Only)
+
+**Context:** The system was initially designed with dual-currency support (contributions in USD, payouts in BDT+USD with exchange rates).
+
+- **Decision (June 2026):** The system is now **BDT-only**. All financial records (contributions, payouts, loan transactions) use Bangladeshi Taka (৳) exclusively.
+- **Rationale:** The sponsor has a US office that handles USD conversion. Bangla Hope receives and operates entirely in BDT. No exchange rate tracking or dual-currency logic is required.
+- **Changes:** Removed `exchange_rates` table. Removed `local_amount`, `exchange_rate` columns from `payouts` and `loan_transactions`.
+
+---
+
+## 9. Report Workflow & Delivery
+
+**Context:** The system was designed with automated report delivery to sponsors via email.
+
+- **Decision (June 2026):** Reports follow the internal workflow (Draft → Pending → Approved → Complete) for governance but are **not automatically sent** to sponsors or the US office. Staff generate PDF reports and email them manually outside the system.
+- **US Office Reporting:** Staff present reports to the US office via manual PDF export and external email. No automated report push.
+- **Sponsor Communications:** The `communications` module is retained for **broadcast messages** (organizational announcements, updates about Bangla Hope) but not for student-specific report delivery.
+
+---
+
+## 10. Communication & Letter Workflow
 **Context:** The system generates student-to-sponsor documents including Thank You letters (financial triggers), Birthday greetings (milestones), and APRs.
 
 - **Question A (Frequency):** When a sponsor pays monthly (Subsidy), should the system trigger a unique "Thank You" task **every month** (12/year), or should these be **consolidated** into a quarterly or bi-annual update?

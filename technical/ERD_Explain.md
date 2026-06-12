@@ -77,9 +77,9 @@ Manages external donors, active sponsorship agreements, and incoming donations.
 * **`SPONSORSHIPS`:** The critical contract junction table matching a **`SPONSOR`** to a **`STUDENT`**.
   * Classifies the contract (e.g., *Primary* or *Co-Sponsor*).
   * Employs a unique partial index to ensure a sponsor cannot hold duplicate active sponsorships for the same child simultaneously.
-* **`CONTRIBUTIONS`:** The general financial ledger tracking incoming revenue.
+* **`CONTRIBUTIONS`:** The general financial ledger tracking incoming revenue in BDT. Each record exactly matches a physical check or bank deposit — no splits, no earmarks. Includes an optional free-text `purpose` field.
   * **Immutability:** This ledger is designed to be immutable; it lacks an update trigger, guaranteeing financial records cannot be manipulated after entry.
-  * **Target Constraint Check:** Enforces that a contribution must target either an active **`SPONSORSHIP`** contract, a specific **`STUDENT`** (e.g., a special gift), or serve as a general unallocated donation.
+  * **Direct Payout Link:** Payouts draw directly from a contribution via `contribution_id`. The student's `current_program_id` provides the program context for filtering payment categories.
 * **`COMMUNICATIONS` & `COMMUNICATION_TEMPLATES`:** Manages automated and manual outreach to sponsors (e.g., receipts, letters, or PDF reports) across various delivery channels (Email, Postal Mail, SMS).
 
 ---
@@ -91,8 +91,7 @@ Monitors student growth, performance, field expenses, and double-entry financial
   * Academic records are linked to **`PROGRAMS`**, **`ORPHANAGES`**, **`VILLAGE_SECTORS`**, and **`EDUCATIONAL_INSTITUTIONS`** to provide a continuous academic history as a student moves between care models.
   * Attendance records are partitioned by date for database performance.
 * **`REPORTS`:** Tracks annual progress reports (APRs), case narratives, and birthday letters. Reports require supervisor approval before generating final outbound PDFs.
-* **`PAYOUTS`:** Tracks every individual payout to a student — whether from a direct contribution or a program funding pool. Each row links back to its source via `contribution_id` or `program_funding_id`. This ledger is structurally immutable.
-* **`PROGRAM_FUNDING`:** Allocates a portion of a contribution to fund a program. Individual student payouts draw from this pool.
+* **`PAYOUTS`:** Tracks every individual payout to a student — drawing directly from a `contribution` via `contribution_id`. Each payout is classified via `payment_category_id` (contextual to the student's program, e.g., `University Tuition` for LON, `Tuition Subsidy` for VLG). If the linked `payment_category` has `is_repayable = true`, a `loan_id` is required. An overdraft trigger (`fn_enforce_payout_limits`) prevents payouts from exceeding the contribution amount. This ledger is structurally immutable.
 
 ---
 
@@ -101,7 +100,8 @@ A specialized financing system for older students who transition from direct spo
 
 * **`EDUCATIONAL_INSTITUTIONS`:** Standardizes a lookup table of universities, vocational schools, and technical colleges.
 * **`LOANS`:** Tracks active loan contracts, statuses (e.g., *Studying*, *Refunding*, *Complete*), and signed agreement URLs.
-* **`LOAN_TRANSACTIONS`:** An immutable double-entry ledger tracking disbursements (positive values increasing debt) and repayments (negative values representing student refunds). It contains a database check constraint to enforce sign logic based on transaction type.
+* **`LOAN_TRANSACTIONS`:** An immutable double-entry ledger tracking repayments (positive amounts reducing debt in BDT), waivers, and adjustments. Disbursements live in **`PAYOUTS`** — when the linked `payment_category.is_repayable = true`, a `loan_id` is required and the payout counts as a loan disbursement. This separation keeps the expense trail distinct from the debt-reduction trail.
+* **`PAYOUTS.loan_id`:** Required when `payment_category.is_repayable = true` (enforced by trigger `trg_ensure_loan_consistency`). A loan can have multiple payouts (e.g., semester tuition installments).
 
 ---
 
@@ -111,11 +111,14 @@ A specialized financing system for older students who transition from direct spo
 * **`ON DELETE RESTRICT`:** The ERD enforces a strict rule: child relationships use `ON DELETE RESTRICT` for key structural records. This prevents the deletion of a student or sponsor if they are associated with existing histories, communications, contributions, or transitions. This is critical for keeping audit trails intact.
 * **`ON DELETE SET NULL`:** Used for non-destructive relational fields (e.g., if a staff member's account in **`USERS`** is deleted, their recorded actions in transitions or document uploads remain intact, with the author field cleanly set to `NULL`).
 
-### 3.2 Financial Overdraft Protection
-* The schema implements automated safeguards on the **`PAYOUTS`** and **`PROGRAM_FUNDING`** tables:
-  1. When a payout or program funding row is inserted or updated, a database trigger (**`trg_limit_payout_overdraft`** or **`trg_limit_funding_overdraft`**) is fired.
-  2. The trigger executes a **`FOR UPDATE` row lock** on the parent contribution. This serializes concurrent writes and prevents race conditions.
-  3. It aggregates all existing allocations and ensures the new total does not exceed the original donation amount. If it does, the transaction is rejected with an `Overdraft` database exception.
+### 3.2 Financial Safeguards
+The schema implements two automated safeguards:
+
+1. **Payout Overdraft (`fn_enforce_payout_limits`):** When a `payouts` row is inserted or updated, the trigger locks the parent `contribution` row (`SELECT ... FOR UPDATE`). It aggregates all existing payouts and ensures the new total does not exceed the contribution amount.
+
+2. **Loan Consistency (`fn_enforce_loan_consistency`):** When a payout is inserted or updated, the trigger checks the linked `payment_category.is_repayable` flag. Repayable categories require a `loan_id`; non-repayable categories reject one.
+
+Each trigger serializes concurrent writes and rejects violations with a descriptive database exception.
 
 ### 3.3 Optimistic Concurrency Control (OCC)
 * System tables include a `row_version` integer and an `updated_at` timestamp.

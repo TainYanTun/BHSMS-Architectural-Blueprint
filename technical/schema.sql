@@ -25,9 +25,6 @@ CREATE SEQUENCE student_master_id_seq START WITH 1;
 -- ==========================================
 -- 1. REFERENCE TABLES
 -- ==========================================
--- ==========================================
--- 1. REFERENCE TABLES
--- ==========================================
 CREATE TABLE programs (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     name TEXT NOT NULL,
@@ -45,6 +42,33 @@ INSERT INTO programs (name, code, description) VALUES
 ('Higher Study Loan Program', 'LON', 'University & Higher Ed Loans'),
 ('Employee Children Program', 'STF', 'Bangla Hope Employee Children');
 
+CREATE TABLE payment_categories (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    program_id UUID NOT NULL REFERENCES programs(id) ON DELETE RESTRICT,
+    name TEXT NOT NULL,
+    is_repayable BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+INSERT INTO payment_categories (program_id, name, is_repayable) VALUES
+((SELECT id FROM programs WHERE code = 'LRC'), 'Subsidy', false),
+((SELECT id FROM programs WHERE code = 'LRC'), 'Pocket Money', false),
+((SELECT id FROM programs WHERE code = 'BRD'), 'Subsidy', false),
+((SELECT id FROM programs WHERE code = 'BRD'), 'Pocket Money', false),
+((SELECT id FROM programs WHERE code = 'BRD'), 'Boarding Fee', false),
+((SELECT id FROM programs WHERE code = 'BRD'), 'Tuition', false),
+((SELECT id FROM programs WHERE code = 'BRD'), 'Uniform', false),
+((SELECT id FROM programs WHERE code = 'VLG'), 'Tuition Subsidy', false),
+((SELECT id FROM programs WHERE code = 'VLG'), 'Textbook Grant', false),
+((SELECT id FROM programs WHERE code = 'VLG'), 'Uniform Stipend', false),
+((SELECT id FROM programs WHERE code = 'LON'), 'Subsidy', true),
+((SELECT id FROM programs WHERE code = 'LON'), 'Total Expense', true),
+((SELECT id FROM programs WHERE code = 'LON'), 'University Tuition', true),
+((SELECT id FROM programs WHERE code = 'LON'), 'Boarding Rent', true),
+((SELECT id FROM programs WHERE code = 'LON'), 'Book Allowance', true),
+((SELECT id FROM programs WHERE code = 'STF'), 'Subsidy', false),
+((SELECT id FROM programs WHERE code = 'STF'), 'Pocket Money', false);
+
 
 CREATE TABLE orphanages (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -58,16 +82,6 @@ CREATE TABLE orphanages (
 CREATE TABLE village_sectors (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     name TEXT NOT NULL,
-    location TEXT,
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW(),
-    row_version INT DEFAULT 1
-);
-
-CREATE TABLE educational_institutions (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    name TEXT NOT NULL,
-    type TEXT, -- e.g., 'University', 'College', 'Vocational'
     location TEXT,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW(),
@@ -289,17 +303,17 @@ CREATE TABLE student_identifiers (
 -- ==========================================
 CREATE TABLE invitations (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    sponsor_id UUID NOT NULL REFERENCES sponsors(id) ON DELETE RESTRICT,
     email TEXT NOT NULL,
     token TEXT NOT NULL, -- Used in the registration URL
     role TEXT NOT NULL DEFAULT 'Sponsor' REFERENCES roles(name),
     expires_at TIMESTAMPTZ NOT NULL,
+    claimed_at TIMESTAMPTZ, -- NULL = not yet claimed
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW(),
     row_version INT DEFAULT 1
 );
 
--- Support for unique constraints with soft deletes (invitations might not have deleted_at, but good for consistency if added)
-CREATE UNIQUE INDEX idx_unique_invitation_email ON invitations(email);
 CREATE UNIQUE INDEX idx_unique_invitation_token ON invitations(token);
 
 CREATE TABLE sponsors (
@@ -350,29 +364,18 @@ WHERE (is_active = TRUE);
 CREATE TABLE contributions (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     sponsor_id UUID NOT NULL REFERENCES sponsors(id) ON DELETE RESTRICT,
-    student_id UUID REFERENCES students(id) ON DELETE RESTRICT, -- Fix: Lock historical ties
-    sponsorship_id UUID REFERENCES sponsorships(id) ON DELETE RESTRICT, -- Fix: Lock historical ties
-    
-    type TEXT NOT NULL DEFAULT 'Subsidy' CHECK (type IN ('Repayment', 'Subsidy', 'Grant', 'General')),
+    sponsorship_id UUID REFERENCES sponsorships(id) ON DELETE RESTRICT,
+    student_id UUID REFERENCES students(id) ON DELETE RESTRICT,
     amount NUMERIC(12, 2) NOT NULL CHECK (amount > 0),
-    currency CHAR(3) DEFAULT 'USD', -- Fix: Added currency context
+    purpose TEXT,
     received_date DATE DEFAULT CURRENT_DATE,
     payment_method TEXT CHECK (payment_method IN ('Check', 'Wire', 'Cash', 'Online')),
     reference_number TEXT,
-    
-    -- Optional fields for when a gift is intended for a specific billing period
-    period_month INT CHECK (period_month BETWEEN 1 AND 12),
-    period_year INT,
-    
     notes TEXT,
+    recorded_by UUID REFERENCES users(id) ON DELETE SET NULL,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW(),
-    row_version INT DEFAULT 1,
-    CONSTRAINT chk_contribution_target CHECK (
-        (sponsorship_id IS NOT NULL AND student_id IS NULL) OR 
-        (sponsorship_id IS NULL AND student_id IS NOT NULL) OR
-        (sponsorship_id IS NULL AND student_id IS NULL) -- Truly general donation
-    )
+    row_version INT DEFAULT 1
 );
 
 -- ==========================================
@@ -436,7 +439,7 @@ CREATE TABLE documents (
 
 CREATE TABLE job_queue (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    task_type TEXT NOT NULL, -- e.g., 'GENERATE_PDF', 'SEND_EMAIL'
+    task_type TEXT NOT NULL, -- e.g., 'GENERATE_PDF'
     payload JSONB NOT NULL,   -- Contextual data (e.g., student_id, report_id)
     status TEXT NOT NULL DEFAULT 'Pending' CHECK (status IN ('Pending', 'Processing', 'Completed', 'Failed')),
     attempts INT DEFAULT 0,
@@ -478,32 +481,18 @@ CREATE TABLE student_history (
     row_version INT DEFAULT 1
 );
 
-CREATE TABLE program_funding (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    contribution_id UUID NOT NULL REFERENCES contributions(id) ON DELETE RESTRICT,
-    program_id UUID NOT NULL REFERENCES programs(id) ON DELETE RESTRICT,
-    amount NUMERIC(12, 2) NOT NULL CHECK (amount > 0),
-    period TEXT,
-    notes TEXT,
-    recorded_by UUID REFERENCES users(id) ON DELETE SET NULL,
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW(),
-    row_version INT DEFAULT 1
-);
-
 CREATE TABLE payouts (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     student_id UUID NOT NULL REFERENCES students(id) ON DELETE RESTRICT,
-    contribution_id UUID REFERENCES contributions(id) ON DELETE RESTRICT,
-    program_funding_id UUID REFERENCES program_funding(id) ON DELETE RESTRICT,
+    contribution_id UUID NOT NULL REFERENCES contributions(id) ON DELETE RESTRICT,
+    payment_category_id UUID NOT NULL REFERENCES payment_categories(id) ON DELETE RESTRICT,
+    loan_id UUID REFERENCES loans(id) ON DELETE RESTRICT,
 
-    -- USD equivalent (local_amount / exchange_rate) for sponsor reporting
-    amount NUMERIC(12, 2) NOT NULL CHECK (amount > 0),
+    subsidy_purpose TEXT,
+    receipts_verified BOOLEAN DEFAULT FALSE,
+    verified_amount NUMERIC(12, 2),
 
-    -- Local currency details for accurate Bangladesh accounting
-    local_amount NUMERIC(12, 2) NOT NULL CHECK (local_amount > 0),
-    local_currency CHAR(3) DEFAULT 'BDT',
-    exchange_rate NUMERIC(10, 4) NOT NULL CHECK (exchange_rate > 0),
+    amount NUMERIC(12, 2) NOT NULL CHECK (amount > 0), -- Amount in BDT
 
     payout_date DATE DEFAULT CURRENT_DATE,
     recorded_by UUID REFERENCES users(id) ON DELETE SET NULL,
@@ -511,11 +500,7 @@ CREATE TABLE payouts (
     notes TEXT,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW(),
-    row_version INT DEFAULT 1,
-    CONSTRAINT chk_payout_source CHECK (
-        (contribution_id IS NOT NULL AND program_funding_id IS NULL) OR
-        (contribution_id IS NULL AND program_funding_id IS NOT NULL)
-    )
+    row_version INT DEFAULT 1
 );
 
 CREATE TABLE migration_metadata (
@@ -627,42 +612,14 @@ CREATE TABLE loan_transactions (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     loan_id UUID NOT NULL REFERENCES loans(id) ON DELETE RESTRICT,
     transaction_date DATE DEFAULT CURRENT_DATE,
-    amount NUMERIC(12, 2) NOT NULL, -- Positive for disbursement (Debt), Negative for repayment (Refund)
-    type TEXT NOT NULL CHECK (type IN ('Disbursement', 'Repayment', 'Adjustment')),
-    recorded_by UUID REFERENCES users(id) ON DELETE SET NULL, -- Fix: Handle user deletion
+    amount NUMERIC(12, 2) NOT NULL CHECK (amount > 0), -- Positive — always reduces debt (repayment, waiver, or adjustment)
+    type TEXT NOT NULL CHECK (type IN ('repayment', 'waiver', 'adjustment')),
+    recorded_by UUID REFERENCES users(id) ON DELETE SET NULL,
     notes TEXT,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW(),
-    row_version INT DEFAULT 1,
-    CONSTRAINT chk_loan_transaction_sign CHECK (
-        (type = 'Disbursement' AND amount > 0) OR
-        (type = 'Repayment' AND amount < 0) OR
-        (type = 'Adjustment') -- Can be positive or negative
-    )
+    row_version INT DEFAULT 1
 );
-
--- ==========================================
--- 6.5. EXCHANGE RATES
--- ==========================================
--- Monthly exchange rates for BDT→USD conversion on payouts.
--- The Director sets the rate at month-start using the Bangladesh Bank
--- published rate. All payouts in that month use this rate.
-CREATE TABLE exchange_rates (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    currency_from CHAR(3) DEFAULT 'BDT',
-    currency_to CHAR(3) DEFAULT 'USD',
-    rate NUMERIC(10, 4) NOT NULL CHECK (rate > 0),
-    effective_month DATE NOT NULL,             -- First day of the month, e.g. '2026-06-01'
-    auto_fetched BOOLEAN DEFAULT false,        -- true if set by cron job, false if set by staff
-    last_fetched_at TIMESTAMPTZ,               -- when the cron last fetched this rate
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    CONSTRAINT uq_exchange_rate_month UNIQUE (currency_from, currency_to, effective_month)
-);
-
--- Rate is auto-fetched daily by cron. Each successful fetch UPSERTs the current month's row
--- (updates rate + last_fetched_at). If the API is down, yesterday's rate remains available.
--- Staff can manually override if the auto-fetched value is incorrect; set auto_fetched = false.
--- The Coordinator is only blocked if no rate exists at all for the current month.
 
 -- ==========================================
 -- 7. BACKUP & FINANCIAL INTEGRITY
@@ -679,38 +636,27 @@ CREATE TABLE backups (
     row_version INT DEFAULT 1 -- Fix: Added for trigger support
 );
 
--- Overdraft Prevention Logic
--- Direct payouts: sum of direct payouts + sum of program fundings from a contribution ≤ contribution amount
+-- ==========================================
+-- 8. FINANCIAL INTEGRITY TRIGGERS
+-- ==========================================
+
+-- Overdraft Prevention: payouts must not exceed their source contribution
 CREATE OR REPLACE FUNCTION fn_enforce_payout_limits()
 RETURNS TRIGGER AS $$
 DECLARE
     v_total_used NUMERIC(12,2);
     v_limit NUMERIC(12,2);
 BEGIN
-    IF NEW.contribution_id IS NOT NULL THEN
-        SELECT amount INTO v_limit FROM contributions WHERE id = NEW.contribution_id;
+    SELECT amount INTO v_limit FROM contributions WHERE id = NEW.contribution_id;
 
-        SELECT COALESCE(SUM(p.amount), 0) INTO v_total_used
-        FROM payouts p
-        WHERE p.contribution_id = NEW.contribution_id
-          AND (TG_OP = 'INSERT' OR p.id <> NEW.id);
+    SELECT COALESCE(SUM(p.amount), 0) INTO v_total_used
+    FROM payouts p
+    WHERE p.contribution_id = NEW.contribution_id
+      AND (TG_OP = 'INSERT' OR p.id <> NEW.id);
 
-        IF (v_total_used + NEW.amount) > v_limit THEN
-            RAISE EXCEPTION 'Payout Overdraft: Attempted to pay out %, but only % remains from contribution %.',
-                NEW.amount, (v_limit - v_total_used), NEW.contribution_id;
-        END IF;
-    ELSIF NEW.program_funding_id IS NOT NULL THEN
-        SELECT amount INTO v_limit FROM program_funding WHERE id = NEW.program_funding_id;
-
-        SELECT COALESCE(SUM(p.amount), 0) INTO v_total_used
-        FROM payouts p
-        WHERE p.program_funding_id = NEW.program_funding_id
-          AND (TG_OP = 'INSERT' OR p.id <> NEW.id);
-
-        IF (v_total_used + NEW.amount) > v_limit THEN
-            RAISE EXCEPTION 'Payout Overdraft: Attempted to pay out %, but only % remains in program funding %.',
-                NEW.amount, (v_limit - v_total_used), NEW.program_funding_id;
-        END IF;
+    IF (v_total_used + NEW.amount) > v_limit THEN
+        RAISE EXCEPTION 'Payout Overdraft: Attempted to pay out %, but only % remains from contribution %.',
+            NEW.amount, (v_limit - v_total_used), NEW.contribution_id;
     END IF;
     RETURN NEW;
 END;
@@ -720,34 +666,32 @@ CREATE TRIGGER trg_limit_payout_overdraft
 BEFORE INSERT OR UPDATE ON payouts
 FOR EACH ROW EXECUTE FUNCTION fn_enforce_payout_limits();
 
--- Program funding overdraft: sum of all fundings from a contribution ≤ contribution amount
-CREATE OR REPLACE FUNCTION fn_enforce_funding_limits()
+-- Loan Consistency: repayable category requires loan_id; non-repayable rejects it
+CREATE OR REPLACE FUNCTION fn_enforce_loan_consistency()
 RETURNS TRIGGER AS $$
 DECLARE
-    v_total_used NUMERIC(12,2);
-    v_limit NUMERIC(12,2);
+    v_is_repayable BOOLEAN;
 BEGIN
-    SELECT amount INTO v_limit FROM contributions WHERE id = NEW.contribution_id;
+    SELECT is_repayable INTO v_is_repayable FROM payment_categories WHERE id = NEW.payment_category_id;
 
-    SELECT COALESCE(SUM(pf.amount), 0) INTO v_total_used
-    FROM program_funding pf
-    WHERE pf.contribution_id = NEW.contribution_id
-      AND (TG_OP = 'INSERT' OR pf.id <> NEW.id);
-
-    IF (v_total_used + NEW.amount) > v_limit THEN
-        RAISE EXCEPTION 'Funding Overdraft: Attempted to allocate %, but only % remains from contribution %.',
-            NEW.amount, (v_limit - v_total_used), NEW.contribution_id;
+    IF v_is_repayable AND NEW.loan_id IS NULL THEN
+        RAISE EXCEPTION 'Loan Required: Payment category % is repayable but no loan_id provided.', NEW.payment_category_id;
     END IF;
+
+    IF NOT v_is_repayable AND NEW.loan_id IS NOT NULL THEN
+        RAISE EXCEPTION 'Unexpected Loan: Payment category % is not repayable but loan_id was set.', NEW.payment_category_id;
+    END IF;
+
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER trg_limit_funding_overdraft
-BEFORE INSERT OR UPDATE ON program_funding
-FOR EACH ROW EXECUTE FUNCTION fn_enforce_funding_limits();
+CREATE TRIGGER trg_ensure_loan_consistency
+BEFORE INSERT OR UPDATE ON payouts
+FOR EACH ROW EXECUTE FUNCTION fn_enforce_loan_consistency();
 
 -- ==========================================
--- 8. AUDIT & LOGGING
+-- 9. AUDIT & LOGGING
 -- ==========================================
 CREATE TABLE audit_logs (
     id UUID,
@@ -814,7 +758,7 @@ $$ LANGUAGE plpgsql;
 SELECT fn_create_audit_partition();
 
 -- ==========================================
--- 8. VIEWS FOR REPORTING
+-- 10. VIEWS FOR REPORTING
 -- ==========================================
 CREATE VIEW view_student_payouts AS
 SELECT 
@@ -822,54 +766,72 @@ SELECT
     p.student_id,
     s.full_name AS student_name,
     s.master_id_number,
-    p.contribution_id,
-    p.program_funding_id,
-    COALESCE(p.contribution_id::text, pf.contribution_id::text) AS source_contribution_id,
-    CASE 
-        WHEN p.contribution_id IS NOT NULL THEN 'Direct'
-        ELSE 'Program'
-    END AS source_type,
+    p.contribution_id AS source_contribution_id,
+    s.current_program_id AS program_id,
+    pg.name AS program_name,
+    pc.name AS payment_category,
+    pc.is_repayable,
+    p.loan_id,
     p.amount,
-    p.local_amount,
-    p.local_currency,
+    p.subsidy_purpose,
+    p.receipts_verified,
+    p.verified_amount,
     p.payout_date,
     p.status
 FROM payouts p
-LEFT JOIN program_funding pf ON p.program_funding_id = pf.id
-LEFT JOIN students s ON p.student_id = s.id;
+INNER JOIN students s ON p.student_id = s.id
+LEFT JOIN programs pg ON s.current_program_id = pg.id
+INNER JOIN payment_categories pc ON p.payment_category_id = pc.id;
 
 CREATE VIEW view_loan_balances AS
 SELECT 
     l.id AS loan_id,
     l.student_id,
-    COALESCE(SUM(CASE WHEN t.amount > 0 THEN t.amount ELSE 0 END), 0) AS total_disbursed,
-    COALESCE(SUM(CASE WHEN t.amount < 0 THEN ABS(t.amount) ELSE 0 END), 0) AS total_refunded,
-    COALESCE(SUM(t.amount), 0) AS outstanding_balance,
+    COALESCE(p.total_disbursed, 0) AS total_disbursed,
+    COALESCE(lt.total_credits, 0) AS total_credits,
+    COALESCE(lt.total_repayments, 0) AS total_repayments,
+    COALESCE(lt.total_waivers, 0) AS total_waivers,
+    COALESCE(lt.total_adjustments, 0) AS total_adjustments,
+    COALESCE(p.total_disbursed, 0) - COALESCE(lt.total_credits, 0) AS outstanding_balance,
     CASE 
-        WHEN COUNT(t.id) = 0 THEN 'Pending Disbursement'
-        WHEN COALESCE(SUM(t.amount), 0) <= 0 THEN 'Complete'
+        WHEN p.total_disbursed IS NULL THEN 'Pending Disbursement'
+        WHEN COALESCE(p.total_disbursed, 0) - COALESCE(lt.total_credits, 0) <= 0 THEN 'Complete'
         ELSE l.status
     END AS effective_status
 FROM loans l
-LEFT JOIN loan_transactions t ON l.id = t.loan_id
-GROUP BY l.id, l.student_id, l.status;
+LEFT JOIN (
+    SELECT p.loan_id, SUM(p.amount) AS total_disbursed
+    FROM payouts p
+    INNER JOIN payment_categories pc ON p.payment_category_id = pc.id
+    WHERE pc.is_repayable = true AND p.status = 'Paid'
+    GROUP BY p.loan_id
+) p ON l.id = p.loan_id
+LEFT JOIN (
+    SELECT 
+        loan_id,
+        SUM(amount) AS total_credits,
+        SUM(CASE WHEN type = 'repayment' THEN amount ELSE 0 END) AS total_repayments,
+        SUM(CASE WHEN type = 'waiver' THEN amount ELSE 0 END) AS total_waivers,
+        SUM(CASE WHEN type = 'adjustment' THEN amount ELSE 0 END) AS total_adjustments
+    FROM loan_transactions
+    GROUP BY loan_id
+) lt ON l.id = lt.loan_id;
 
 -- ==========================================
--- 9. INDEXES & TRIGGERS
+-- 11. INDEXES & TRIGGERS
 -- ==========================================
 CREATE INDEX idx_student_names ON students USING gin (first_name gin_trgm_ops, last_name gin_trgm_ops);
 CREATE INDEX idx_sponsor_names ON sponsors USING gin (full_name gin_trgm_ops);
 CREATE INDEX idx_audit_details ON audit_logs USING gin (mutation_detail jsonb_path_ops);
 CREATE INDEX idx_student_master_id ON students(master_id_number);
 CREATE INDEX idx_contribution_sponsor ON contributions(sponsor_id);
-CREATE INDEX idx_contribution_student ON contributions(student_id);
-
 -- Performance Indexes
 CREATE INDEX idx_sponsorships_student_id ON sponsorships(student_id);
 CREATE INDEX idx_sponsorships_sponsor_id ON sponsorships(sponsor_id);
 CREATE INDEX idx_academic_records_orphanage_id ON academic_records(orphanage_id);
 CREATE INDEX idx_academic_records_village_sector_id ON academic_records(village_sector_id);
 CREATE INDEX idx_loans_institution_id ON loans(institution_id);
+CREATE INDEX idx_payment_categories_program_id ON payment_categories(program_id);
 
 -- Fix: Additional Foreign Key Indexes for Reporting Performance
 CREATE INDEX idx_loan_transactions_loan_id ON loan_transactions(loan_id);
@@ -882,8 +844,8 @@ CREATE INDEX idx_communications_read ON communications(sponsor_id, read_at) WHER
 CREATE INDEX idx_loans_student_id ON loans(student_id);
 CREATE INDEX idx_payouts_student_id ON payouts(student_id);
 CREATE INDEX idx_payouts_contribution_id ON payouts(contribution_id);
-CREATE INDEX idx_payouts_program_funding_id ON payouts(program_funding_id);
-CREATE INDEX idx_program_funding_contribution_id ON program_funding(contribution_id);
+CREATE INDEX idx_payouts_payment_category_id ON payouts(payment_category_id);
+CREATE INDEX idx_payouts_loan_id ON payouts(loan_id);
 CREATE INDEX idx_reports_student_id ON reports(student_id);
 
 CREATE TRIGGER trg_upd_programs BEFORE UPDATE ON programs FOR EACH ROW EXECUTE FUNCTION fn_update_timestamp();
@@ -901,7 +863,6 @@ CREATE TRIGGER trg_upd_documents BEFORE UPDATE ON documents FOR EACH ROW EXECUTE
 CREATE TRIGGER trg_upd_reports BEFORE UPDATE ON reports FOR EACH ROW EXECUTE FUNCTION fn_update_timestamp();
 CREATE TRIGGER trg_upd_student_history BEFORE UPDATE ON student_history FOR EACH ROW EXECUTE FUNCTION fn_update_timestamp();
 -- payouts is immutable
--- program_funding is immutable
 CREATE TRIGGER trg_upd_communication_templates BEFORE UPDATE ON communication_templates FOR EACH ROW EXECUTE FUNCTION fn_update_timestamp();
 CREATE TRIGGER trg_upd_communications BEFORE UPDATE ON communications FOR EACH ROW EXECUTE FUNCTION fn_update_timestamp();
 CREATE TRIGGER trg_upd_loans BEFORE UPDATE ON loans FOR EACH ROW EXECUTE FUNCTION fn_update_timestamp();
@@ -915,3 +876,4 @@ CREATE TRIGGER trg_upd_permissions BEFORE UPDATE ON permissions FOR EACH ROW EXE
 CREATE TRIGGER trg_upd_student_intake_details BEFORE UPDATE ON student_intake_details FOR EACH ROW EXECUTE FUNCTION fn_update_timestamp();
 CREATE TRIGGER trg_upd_student_references BEFORE UPDATE ON student_references FOR EACH ROW EXECUTE FUNCTION fn_update_timestamp();
 CREATE TRIGGER trg_upd_program_transitions BEFORE UPDATE ON program_transitions FOR EACH ROW EXECUTE FUNCTION fn_update_timestamp();
+CREATE TRIGGER trg_upd_payment_categories BEFORE UPDATE ON payment_categories FOR EACH ROW EXECUTE FUNCTION fn_update_timestamp();

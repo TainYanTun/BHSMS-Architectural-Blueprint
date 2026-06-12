@@ -1,19 +1,12 @@
 @startuml
 |Secretary / Coordinator|
 start
-:Select communication type;
-if (Broadcast?) then (Yes)
-  :Write announcement; 
-else (No)
-  :Link to student;
-  if (Thank You Letter?) then (Yes)
-    :Link to contribution;
-  endif
-  :Write narrative;
-endif
+:Select report type;
+:Link to student;
+:Write narrative;
 :Submit for review;
 
-|Director|
+|Director / Supervisor|
 if (Approve?) then (Approve)
   :Sign off;
 else (Return)
@@ -24,11 +17,12 @@ endif
 
 |System|
 :Generate PDF;
-:Create communication record;
-:Send to sponsor;
+:Store in pdf_url;
+:Mark report as Complete;
 
-|Sponsor|
-:Receive & read;
-:Mark read_at;
+|Staff|
+:Download PDF;
+:Email manually\n(outside system);
+
 stop
 @enduml

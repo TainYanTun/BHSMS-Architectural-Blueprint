@@ -22,7 +22,7 @@ The Bangla Hope SMS replaces legacy MS Access and paper-based processes with a m
 ## Architectural Pillars
 
 -   **Master-Relational Data Model:** Every student is assigned a unique, permanent **Master ID**. Program-specific IDs are preserved for historical context, allowing seamless transitions between programs.
--   **Immutable Financial Ledger:** A high-integrity system for tracking USD contributions and BDT payouts. Uses dual-currency recording (`local_amount` in BDT, `amount` in USD) with daily auto-fetched exchange rates for accurate reconciliation.
+-   **Immutable Financial Ledger:** A high-integrity system for tracking contributions and payouts entirely in **BDT (Bangladeshi Taka)**. Simplified single-currency ledger — no exchange rate management needed.
 -   **Role-Based Access Control (RBAC):** Granular permissions for Administrators, Directors, Coordinators, Secretaries, and Sponsors to ensure data privacy and operational security. Coordinator access is scoped to their assigned program.
 -   **Offline Resilience (PWA):** The Staff Portal functions as a Progressive Web App with IndexedDB caching for offline data entry and automatic sync when the network is restored.
 -   **Partitioned Audit Log:** Monthly range partitions on `audit_logs` with automatic partition creation and drop-after-6-months retention. No archive schema — stale partitions are dropped directly.
@@ -35,14 +35,14 @@ The Bangla Hope SMS replaces legacy MS Access and paper-based processes with a m
 PlantUML source files for 7 activity diagrams with swimlanes, plus rendered PNG/SVG outputs:
 - **student** — Student intake, enrollment, lifecycle
 - **sponsor** — Sponsor onboarding and registration
-- **finance** — Contributions (income) and payouts (expenditure), including exchange rate lookup
+- **finance** — Contributions (income) and payouts (expenditure) in BDT
 - **loan** — Loan agreement, disbursement, repayment loop
 - **report** — APR, Thank You letters, communications approval workflow
 - **transition** — Student program transfers (including institution selection for Loan Program)
 - **migration** — Legacy data ETL with sandbox preview, validation, fix-retry, and approval pipeline
 
 ### 📁 [technical/](./technical/) — System Blueprints
-- **[schema.sql](./technical/schema.sql):** PostgreSQL schema — 30+ tables, triggers, audit log partition functions, dual-currency payouts, exchange rates, LIST-partitioned business data by status
+- **[schema.sql](./technical/schema.sql):** PostgreSQL schema — 30+ tables, triggers, audit log partition functions, BDT-only payouts, LIST-partitioned business data by status
 - **[DATA_ARCHITECTURE.md](./technical/DATA_ARCHITECTURE.md):** Logical domain mapping and sync logic
 - **[ERD.mmd](./technical/ERD.mmd):** Entity Relationship Diagram (Mermaid) covering all 7 domains
 - **[Architecture.mmd](./technical/Architecture.mmd):** System architecture diagram (FrankenPHP + Laravel + PostgreSQL)
@@ -52,7 +52,7 @@ PlantUML source files for 7 activity diagrams with swimlanes, plus rendered PNG/
 
 ### 📁 [financial/](./financial/) — Money & Ledger
 - **[FINANCIAL_WORKFLOW.md](./financial/FINANCIAL_WORKFLOW.md):** Logic for subsidies, pocket money, and loans
-- **[FINANCIAL_GUIDE.md](./financial/FINANCIAL_GUIDE.md):** Currency handling policies (dual-currency, daily auto-fetched exchange rates), audit trail, reconciliation
+- **[FINANCIAL_GUIDE.md](./financial/FINANCIAL_GUIDE.md):** Currency handling policies (BDT-only), audit trail, reconciliation
 - **[bangla_hope_table_guide.md](./financial/bangla_hope_table_guide.md):** Field-level definitions for financial tables
 
 ### 📁 [core/](./core/) — Project Strategy
@@ -97,7 +97,7 @@ PlantUML source files for 7 activity diagrams with swimlanes, plus rendered PNG/
 | **Database** | PostgreSQL 15+ (UUID, GIN indexing, partitioning) |
 | **Authentication** | Laravel Sanctum (Token-based) |
 | **Offline Storage** | IndexedDB (PWA Staff Portal) |
-| **Object Storage** | S3-compatible (Photos, PDFs, Documents) |
+| **Object Storage** | MinIO (Photos, PDFs, Documents) |
 | **Diagramming** | PlantUML (activity diagrams), Mermaid.js (ERD, architecture) |
 
 ---
@@ -105,8 +105,8 @@ PlantUML source files for 7 activity diagrams with swimlanes, plus rendered PNG/
 ## Key Design Decisions
 
 - **FrankenPHP** replaces Nginx + PHP-FPM — single binary, auto HTTPS, HTTP/2/3
-- **Dual-currency payouts** — `local_amount` (BDT) + `exchange_rate` → USD equivalent. Industry standard for NGOs with foreign donors
-- **Exchange rates** — Daily UPSERT by cron from free FX API. Manual override available with audit trail
+- **BDT-only payouts** — All financial tracking in Bangladeshi Taka. Simplified single-currency ledger. No exchange rate management.
+- **Exchange rates** — Not used. The sponsor's US office handles USD/BDT conversion externally.
 - **Audit logs** — Monthly range partitions, dropped after 6 months, no archive schema
 - **Business data** — LIST partition by status (Active vs Inactive) — no cold storage at ~10k rows
 - **Migration pipeline** — ETL with sandbox preview, batch validation, fix-retry before approval commit

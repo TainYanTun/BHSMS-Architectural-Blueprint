@@ -17,11 +17,11 @@ This document defines the system-wide permissions for each user role within the 
 | **Sponsors**                     | Create / Edit | View¹               | View²                | Full Access            | --          | --              |
 | **Sponsorships**                 | Create / Edit | View¹               | View²                | Full Access            | --          | --              |
 | **▸ Financial**                  |               |                      |                      |                        |             |                 |
-| **Sponsorship Income (USD)**     | Create / Edit | View¹               | View²                | Full Access            | --          | View (Personal) |
+| **Sponsorship Income (BDT)**     | Create / Edit | View¹               | View²                | Full Access            | --          | View (Personal) |
 | **Payouts**                      | View          | Create / Edit¹      | Create / Edit²       | Full Access            | --          | --              |
 | **Program Funding**              | --            | View¹               | Create / Edit²       | Full Access            | --          | --              |
 | **Higher Ed Loan Program**       | Create / Edit | --                  | Create / Edit²       | Full Access            | --          | --              |
-| **Exchange Rates (Monthly BDT→USD)** | View / Edit | View              | View²                | Full Access            | --          | --              |
+| ~~Exchange Rates~~                     | (Removed)   | --                | --                   | --                     | --          | --              |
 | **Financial Audit Logs**         | View          | View¹               | View²                | View                   | Full Access | --              |
 | **▸ Documents & Communications** |               |                      |                      |                        |             |                 |
 | **Documents**                    | Create / Edit | Create / Edit¹      | Create / Edit²       | Full Access            | --          | View            |

@@ -1,5 +1,4 @@
 @startuml
-|Admin|
 start
 :Extract data from legacy system;
 :Map fields to new schema;

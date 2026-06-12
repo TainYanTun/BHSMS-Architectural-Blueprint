@@ -100,8 +100,8 @@ Manages external stakeholders, contract configurations, incoming revenue ledgers
 * **Key Design:** Employs a strict partial unique index (`idx_unique_active_sponsorship`) ensuring that a sponsor cannot be registered as an *active* concurrent duplicate primary or co-sponsor for the exact same child twice.
 
 ### `contributions`
-* **Purpose:** The unalterable general accounting ledger for all incoming donor revenue.
-* **Key Design:** This ledger is designed as completely **immutable** (no update trigger exists). It implements an explicit conditional database constraint (`chk_contribution_target`) that enforces structural destination logic: a payment must be bound cleanly to a specific active sponsorship contract, routed directly to an unlinked student as a special gift, or left open as a general organizational grant.
+* **Purpose:** The unalterable general accounting ledger for all incoming donor revenue. Each record exactly matches a physical check or bank deposit — no splits, no earmarks.
+* **Key Design:** Each contribution links to a `sponsorship_id` (for donor recency tracking) and optionally a `student_id` (for direct one-time gifts). A free-text `purpose` field captures the donation intent. Payouts draw directly from a `contribution` via `contribution_id`; the student's `current_program_id` determines the program context.
 
 ---
 
@@ -143,20 +143,18 @@ Dedicated accounting instruments optimized for tracking long-term repayable fina
 * **Purpose:** Central tracking agreement records for advanced students moving away from standard sponsorship models into repayable loan funding accounts.
 
 ### `loan_transactions`
-* **Purpose:** An immutable financial ledger detailing the balance sheet of an active student loan. Disbursements to third-party institutions enter the system as positive debt metrics, while student payment installments are logged as negative balances.
+* **Purpose:** An immutable ledger tracking loan repayments, waivers, and adjustments in BDT. Each entry carries a positive `amount` (always reduces debt). Disbursements are recorded separately in `payouts` (linked to a `payment_category` with `is_repayable = true`), keeping the expense trail distinct from the debt-reduction trail.
 
 ---
 
 ## 7. Safeguards & Staging Engines
 Guarantees financial integrity and safely manages bulk old data migrations.
 
-### `program_funding`
-* **Purpose:** Allocates a portion of a contribution to fund a program (e.g., sponsor X's $5,000 goes to VLG school). Individual student payouts draw from this pool.
-
 ### `payouts`
-* **Purpose:** Records every individual payout to a student, whether funded directly from a contribution or through a program funding pool. Provides a complete per-student expenditure trail.
+* **Purpose:** Records every individual payout to a student in BDT, drawing directly from a `contribution` via `contribution_id`. Classified by `payment_category_id` (contextual to the student's program — e.g., `University Tuition` for LON students, `Tuition Subsidy` for VLG). If the linked `payment_category` has `is_repayable = true`, a `loan_id` is required, and the payout counts as a loan disbursement. An overdraft trigger (`fn_enforce_payout_limits`) ensures total payouts never exceed the contribution amount. All amounts are in BDT — no exchange rate conversion is used.
 
-### `backups`
+### `payment_categories`
+* **Purpose:** Program-specific expense categories that replace global hardcoded enums. Each category is linked to a `program_id`, so the UI only shows relevant options (e.g., no loan categories for VLG students). The `is_repayable` flag drives automatic loan tracking.
 
 ### `backups`
 * **Purpose:** An administrative execution log detailing internal snapshot states, sizing weights, and file storage locations.

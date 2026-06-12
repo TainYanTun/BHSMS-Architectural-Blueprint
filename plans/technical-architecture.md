@@ -52,5 +52,5 @@ Given the heavy reliance on background jobs and Redis for system performance, we
 ### 5.3 Image Optimization Engine
 To support high-quality student documentation while respecting bandwidth constraints in remote areas, an automated image processing pipeline will be used.
 *   **Logic:** Upon upload, an asynchronous background job (Image Intervention) will automatically resize and compress photos (e.g., resizing to 800px wide, converting to WebP format).
-*   **Efficiency:** This reduces storage costs on S3 and ensures fast page loads for sponsors on mobile devices.
+*   **Efficiency:** This reduces storage costs on MinIO and ensures fast page loads for sponsors on mobile devices.
 

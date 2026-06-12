@@ -134,34 +134,44 @@ The system operates under a strict **Role-Based Access Control (RBAC)** model de
 *   **Preconditions:** Sponsor exists, and payment is processed.
 *   **Main Flow:**
     1. The Coordinator clicks **Log Contribution** in the Ledger module.
-    2. Selects the contributing sponsor, inputs the amount in USD, payment date, and transaction source.
-    3. Maps the transaction to its target destination (General Fund, Student-Specific Gift, or Active Sponsorship Agreement).
-    4. Submits the form.
-    5. The database runs the check constraint `chk_contribution_target` ensuring that target mapping rules are strictly satisfied.
-*   **Postconditions:** The contribution is recorded as an **immutable ledger row** (cannot be updated or deleted).
-*   **Schema References:** [contributions](file:///c:/Users/Pann/Documents/New%20folder%20(5)/Bangla_Hope_Blueprint/technical/schema.sql#L268).
+     2. Selects the contributing sponsor, selects the contribution category (Monthly Sponsorship, Special Gift, etc.), inputs the amount in USD, payment date, and reference.
+     3. Submits the form.
+     4. The contribution is recorded — optionally linked to a sponsorship and/or student.
+*   **Postconditions:** The contribution is recorded as an immutable ledger row (cannot be updated or deleted).
+*   **Schema References:** [contributions](file:///c:/Users/Pann/Documents/New%20folder%20(5)/Bangla_Hope_Blueprint/technical/schema.sql#L368).
 
 #### UC-11: Record Payout to Student
 *   **Primary Actor:** Supervisor / Coordinator
-*   **Preconditions:** A contribution or program funding pool exists.
+*   **Preconditions:** A contribution exists with sufficient balance.
 *   **Main Flow:**
-    1. The operator opens the **Payout Console**.
-    2. Selects the student, selects the source (direct contribution or program funding pool), and enters the amount.
-    3. Clicks **Record Payout**.
-    4. The database triggers `fn_enforce_payout_limits` / `fn_enforce_funding_limits`, which locks the parent record (`FOR UPDATE`), calculates the remaining balance, and rejects if the payout exceeds the available amount.
-*   **Postconditions:** The payout is recorded, and the source balance is reduced.
+     1. The operator opens the **Payout Console**.
+      2. Selects the student, selects the source contribution, and enters the amount and category.
+      3. Clicks **Record Payout**.
+      4. The database triggers `fn_enforce_payout_limits`, which locks the parent contribution (`FOR UPDATE`), sums existing payouts, and rejects if the new payout exceeds the contribution amount.
+*   **Postconditions:** The payout is recorded against the contribution.
 
-#### UC-12: Disburse Monthly Student Subsidy
+#### UC-12: Record Payout with Unrestricted Contribution
+*   **Primary Actor:** Director
+*   **Preconditions:** An unrestricted contribution exists (no `student_id` set).
+*   **Main Flow:**
+     1. The Director opens the **Payout Console**.
+     2. Selects the unrestricted contribution and a target student.
+     3. Enters the payout amount and payment category.
+     4. Submits the form.
+     5. The database trigger `fn_enforce_payout_limits` locks the parent contribution (`FOR UPDATE`), sums existing payouts, and rejects if the total would exceed the contribution amount.
+*   **Postconditions:** Funds are disbursed to the student. The Director can repeat for additional students from the same contribution pool.
+
+#### UC-13: Disburse Monthly Student Subsidy
 *   **Primary Actor:** Supervisor
-*   **Preconditions:** Active students exist in boarding or village school programs.
+*   **Preconditions:** Active students exist in boarding or village school programs, and a contribution exists with sufficient balance.
 *   **Main Flow:**
-    1. The Supervisor opens the financial dashboard and selects **Disburse Monthly Subsidies**.
-    2. Selects the target school or village sector, sets the month/year, and confirms the disbursement.
-     3. The system creates a `program_funding` record allocating the contribution to the program.
+     1. The Supervisor opens the financial dashboard and selects **Disburse Monthly Subsidies**.
+      2. Selects the target school or village sector, sets the month/year, selects the source contribution, and confirms the disbursement.
+      3. The system creates per-student payout records in `payouts`, linked to the contribution via `contribution_id`.
 *   **Postconditions:** Subsidies are registered as field expenses.
-*   **Schema References:** [program_funding](file:///c:/Users/Pann/Documents/New%20folder%20(5)/Bangla_Hope_Blueprint/technical/schema.sql#L343).
+*   **Schema References:** [payouts](file:///c:/Users/Pann/Documents/New%20folder%20(5)/Bangla_Hope_Blueprint/technical/schema.sql#L495).
 
-#### UC-13: Distribute Boarding Student Pocket Money
+#### UC-14: Distribute Boarding Student Pocket Money
 *   **Primary Actor:** Secretary / Coordinator
 *   **Preconditions:** Students are active in the Boarding School program.
 *   **Main Flow:**
@@ -644,19 +654,19 @@ sequenceDiagram
     autonumber
     actor Sponsor
     actor Coordinator
+    actor Director
     actor Supervisor
     participant Database as PostgreSQL DB
     
     Sponsor->>Coordinator: Send sponsorship contribution (USD)
     Coordinator->>Database: UC-10: Insert into `contributions` table
-    Note over Database: System checks chk_contribution_target constraint
     Database-->>Coordinator: Insertion Confirmed (Immutable Record)
     
-    Note over Coordinator: Field payout needed for student pocket money or subsidy
-    Coordinator->>Database: Insert payout record to `payouts`
-    Database-->>Coordinator: Allocation Recorded (Pending state)
+    Note over Coordinator: Direct payout to student (UC-11) or Director assigns unrestricted funds (UC-12)
+    Coordinator->>Database: Insert payout record to `payouts` (links to contribution)
+    Database-->>Coordinator: Payout Recorded
     
-    Note over Database: Triggers fn_enforce_payout_limits / fn_enforce_funding_limits
+    Note over Database: Triggers fn_enforce_payout_limits + fn_enforce_loan_consistency
     alt Balance is Sufficient
         Database-->>Supervisor: Payout Recorded
     else Overdraft / Insufficient Balance

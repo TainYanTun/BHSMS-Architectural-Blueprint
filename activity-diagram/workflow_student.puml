@@ -6,23 +6,26 @@ start
 :Add guardians;
 :Enroll in program;
 
-|School Coordinator|
-:Track academics & attendance;
-
-if (Drop or Complete?) then (Yes)
-  :Request status change;
-  |Program Coordinator|
-  :Review drop request;
-  |Director|
-  :Approve or reject;
-  stop
-else (No)
-  |Program Coordinator|
-  if (Transition needed?) then (Yes)
-    :Request program change;
-    |Director|
-    :Approve or reject;
+|School Coordinator / Program Coordinator|
+repeat
+  :Track academics & attendance;
+  if (Drop or Complete?) then (Yes)
+    :Request status change;
+    :Review drop request;
+  else (No)
+    if (Transition needed?) then (Yes)
+      :Request program change;
+    else (No)
+      stop
+    endif
   endif
-  stop
-endif
+
+  |Director|
+  :Review request;
+  if (Approved?) then (Yes)
+    stop
+  else (No)
+    :Add rejection note;
+  endif
+repeat while (↻ Back) is (Yes)
 @enduml

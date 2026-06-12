@@ -16,7 +16,7 @@ graph TD
         Sched["Laravel Automation Engine <br/> (Artisan Scheduler)"]
         Logic["Domain Logic <br/> (Services / Eloquent Models)"]
         Cache["File Cache <br/> (Laravel Internal)"]
-        Jobs["Background Queue <br/> (DB-backed: PDFs, Mail, Sync)"]
+        Jobs["Background Queue <br/> (DB-backed: PDF Generation)"]
         
         Auth -->|Validate FormRequests| Logic
         Sched -->|Triggers Periodic| Logic
@@ -40,11 +40,10 @@ graph TD
     %% --- DATA & PERSISTENCE ---
     subgraph DL ["Data Layer (PostgreSQL 15+)"]
         DB[("PostgreSQL Production <br/>(Partitioned Audit Logs)")]
-        File["Object Storage <br/> (S3 — Photos, PDFs, Documents)"]
+        File["Object Storage <br/> (MinIO — Photos, PDFs, Documents)"]
     end
 
-    %% --- OUTBOUND ---
-    ExtDelivery[(External SMTP <br> & SMS Gateways)]
+    %% --- OUTBOUND (Manual — staff handles external email outside the system) ---
 
     %% ==========================================
     %% DATA FLOW PIPELINES
@@ -73,7 +72,6 @@ graph TD
 
     %% Persistence & Outbound Pipelines
     Logic -->|ORM Write / Audit Trail| DB
-    Jobs -->|send| ExtDelivery
     Jobs -->|Store Media| File
 
     Logic -->|Transform to UI Preview| Gate

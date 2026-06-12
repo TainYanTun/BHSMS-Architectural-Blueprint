@@ -14,8 +14,7 @@ Tracks the sponsorship relationships and the individual contribution receipts.
 ### Tables
 | Table | Role | Key Fields |
 | :--- | :--- | :--- |
-| `sponsorships` | **Relationship Registry** | `type` (Primary/Co-Sponsor), `start_date`, `is_active` |
-| `contributions` | **Flexible Gift Log**| `received_date`, `amount`, `payment_method`, `reference_number` |
+| `contributions` | **Flexible Gift Log**| `received_date`, `amount`, `purpose`, `payment_method`, `reference_number` |
 
 ### Logic
 - **Relationship Registry:** Admins record the fact that a sponsor is supporting a student. This is used for status tracking and portal visibility.
@@ -32,13 +31,12 @@ Supports students in higher education via a **Unified Ledger** model. It tracks 
 | Table | Role | Key Fields |
 | :--- | :--- | :--- |
 | `loans` | **Agreement Record** | `status` (Studying/Refunding/Complete), `agreement_url` |
-| `loan_transactions` | **The Unified Ledger** | `amount` (+ for debt, - for repayment), `type`, `date` |
+| `loan_transactions` | **Repayment / Waiver / Adjustment Ledger** | `amount` (always positive — reduces debt, in BDT), `type` (repayment/waiver/adjustment), `date` |
 
 ### Logic
-- **Single Source of Truth:** Every penny moving in or out is recorded in `loan_transactions`. 
-- **Debt Creation (+):** When Bangla Hope pays for student expenses, a **Positive** amount is logged (Type: 'Disbursement'). This increases the student's debt.
-- **Debt Recovery (-):** When a repayment is received (Sponsor/Student sends money), a **Negative** amount is logged (Type: 'Repayment'). 
-- **The Balance:** Outstanding Debt = `SUM(amount)` of all transactions for that loan.
+- **Single Source of Truth:** Loan debt is tracked by the sum of disbursed payouts linked to a repayable `payment_category` (`is_repayable = true`), while repayments, waivers, and adjustments are recorded in `loan_transactions`.
+- **Debt Creation (+):** When Bangla Hope pays for student expenses, a payout is recorded with a `payment_category` having `is_repayable = true` and linked via `loan_id`. This increases the student's debt.
+- **The Balance:** Outstanding Debt = `SUM(payouts where payment_category.is_repayable = true and status = 'Paid')` - `SUM(loan_transactions.amount)` (all types: repayments + waivers + adjustments). All amounts are recorded in BDT.
 
 ---
 
@@ -49,21 +47,20 @@ Used for programs that do not require repayment (Boarding Schools, Subsidies, Po
 ### Tables
 | Table | Role | Key Fields |
 | :--- | :--- | :--- |
-| `program_funding` | **Program Allocation Log** | `contribution_id`, `program_id`, `amount`, `period` |
-| `payouts` | **Per-Student Payout Log** | `student_id`, `amount`, `payout_date`, source via `contribution_id` or `program_funding_id` |
+| `payouts` | **Per-Student Payout Log** | `contribution_id`, `student_id`, `payment_category_id`, `subsidy_purpose`, `receipts_verified`, `amount` (BDT), `payout_date`, optional `loan_id` |
 
 ### Logic
-- **Direct Recording:** Instead of complex budgeting rules, admins simply record the actual payout when it occurs.
-- **The "Jar" Principle:** For sponsored students, these payouts "draw" from the student's available balance in the `contributions` table.
-- **Separation:** Keeps "Gifts" (Payouts) separate from "Debt" (Loans) to ensure they are never incorrectly flagged for repayment.
+- **Direct Link:** Each payout draws directly from a `contribution` via `contribution_id`. The student's `current_program_id` determines the program context for filtering payment categories.
+- **Payout Overdraft:** A trigger enforces `SUM(payouts.amount) ≤ contribution.amount` at the contribution level.
+- **Loan Consistency:** A trigger enforces that repayable payment categories require a `loan_id`; non-repayable categories reject one.
 
 ---
 
 ## 4. Key Business Logic & Controls
 
 ### Currency Handling
-- **Unified Currency:** All financial tracking—including Income (Sponsorships), Spending (Subsidies/Grants), and Recoveries (Loans)—is conducted strictly in **USD ($)**.
-- **Reporting:** Using a single currency simplifies the ledger and provides a clear, high-integrity overview for management. Local BDT costs are converted to USD at the point of entry based on monthly standard rates.
+- **Single Currency:** All financial tracking—including Income (Contributions), Spending (Payouts), and Recoveries (Loans)—is conducted strictly in **BDT (৳)**.
+- **Rationale:** Bangla Hope receives funds pre-converted to BDT from the sponsor's US office. There is no need for dual-currency tracking or exchange rate management within the system.
 
 ### Security & Integrity
 - **Audit Logs:** Every financial modification (Add/Edit/Delete) is captured in `audit_logs` with a timestamp and the user ID of the admin.

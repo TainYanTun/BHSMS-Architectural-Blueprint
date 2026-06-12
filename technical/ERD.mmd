@@ -8,6 +8,14 @@ erDiagram
         timestamptz created_at
     }
 
+    PAYMENT_CATEGORIES {
+        uuid id PK
+        uuid program_id FK "Filters categories by program context"
+        text name "e.g., Monthly Subsidy, University Tuition, Pocket Money"
+        boolean is_repayable "TRUE = drives loan tracking"
+        timestamptz created_at
+    }
+
     JOB_QUEUE {
         uuid id PK
         text task_type
@@ -324,17 +332,15 @@ erDiagram
     CONTRIBUTIONS {
         uuid id PK
         uuid sponsor_id FK
-        uuid student_id FK
-        uuid sponsorship_id FK
-        text type "IMMUTABLE"
-        numeric amount
-        char currency
+        uuid sponsorship_id FK "Links to sponsorship agreement"
+        uuid student_id FK "Direct one-time gift, NULL otherwise"
+        numeric amount "BDT, exactly matches physical check/deposit"
+        text purpose "Free-text description of donation purpose"
         date received_date
         text payment_method
         text reference_number
-        int period_month
-        int period_year
         text notes
+        uuid recorded_by FK
         timestamptz created_at
         timestamptz updated_at
         int row_version
@@ -440,28 +446,16 @@ erDiagram
         int row_version
     }
 
-    PROGRAM_FUNDING {
-        uuid id PK
-        uuid contribution_id FK
-        uuid program_id FK
-        numeric amount
-        text period
-        text notes
-        uuid recorded_by FK
-        timestamptz created_at
-        timestamptz updated_at
-        int row_version
-    }
-
     PAYOUTS {
         uuid id PK
         uuid student_id FK "NOT NULL"
-        uuid contribution_id FK "NULL if via program"
-        uuid program_funding_id FK "NULL if direct"
-        numeric amount "USD equivalent"
-        numeric local_amount "actual BDT disbursed"
-        char local_currency "default BDT"
-        numeric exchange_rate "at time of payout"
+        uuid contribution_id FK "NOT NULL"
+        uuid payment_category_id FK "NOT NULL"
+        uuid loan_id FK "NULL unless payment_category.is_repayable=true"
+        text subsidy_purpose "NULL unless audited grant requires description"
+        boolean receipts_verified
+        numeric verified_amount
+        numeric amount "Amount in BDT"
         date payout_date
         uuid recorded_by FK
         text status "Paid | Pending | Cancelled"
@@ -469,18 +463,6 @@ erDiagram
         timestamptz created_at
         timestamptz updated_at
         int row_version
-        "chk_payout_source: exactly one of contribution_id / program_funding_id"
-    }
-
-    EXCHANGE_RATES {
-        uuid id PK
-        char currency_from "default BDT"
-        char currency_to "default USD"
-        numeric rate
-        date effective_month "month-start, e.g. 2026-06-01"
-        boolean auto_fetched "true=cron, false=manual override"
-        timestamptz last_fetched_at "cron fetch timestamp"
-        timestamptz created_at
     }
 
 
@@ -513,8 +495,8 @@ erDiagram
         uuid id PK
         uuid loan_id FK
         date transaction_date
-        numeric amount "IMMUTABLE"
-        text type
+        numeric amount "positive — always reduces debt (BDT)"
+        text type "ENUM: repayment | waiver | adjustment"
         uuid recorded_by FK
         text notes
         timestamptz created_at
@@ -532,7 +514,6 @@ erDiagram
     USERS ||--o{ AUDIT_LOGS : "generates"
     USERS ||--o{ LOAN_TRANSACTIONS : "records"
     USERS ||--o{ DOCUMENTS : "uploads"
-    USERS ||--o{ PROGRAM_FUNDING : "records"
     USERS ||--o{ PAYOUTS : "records"
     USERS ||--o{ STUDENTS : "parent of (Staff Child)"
     USERS ||--o{ PROGRAM_TRANSITIONS : "records"
@@ -545,6 +526,7 @@ erDiagram
     PROGRAMS ||--o{ STUDENT_IDENTIFIERS : "categorizes"
     PROGRAMS ||--o{ PROGRAM_TRANSITIONS : "source of"
     PROGRAMS ||--o{ PROGRAM_TRANSITIONS : "target of"
+    PROGRAMS ||--o{ PAYMENT_CATEGORIES : "defines"
     
     ORPHANAGES ||--o{ TEACHERS : "employs"
     VILLAGE_SECTORS ||--o{ TEACHERS : "employs"
@@ -552,7 +534,6 @@ erDiagram
     USERS ||--o{ USER_PROGRAMS : "assigned to"
     PROGRAMS ||--o{ USER_PROGRAMS : "scopes"
     VILLAGE_SECTORS ||--o{ USER_PROGRAMS : "scopes (School Coord)"
-    PROGRAMS ||--o{ PROGRAM_FUNDING : "funds"
     
     STUDENTS ||--o{ GUARDIANS : "has"
     STUDENTS ||--o{ ENROLLMENTS : "enrolled in"
@@ -579,12 +560,13 @@ erDiagram
     SPONSORS ||--o{ CONTRIBUTIONS : "makes"
     SPONSORS ||--o{ COMMUNICATIONS : "receives"
     SPONSORSHIPS ||--o{ CONTRIBUTIONS : "fulfills"
+    STUDENTS ||--o{ CONTRIBUTIONS : "receives (one-time)"
 
-    CONTRIBUTIONS ||--o{ PROGRAM_FUNDING : "funds"
-    CONTRIBUTIONS ||--o{ PAYOUTS : "funds (direct)"
-    PROGRAM_FUNDING ||--o{ PAYOUTS : "funds (per-student)"
+    CONTRIBUTIONS ||--o{ PAYOUTS : "funds"
+    PAYMENT_CATEGORIES ||--o{ PAYOUTS : "classifies"
 
     LOANS ||--o{ LOAN_TRANSACTIONS : "tracks"
+    LOANS ||--o{ PAYOUTS : "disburses (optional)"
     EDUCATIONAL_INSTITUTIONS ||--o{ LOANS : "hosts"
     
     COMMUNICATION_TEMPLATES ||--o{ COMMUNICATIONS : "defines"

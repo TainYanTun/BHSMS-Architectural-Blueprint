@@ -16,7 +16,7 @@ A centralized table to track job state across the entire system.
 ```sql
 CREATE TABLE job_queue (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    task_type TEXT NOT NULL, -- e.g., 'GENERATE_PDF', 'SEND_EMAIL'
+    task_type TEXT NOT NULL, -- e.g., 'GENERATE_PDF'
     payload JSONB NOT NULL,   -- Contextual data (e.g., student_id, report_id)
     status TEXT NOT NULL DEFAULT 'Pending' CHECK (status IN ('Pending', 'Processing', 'Completed', 'Failed')),
     attempts INT DEFAULT 0,
