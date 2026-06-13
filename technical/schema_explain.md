@@ -118,7 +118,7 @@ Tracks child development matrices, automated document compilation pipelines, and
 * **Purpose:** Decentralized asset management table tracking secure physical verification files, birth certifications, and signed legal agreements stored via remote cloud storage links (`file_url`).
 
 ### `reports`
-* **Purpose:** Manages the drafting, approval states, and completion workflows for case histories, special donor notes, and Annual Progress Reports (APRs) before they are rendered into flat PDF links for export.
+* **Purpose:** Manages the drafting, approval states, and completion workflows for case histories, special donor notes, Annual Progress Reports (APRs), and Financial Tracking reports before they are rendered into flat PDF links for export. Financial Tracking reports use `type = 'Financial Tracking'` with an optional `student_id` (for per-student ledgers) or `contribution_id` (for per-contribution breakdowns).
 
 ### `communications`
 * **Purpose:** The delivery outbox and audit pipeline. Tracks execution histories, delivery states, and communication snapshots.

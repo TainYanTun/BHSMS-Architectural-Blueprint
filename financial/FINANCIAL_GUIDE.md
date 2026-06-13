@@ -145,7 +145,55 @@ The system follows a policy of **non-deletion**. Financial records must never be
 
 ---
 
-## 4. Summary Table
+## 4. Financial Tracking Reports
+
+The system supports two financial report types, both generated as simple ledger-style PDFs following the standard report workflow (Draft → Approved → Complete).
+
+### A. Student Financial Report (per student)
+
+Running balance for a single student showing all contributions and payouts:
+
+```
+Student: Abdur Rahman — LRC (ID: 202600000001)
+Sponsor: John & Sarah Miller
+Period: Jan 2026 – Jun 2026
+
+Date        | Description                  | In (BDT)  | Out (BDT) | Balance
+------------+------------------------------+-----------+-----------+--------
+Jan 15 2026 | Contribution - Sponsor       |  10,000   |           |  10,000
+Jan 20 2026 | Subsidy                      |           |   3,000   |   7,000
+Feb 15 2026 | Contribution - Sponsor       |  10,000   |           |  17,000
+Feb 25 2026 | Pocket Money                 |           |   1,500   |  15,500
+Jun 10 2026 | Tuition                      |           |   8,000   |   7,500
+------------+------------------------------+-----------+--------+--------
+Total       |                              |  20,000   |  12,500  |   7,500
+```
+
+### B. Financial Tracking Record (per contribution)
+
+Breakdown of a single contribution showing what it funded:
+
+```
+Contribution: #c4a7e2... — 100,000 BDT
+Sponsor: John & Sarah Miller
+Received: Jan 15 2026
+
+Student          | Program | Category        | Amount (BDT)
+-----------------+---------+-----------------+-------------
+Abdur Rahman     | LRC     | Subsidy         |  15,000
+Fatima Begum     | LRC     | Subsidy         |  15,000
+Rafiq Hasan      | BRD     | Boarding Fee    |  30,000
+Ayesha Khatun    | VLG     | Tuition Subsidy |   8,000
+-----------------+---------+-----------------+-------------
+Total Allocated  |         |                 |  68,000
+Remaining Balance|         |                 |  32,000
+```
+
+Both report types use the `reports` table with `type = 'Financial Tracking'`. The application context (per-student vs per-contribution) is determined by whether `student_id` or `contribution_id` is set.
+
+---
+
+## 5. Summary Table
 
 | Category | Component | Currency | Tracking & Validation Method |
 | --- | --- | --- | --- |
