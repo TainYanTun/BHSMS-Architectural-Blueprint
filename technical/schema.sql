@@ -452,7 +452,7 @@ CREATE TABLE reports (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     student_id UUID REFERENCES students(id) ON DELETE RESTRICT,
     year INT NOT NULL CHECK (year > 1900),
-    type TEXT NOT NULL DEFAULT 'APR' CHECK (type IN ('APR', 'Case History', 'Incident', 'Thank You', 'Birthday', 'Special Gift', 'Financial Tracking')),
+    type TEXT NOT NULL DEFAULT 'APR' CHECK (type IN ('APR', 'Case History', 'Incident', 'Thank You', 'Birthday', 'Financial Tracking')),
     status TEXT NOT NULL DEFAULT 'Not Started' CHECK (status IN ('Not Started', 'Draft', 'Pending', 'Approved', 'Returned', 'Complete')),
     
     narrative TEXT, -- The core content of the document (Letter body or Case Narrative)
