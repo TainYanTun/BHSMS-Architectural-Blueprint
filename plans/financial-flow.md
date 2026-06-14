@@ -15,27 +15,29 @@ graph LR
     Sponsor((Sponsor)) -- "Sends $50" --> Org[Bangla Hope Bank Account]
     end
 
-    %% Tier 2: The Ledger (The Envelopes)
+    %% Tier 2: The Ledger (The Labels)
     subgraph "2. THE LEDGER (The Labels)"
-    Org -- "Record as 'Subsidy'" --> Envelope["CONTRIBUTIONS TABLE<br/>(Restricted Envelopes)"]
-    Envelope -- "Tagged to" --> StudentAcc{Student's Account}
+    Org -- "Record as 'Subsidy'" --> Sponsorship[("SPONSORSHIPS TABLE<br/>Required for all<br/>contributions")]
+    Sponsorship --> Cont["CONTRIBUTIONS TABLE<br/>Linked to sponsorship"]
+    Cont --> StudentAcc{Student's Account}
     end
 
     %% Tier 3: Impact (The Payout)
-    %% Tier 3: Impact (The Payout)
+    subgraph "3. IMPACT (The Payout)"
     StudentAcc -- "Record Disbursement" --> Payout[PAYOUTS<br/>'Tuition Paid']
     end
 
     %% Styling
     style Org fill:#f9f,stroke:#333
-    style Envelope fill:#fff4dd,stroke:#d4a017,stroke-width:2px
+    style Sponsorship fill:#d5f4e6,stroke:#0f5132,stroke-width:2px
+    style Cont fill:#fff4dd,stroke:#d4a017,stroke-width:2px
     style StudentAcc fill:#d1e7dd,stroke:#0f5132
     style Payout fill:#cfe2ff,stroke:#084298
     ```
 
     ### Description
     *   **Intake:** Money is received by the organization.
-    *   **The Ledger:** Money is placed in a **"Restricted Envelope"** (Contribution Table) labeled for a specific student.
+    *   **The Ledger:** Every contribution must reference an existing `SPONSORSHIPS` record. No general pool — all money is tracked through sponsorship links.
     *   **Impact:** When a student has a need (tuition, food, etc.), money is disbursed directly and recorded in **PAYOUTS**.
 
 

@@ -98,8 +98,8 @@ The system operates under a strict **Role-Based Access Control (RBAC)** model de
 *   **Preconditions:** Sponsor profile is active, and student has open sponsorship capacity.
 *   **Main Flow:**
     1. The Coordinator opens the Sponsor dashboard and clicks **Link Student**.
-    2. Selects the student, sets the role ("Primary" or "Co-Sponsor"), inputs the monthly commitment (USD), and sets the start date.
-    3. Saves the agreement.
+     2. Selects the student, sets the role ("Primary" or "Co-Sponsor"), inputs the monthly amount (USD), and sets the start date.
+     3. Saves the sponsorship.
     4. The database validates the linkage using the partial unique index `idx_unique_active_sponsorship` to ensure that no duplicate active sponsorship is recorded.
 *   **Postconditions:** The student is linked to the sponsor, and billing rules are established.
 *   **Schema References:** [sponsorships](file:///c:/Users/Pann/Documents/New%20folder%20(5)/Bangla_Hope_Blueprint/technical/schema.sql#L249).
@@ -130,56 +130,50 @@ The system operates under a strict **Role-Based Access Control (RBAC)** model de
 ### Category C: Financial Tracking & Immutable Ledger
 
 #### UC-10: Log an Incoming Sponsor Contribution
-*   **Primary Actor:** Coordinator
-*   **Preconditions:** Sponsor exists, and payment is processed.
+*   **Primary Actor:** Secretary
+*   **Preconditions:** Money has been received from the US office. A sponsorship link already exists.
 *   **Main Flow:**
-    1. The Coordinator clicks **Log Contribution** in the Ledger module.
-     2. Selects the contributing sponsor, selects the contribution category (Monthly Sponsorship, Special Gift, etc.), inputs the amount in USD, payment date, and reference.
-     3. Submits the form.
-     4. The contribution is recorded — optionally linked to a sponsorship and/or student.
-*   **Postconditions:** The contribution is recorded as an immutable ledger row (cannot be updated or deleted).
+    1. The Secretary clicks **Log Contribution**.
+    2. Selects the existing sponsorship from the list.
+    3. Records the amount in BDT, received date, and reference number.
+    4. Submits the form.
+*   **Postconditions:** The contribution is recorded against the sponsorship, adding to that student's available funds.
 *   **Schema References:** [contributions](file:///c:/Users/Pann/Documents/New%20folder%20(5)/Bangla_Hope_Blueprint/technical/schema.sql#L368).
 
-#### UC-11: Record Payout to Student
-*   **Primary Actor:** Supervisor / Coordinator
-*   **Preconditions:** A contribution exists with sufficient balance.
+#### UC-11: Record Payout to a Student
+*   **Primary Actor:** Coordinator
+*   **Preconditions:** The student has an active sponsorship with available funds.
 *   **Main Flow:**
-     1. The operator opens the **Payout Console**.
-      2. Selects the student, selects the source contribution, and enters the amount and category.
-      3. Clicks **Record Payout**.
-      4. The database triggers `fn_enforce_payout_limits`, which locks the parent contribution (`FOR UPDATE`), sums existing payouts, and rejects if the new payout exceeds the contribution amount.
-*   **Postconditions:** The payout is recorded against the contribution.
+      1. The Coordinator opens the **Payout Console**.
+       2. Selects the student who received the support.
+       3. Selects the expense type (subsidy, tuition, uniform, pocket money, medical).
+       4. Enters the amount in BDT.
+       5. Clicks **Record Payout**.
+       6. The overdraft trigger (`fn_enforce_payout_limits`) rejects the payout if total spending would exceed total received from the sponsorship contributions.
+*   **Postconditions:** The payout is recorded. Student's sponsorship balance is reduced.
 
-#### UC-12: Record Payout with Unrestricted Contribution
-*   **Primary Actor:** Director
-*   **Preconditions:** An unrestricted contribution exists (no `student_id` set).
-*   **Main Flow:**
-     1. The Director opens the **Payout Console**.
-     2. Selects the unrestricted contribution and a target student.
-     3. Enters the payout amount and payment category.
-     4. Submits the form.
-     5. The database trigger `fn_enforce_payout_limits` locks the parent contribution (`FOR UPDATE`), sums existing payouts, and rejects if the total would exceed the contribution amount.
-*   **Postconditions:** Funds are disbursed to the student. The Director can repeat for additional students from the same contribution pool.
+#### UC-12: ~~Record Payout from General Pool~~
+*~~Removed — no general pool. All money is tracked through sponsorship links.~~*
 
-#### UC-13: Disburse Monthly Student Subsidy
+#### UC-13: Monthly Subsidy Disbursement (Batch)
 *   **Primary Actor:** Supervisor
-*   **Preconditions:** Active students exist in boarding or village school programs, and a contribution exists with sufficient balance.
+*   **Preconditions:** Active students exist in a program with available sponsorship funds.
 *   **Main Flow:**
-     1. The Supervisor opens the financial dashboard and selects **Disburse Monthly Subsidies**.
-      2. Selects the target school or village sector, sets the month/year, selects the source contribution, and confirms the disbursement.
-      3. The system creates per-student payout records in `payouts`, linked to the contribution via `contribution_id`.
-*   **Postconditions:** Subsidies are registered as field expenses.
+      1. The Supervisor opens the financial dashboard and selects **Disburse Monthly Subsidies**.
+      2. Selects the target school or village sector and sets the month/year.
+      3. The system creates per-student payout records from available sponsorship contributions.
+      4. Confirms the batch.
+*   **Postconditions:** Monthly subsidies are recorded for all eligible students with available sponsorship funds.
 *   **Schema References:** [payouts](file:///c:/Users/Pann/Documents/New%20folder%20(5)/Bangla_Hope_Blueprint/technical/schema.sql#L495).
 
-#### UC-14: Distribute Boarding Student Pocket Money
+#### UC-14: Bulk Pocket Money Distribution
 *   **Primary Actor:** Secretary / Coordinator
-*   **Preconditions:** Students are active in the Boarding School program.
+*   **Preconditions:** Students are active in a program with available funds.
 *   **Main Flow:**
-    1. The Secretary opens the Boarding School module and selects a school registry.
-    2. Clicks **Distribute Pocket Allowance** and enters the monthly or yearly USD amount per child.
-    3. Saves the bulk payouts.
-     4. System creates per-student payout records in `payouts`.
-*   **Postconditions:** Allowances are recorded as individual student liabilities.
+     1. The Secretary opens the program module and selects a school registry.
+     2. Clicks **Distribute Pocket Allowance** and enters the monthly amount in BDT per child.
+     3. The system creates per-student payouts, drawing from available funds.
+*   **Postconditions:** Allowances are recorded for each student.
 *   **Schema References:** [payouts](file:///c:/Users/Pann/Documents/New%20folder%20(5)/Bangla_Hope_Blueprint/technical/schema.sql#L343).
 
 #### UC-14: Audit Financial Transaction History
@@ -239,7 +233,7 @@ The system operates under a strict **Role-Based Access Control (RBAC)** model de
 *   **Main Flow:**
     1. The Supervisor opens the student profile page and clicks **Transition Student**.
     2. Creates a transition record in `program_transitions` (marking source program as Boarding and target as Higher Ed Loan).
-    3. Sets up a loan agreement details in the `loans` table.
+     3. Creates a loan record in the `loans` table.
     4. System terminates active enrollment in the boarding school program and registers a new active enrollment in the Higher Study Loan program.
 *   **Postconditions:** The student is transitioned to the loan track.
 *   **Schema References:** [program_transitions](file:///c:/Users/Pann/Documents/New%20folder%20(5)/Bangla_Hope_Blueprint/technical/schema.sql#L221), [loans](file:///c:/Users/Pann/Documents/New%20folder%20(5)/Bangla_Hope_Blueprint/technical/schema.sql#L316).
@@ -662,7 +656,7 @@ sequenceDiagram
     Coordinator->>Database: UC-10: Insert into `contributions` table
     Database-->>Coordinator: Insertion Confirmed (Immutable Record)
     
-    Note over Coordinator: Direct payout to student (UC-11) or Director assigns unrestricted funds (UC-12)
+    Note over Coordinator: Record payout to student (UC-11)
     Coordinator->>Database: Insert payout record to `payouts` (links to contribution)
     Database-->>Coordinator: Payout Recorded
     

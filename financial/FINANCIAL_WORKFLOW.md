@@ -18,7 +18,7 @@ Tracks the sponsorship relationships and the individual contribution receipts.
 
 ### Logic
 - **Relationship Registry:** Admins record the fact that a sponsor is supporting a student. This is used for status tracking and portal visibility.
-- **Verification:** When a gift is manually confirmed, a record is added to `contributions`. It can be linked to a specific `sponsorship` agreement, or directly to a `student` (for one-time gifts), or left as a general donation.
+- **Verification:** When a gift is manually confirmed, a record is added to `contributions`. Every contribution must reference an existing `sponsorship` — no general donations or unlinked gifts.
 - **Reporting:** Sponsorship health is tracked by **Recency of Support** (contributions within the last 6 months). The rigid monthly "subscription" model is replaced by a flexible gift history.
 
 ---
@@ -30,7 +30,7 @@ Supports students in higher education via a **Unified Ledger** model. It tracks 
 ### Tables
 | Table | Role | Key Fields |
 | :--- | :--- | :--- |
-| `loans` | **Agreement Record** | `status` (Studying/Refunding/Complete), `agreement_url` |
+| `loans` | **Loan Record** | `status` (Studying/Refunding/Complete) |
 | `loan_transactions` | **Repayment / Waiver / Adjustment Ledger** | `amount` (always positive — reduces debt, in BDT), `type` (repayment/waiver/adjustment), `date` |
 
 ### Logic

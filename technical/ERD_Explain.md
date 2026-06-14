@@ -71,11 +71,11 @@ An isolated staging area designed for dry-running, sanitizing, and importing leg
 ---
 
 ### 2.4 Sponsorship System (Donor Management)
-Manages external donors, active sponsorship agreements, and incoming donations.
+Manages external donors, active sponsorships, and incoming donations.
 
 * **`SPONSORS`:** Holds donor profiles, communication preferences, and contact details. It maps back to a portal access account in **`USERS`**.
-* **`SPONSORSHIPS`:** The critical contract junction table matching a **`SPONSOR`** to a **`STUDENT`**.
-  * Classifies the contract (e.g., *Primary* or *Co-Sponsor*).
+* **`SPONSORSHIPS`:** The critical junction table matching a **`SPONSOR`** to a **`STUDENT`**.
+  * Classifies the sponsorship type (e.g., *Primary* or *Co-Sponsor*).
   * Employs a unique partial index to ensure a sponsor cannot hold duplicate active sponsorships for the same child simultaneously.
 * **`CONTRIBUTIONS`:** The general financial ledger tracking incoming revenue in BDT. Each record exactly matches a physical check or bank deposit — no splits, no earmarks. Includes an optional free-text `purpose` field.
   * **Immutability:** This ledger is designed to be immutable; it lacks an update trigger, guaranteeing financial records cannot be manipulated after entry.
@@ -99,7 +99,7 @@ Monitors student growth, performance, field expenses, and double-entry financial
 A specialized financing system for older students who transition from direct sponsorship to repayable university funding.
 
 * **`EDUCATIONAL_INSTITUTIONS`:** Standardizes a lookup table of universities, vocational schools, and technical colleges.
-* **`LOANS`:** Tracks active loan contracts, statuses (e.g., *Studying*, *Refunding*, *Complete*), and signed agreement URLs.
+* **`LOANS`:** Tracks active loans, statuses (e.g., *Studying*, *Refunding*, *Complete*).
 * **`LOAN_TRANSACTIONS`:** An immutable double-entry ledger tracking repayments (positive amounts reducing debt in BDT), waivers, and adjustments. Disbursements live in **`PAYOUTS`** — when the linked `payment_category.is_repayable = true`, a `loan_id` is required and the payout counts as a loan disbursement. This separation keeps the expense trail distinct from the debt-reduction trail.
 * **`PAYOUTS.loan_id`:** Required when `payment_category.is_repayable = true` (enforced by trigger `trg_ensure_loan_consistency`). A loan can have multiple payouts (e.g., semester tuition installments).
 

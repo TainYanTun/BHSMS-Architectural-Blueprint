@@ -3,8 +3,10 @@
 start
 :Identify student needing transfer;
 :Select target program;
-if (Target is Loan Program?) then (Yes)
+if (Loan program?) then (Yes)
   :Select institution;
+elseif (Village school?) then (Yes)
+  :Select village sector;
 endif
 :Submit transition request with reason;
 

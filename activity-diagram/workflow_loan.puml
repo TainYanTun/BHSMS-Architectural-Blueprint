@@ -1,25 +1,46 @@
 @startuml
-|Secretary|
+skinparam conditionStyle inside
+
+|Program Coordinator / Director|
 start
-:Select student;
-:Create loan agreement;
-:Upload agreement document;
-
-|Coordinator|
-:Record disbursement amount & date;
-:Monitor student until graduation;
-if (Graduated?) then (No)
-  stop
-endif
-:Change status to Refunding;
-
 repeat
-  :Record repayment amount & date;
-  :Calculate remaining balance;
-repeat while (Balance > 0?) is (Yes)
+  :Record loan disbursement;
+  :Select payment category;
+  :Pay tuition, rent, books;
+|System|
+  :Deduct from loan balance;
+|Program Coordinator / Director|
+  :Track student progress;
+repeat while (Student studying?) is (Yes) not (No)
+
+:Confirm graduation or dropout;
+:Inform student of repayment amount;
 
 |System|
-:Mark loan complete;
-:Log to audit trail;
-stop
+repeat
+:Track automated 6-month grace period;
+
+if (First tracking entry logged within the period?) then (No)
+  :Mark loan as overdue;
+  :Notify staff;
+  stop
+else (Yes)
+  :Mark loan as refunding;
+endif
+
+|Secretary|
+:Record payment;
+:Select type;
+:Click submit;
+
+
+|System|
+:Create/Update balance;
+if (Tracked Balance > 0?) then (Yes)
+  else
+  |System|
+  :Mark loan as repaid;
+  stop
+endif
+repeat while (Reset the period timer)
 @enduml

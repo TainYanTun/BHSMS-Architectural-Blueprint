@@ -1,28 +1,42 @@
 @startuml
-|Secretary / Coordinator|
+|Secretary|
 start
+:Select student;
 :Select report type;
-:Link to student;
-:Write narrative;
-:Submit for review;
 
-|Director / Supervisor|
-if (Approve?) then (Approve)
+if (Case history?) then (Yes)
+  :Add student photo;
+endif
+
+if (Use template? (optional)) then (Yes)
+  :Choose template;
+endif
+
+:Write narrative;
+:Review draft;
+:Submit for approval;
+
+
+|Director|
+if (Approve?) then (No)
+  :Write feedback;
+  |Secretary|
+  :Revise report;
+  :Resubmit for approval;
+  kill
+else (Yes)
+  |Director|
   :Sign off;
-else (Return)
-  :Add return reason;
-  |Secretary / Coordinator|
-  :Revise narrative;
 endif
 
 |System|
-:Generate PDF;
-:Store in pdf_url;
-:Mark report as Complete;
+:Queue PDF generation;
+:Render PDF;
+:Store to object storage;
+:Log to audit trail;
 
-|Staff|
+|Director|
 :Download PDF;
-:Email manually\n(outside system);
-
+:Email to US office;
 stop
 @enduml

@@ -60,7 +60,7 @@ INSERT INTO payment_categories (program_id, name, is_repayable) VALUES
 ((SELECT id FROM programs WHERE code = 'BRD'), 'Uniform', false),
 ((SELECT id FROM programs WHERE code = 'VLG'), 'Tuition Subsidy', false),
 ((SELECT id FROM programs WHERE code = 'VLG'), 'Textbook Grant', false),
-((SELECT id FROM programs WHERE code = 'VLG'), 'Uniform Stipend', false),
+((SELECT id FROM programs WHERE code = 'VLG'), 'Uniform Allowance', false),
 ((SELECT id FROM programs WHERE code = 'LON'), 'Subsidy', true),
 ((SELECT id FROM programs WHERE code = 'LON'), 'Total Expense', true),
 ((SELECT id FROM programs WHERE code = 'LON'), 'University Tuition', true),
@@ -364,7 +364,7 @@ WHERE (is_active = TRUE);
 CREATE TABLE contributions (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     sponsor_id UUID NOT NULL REFERENCES sponsors(id) ON DELETE RESTRICT,
-    sponsorship_id UUID REFERENCES sponsorships(id) ON DELETE RESTRICT,
+    sponsorship_id UUID NOT NULL REFERENCES sponsorships(id) ON DELETE RESTRICT,
     student_id UUID REFERENCES students(id) ON DELETE RESTRICT,
     amount NUMERIC(12, 2) NOT NULL CHECK (amount > 0),
     purpose TEXT,
@@ -450,9 +450,9 @@ CREATE TABLE job_queue (
 
 CREATE TABLE reports (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    student_id UUID NOT NULL REFERENCES students(id) ON DELETE RESTRICT,
+    student_id UUID REFERENCES students(id) ON DELETE RESTRICT,
     year INT NOT NULL CHECK (year > 1900),
-    type TEXT NOT NULL DEFAULT 'APR' CHECK (type IN ('APR', 'Case History', 'Incident', 'Thank You', 'Birthday', 'Special Gift')),
+    type TEXT NOT NULL DEFAULT 'APR' CHECK (type IN ('APR', 'Case History', 'Incident', 'Thank You', 'Birthday', 'Financial Tracking')),
     status TEXT NOT NULL DEFAULT 'Not Started' CHECK (status IN ('Not Started', 'Draft', 'Pending', 'Approved', 'Returned', 'Complete')),
     
     narrative TEXT, -- The core content of the document (Letter body or Case Narrative)
@@ -601,8 +601,7 @@ CREATE TABLE loans (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     student_id UUID NOT NULL REFERENCES students(id) ON DELETE RESTRICT,
     institution_id UUID REFERENCES educational_institutions(id),
-    status TEXT DEFAULT 'Studying' CHECK (status IN ('Studying', 'Refunding', 'Complete', 'Expired')),
-    agreement_url TEXT,
+    status TEXT DEFAULT 'Studying' CHECK (status IN ('Studying', 'Refunding', 'Complete', 'Overdue', 'Expired')),
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW(),
     row_version INT DEFAULT 1
@@ -667,10 +666,12 @@ BEFORE INSERT OR UPDATE ON payouts
 FOR EACH ROW EXECUTE FUNCTION fn_enforce_payout_limits();
 
 -- Loan Consistency: repayable category requires loan_id; non-repayable rejects it
+-- Also prevents cross-assigning debt by ensuring payout student matches loan student
 CREATE OR REPLACE FUNCTION fn_enforce_loan_consistency()
 RETURNS TRIGGER AS $$
 DECLARE
     v_is_repayable BOOLEAN;
+    v_loan_student_id UUID;
 BEGIN
     SELECT is_repayable INTO v_is_repayable FROM payment_categories WHERE id = NEW.payment_category_id;
 
@@ -682,6 +683,15 @@ BEGIN
         RAISE EXCEPTION 'Unexpected Loan: Payment category % is not repayable but loan_id was set.', NEW.payment_category_id;
     END IF;
 
+    -- Cross-assignment check: payout student must match loan student
+    IF NEW.loan_id IS NOT NULL THEN
+        SELECT student_id INTO v_loan_student_id FROM loans WHERE id = NEW.loan_id;
+        IF NEW.student_id != v_loan_student_id THEN
+            RAISE EXCEPTION 'Cross-Assignment Denied: Payout student % does not match loan student %.',
+                NEW.student_id, v_loan_student_id;
+        END IF;
+    END IF;
+
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
@@ -690,9 +700,8 @@ CREATE TRIGGER trg_ensure_loan_consistency
 BEFORE INSERT OR UPDATE ON payouts
 FOR EACH ROW EXECUTE FUNCTION fn_enforce_loan_consistency();
 
--- ==========================================
--- 9. AUDIT & LOGGING
--- ==========================================
+-- payouts is immutable
+CREATE TRIGGER trg_upd_communication_templates
 CREATE TABLE audit_logs (
     id UUID,
     user_id UUID REFERENCES users(id) ON DELETE SET NULL, -- Fix: Handle user deletion

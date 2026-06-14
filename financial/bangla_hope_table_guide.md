@@ -18,7 +18,7 @@ This guide provides a simple, plain-English breakdown of what every single table
 ## 3. Student Core (The Children)
 * **`STUDENTS`**: The main profiles of the children. It holds their personal info like names, birthdays, religion, parents' names, photos, and general life situation.
 * **`STUDENT_IDENTIFIERS`**: Stores the student ID cards or numbers. Since a student might get a new ID number if they change programs, this tracks their history of IDs.
-* **`DOCUMENTS`**: A digital filing cabinet for uploading birth certificates, report cards, or scanned sponsorship agreements.
+* **`DOCUMENTS`**: A digital filing cabinet for uploading birth certificates, report cards, or scanned documents.
 * **`MIGRATION_METADATA`**: A backstage tracking table used only when moving old data from a previous computer system into this new one.
 * **`MIGRATION_STAGING_STUDENTS`**: A temporary holding area used to double-check old student data for errors before officially saving it.
 
@@ -38,7 +38,7 @@ This guide provides a simple, plain-English breakdown of what every single table
 * **`PAYOUTS`**: Records the exact date and amount whenever a staff member hands over cash or supplies to a specific student — whether funded directly from a contribution or from a program funding pool.
 
 ## 7. Loan System (Higher Education Funding)
-* **`LOANS`**: The master agreement for older students borrowing money for college. **This is structural funding that the student must pay back later.**
+* **`LOANS`**: Tracks higher education funding for older students. **This is structural funding that the student must pay back later.**
 * **`LOAN_DISBURSEMENTS`**: Tracks the money the organization sends directly to the university or student to pay for tuition, books, or fees.
 * **`LOAN_REFUNDS`**: Records the payback payments made by the student back to the organization after they graduate and start working.
 

@@ -332,7 +332,7 @@ erDiagram
     CONTRIBUTIONS {
         uuid id PK
         uuid sponsor_id FK
-        uuid sponsorship_id FK "Links to sponsorship agreement"
+        uuid sponsorship_id FK "Links to sponsorship"
         uuid student_id FK "Direct one-time gift, NULL otherwise"
         numeric amount "BDT, exactly matches physical check/deposit"
         text purpose "Free-text description of donation purpose"
@@ -419,7 +419,7 @@ erDiagram
 
     REPORTS {
         uuid id PK
-        uuid student_id FK
+        uuid student_id FK "NULL for Financial Tracking"
         int year
         text type
         text status
@@ -485,7 +485,6 @@ erDiagram
         uuid student_id FK
         uuid institution_id FK
         text status
-        text agreement_url
         timestamptz created_at
         timestamptz updated_at
         int row_version

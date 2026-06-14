@@ -7,11 +7,10 @@ start
 :Enroll in program;
 
 |School Coordinator / Program Coordinator|
-repeat
+  repeat
   :Track academics & attendance;
   if (Drop or Complete?) then (Yes)
     :Request status change;
-    :Review drop request;
   else (No)
     if (Transition needed?) then (Yes)
       :Request program change;
@@ -27,5 +26,6 @@ repeat
   else (No)
     :Add rejection note;
   endif
-repeat while (↻ Back) is (Yes)
+|School Coordinator / Program Coordinator|
+repeat while (Review notes)
 @enduml

@@ -90,7 +90,7 @@ The functional core of the application. These entities store comprehensive medic
 ---
 
 ## 4. Donor Management & Sponsorship Financials
-Manages external stakeholders, contract configurations, incoming revenue ledgers, and contribution boundaries.
+Manages external stakeholders, sponsorships, incoming revenue ledgers, and contribution boundaries.
 
 ### `sponsors`
 * **Purpose:** Stores detailed donor profiles, structural communication flags, primary languages, and delivery configurations. Employs soft-delete logic paired with partial unique indexes for robust validation.
@@ -118,7 +118,7 @@ Tracks child development matrices, automated document compilation pipelines, and
 * **Purpose:** Decentralized asset management table tracking secure physical verification files, birth certifications, and signed legal agreements stored via remote cloud storage links (`file_url`).
 
 ### `reports`
-* **Purpose:** Manages the drafting, approval states, and completion workflows for case histories, special donor notes, and Annual Progress Reports (APRs) before they are rendered into flat PDF links for export.
+* **Purpose:** Manages the drafting, approval states, and completion workflows for case histories, special donor notes, Annual Progress Reports (APRs), and Financial Tracking reports before they are rendered into flat PDF links for export. Financial Tracking reports use `type = 'Financial Tracking'` with an optional `student_id` (for per-student ledgers) or `contribution_id` (for per-contribution breakdowns).
 
 ### `communications`
 * **Purpose:** The delivery outbox and audit pipeline. Tracks execution histories, delivery states, and communication snapshots.

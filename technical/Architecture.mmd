@@ -38,12 +38,18 @@ graph TD
     Gate[["Sandbox Preview <br/> (Visual UI Evaluation & Confirmation)"]]
 
     %% --- DATA & PERSISTENCE ---
-    subgraph DL ["Data Layer (PostgreSQL 15+)"]
-        DB[("PostgreSQL Production <br/>(Partitioned Audit Logs)")]
-        File["Object Storage <br/> (MinIO — Photos, PDFs, Documents)"]
+    subgraph DL_Wrapper ["Data & Outbound"]
+        direction LR
+        subgraph DL ["Data Layer (PostgreSQL 15+)"]
+            DB[("PostgreSQL Production <br/>(Partitioned Audit Logs)")]
+            File["Object Storage <br/> (MinIO — Photos, PDFs, Documents)"]
+        end
+        subgraph EG ["Email Gateway"]
+            Em["SendGrid / SES / Mailgun"]
+        end
     end
 
-    %% --- OUTBOUND (Manual — staff handles external email outside the system) ---
+    Logic -->|"Send Bulk Broadcast (BCC)"| Em
 
     %% ==========================================
     %% DATA FLOW PIPELINES

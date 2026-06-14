@@ -1,29 +1,38 @@
 @startuml
-|Secretary|
+|Director|
 start
-:Receive donation;
-:Select contribution type;
-:Record amount (BDT) & received date;
-:Record payment method & reference;
-if (Target?) then (Specific student)
-  :Link to sponsor & student;
-else (General)
-  :Leave as general donation;
-endif
+:Receive funds;
+:Select student and sponsor;
+:Create sponsorship record;
 
-|Program Coordinator|
-:Select payout type\n(Subsidy / Pocket Money / Stipend);
-:Enter amount in BDT;
-:Record payout date & notes;
-if (Disburse now?) then (Yes)
-  :Hand over BDT to student;
-  :Set status to Paid;
-else (No)
-  :Set status to Pending;
-endif
+|Secretary|
+:Select sponsorship;
+:Enter amount and date;
+:Add reference number;
+:Confirm contribution;
 
 |System|
+:Record in contribution table;
 :Log to audit trail;
-:Update contribution balance;
+
+|Coordinator|
+:Initiate payout to student;
+:Select payment category;
+:Enter amount in BDT;
+:Note receipt references;
+:Confirm payout;
+
+|System|
+:Deduct from available balance;
+
+if (Total payout exceeds total in?) then (Yes)
+  :Reject payout;
+  :Show insufficient funds;
+  else (No)
+  :Record in payout table;
+  :Log to audit trail;
+  stop
+endif
+
 stop
 @enduml

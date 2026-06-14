@@ -36,7 +36,7 @@ PlantUML source files for 7 activity diagrams with swimlanes, plus rendered PNG/
 - **student** — Student intake, enrollment, lifecycle
 - **sponsor** — Sponsor onboarding and registration
 - **finance** — Contributions (income) and payouts (expenditure) in BDT
-- **loan** — Loan agreement, disbursement, repayment loop
+- **loan** — Loan setup, disbursement, repayment loop
 - **report** — APR, Thank You letters, communications approval workflow
 - **transition** — Student program transfers (including institution selection for Loan Program)
 - **migration** — Legacy data ETL with sandbox preview, validation, fix-retry, and approval pipeline

@@ -2,14 +2,14 @@
 |Director / Admin|
 start
 :Create sponsor account;
+:Select student;
+:Create sponsorship record;
 |Secretary|
-:Enter first contribution;
-if (Specific student?) then (Yes)
-  :Assign to student;
-else (No)
-  :Leave as general donor;
-endif
+:Select sponsorship;
+:Enter amount and date;
 :Log contribution;
+
+|Director / Admin|
 :Send "your account is ready" invitation;
 
 |Sponsor|
@@ -19,11 +19,12 @@ if (Link expired?) then (Yes)
   stop
 else (No)
   :Set password / claim account;
-  :Tick Agreement;
+  :Accept Agreement;
 endif
 
 |System|
 :Link user to existing sponsor;
 :Trigger welcome;
+:Log to audit trail;
 stop
 @enduml
