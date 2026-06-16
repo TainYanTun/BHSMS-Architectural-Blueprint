@@ -43,7 +43,7 @@ Background tasks must be resilient to failure.
 
 | Task Category | Trigger Mechanism | Implementation Layer | Priority |
 | :--- | :--- | :--- | :--- |
-| **Manual Backups** | User-Initiated | Queue (`job_queue`) | Required |
+| **Database Backups (GFS)** | Scheduled (cron) + User-Initiated on-demand | Shell script (`pg_dump`) + Queue (`job_queue` for on-demand) | Required |
 | **Bulk PDF (APR) Generation** | User-Initiated | Queue (`job_queue`) | Required |
 | **Mass Communications** | User-Initiated | Queue (`job_queue`) | Required |
 | **Maintenance/Cleanup** | Time-Based | Scheduler (`Artisan`) | Optional |

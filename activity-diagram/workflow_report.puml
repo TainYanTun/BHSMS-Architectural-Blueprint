@@ -32,11 +32,8 @@ endif
 |System|
 :Queue PDF generation;
 :Render PDF;
+:Sent and notify HQ Staff;
 :Store to object storage;
 :Log to audit trail;
-
-|Director|
-:Download PDF;
-:Email to US office;
 stop
 @enduml

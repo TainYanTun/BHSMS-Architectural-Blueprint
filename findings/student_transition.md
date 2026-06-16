@@ -31,7 +31,7 @@ The system handles ID generation automatically based on the selected program to 
     - `BRD-` : Boarding Schools
     - `VLG-` : Village Day Schools
     - `LN-`  : Higher Study Loans
-    - `STF-` : Staff Children
+    - Removed: Staff Children was not a distinct program — tracked via `staff_parent_id` FK instead
 
 2.  **Auto-Incrementing Sequences:**
     - Upon selecting a program in the Admission form, the system queries the database for the highest existing number in that program category.

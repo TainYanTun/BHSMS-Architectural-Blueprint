@@ -39,8 +39,7 @@ INSERT INTO programs (name, code, description) VALUES
 ('Orphanage Residential Program', 'LRC', 'Love Receiving Center'),
 ('Boarding School Program', 'BRD', 'Boarding School Sponsorship'),
 ('Village Schools Program', 'VLG', 'Community-based Day Schools'),
-('Higher Study Loan Program', 'LON', 'University & Higher Ed Loans'),
-('Employee Children Program', 'STF', 'Bangla Hope Employee Children');
+('Higher Study Loan Program', 'LON', 'University & Higher Ed Loans');
 
 CREATE TABLE payment_categories (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -66,8 +65,9 @@ INSERT INTO payment_categories (program_id, name, is_repayable) VALUES
 ((SELECT id FROM programs WHERE code = 'LON'), 'University Tuition', true),
 ((SELECT id FROM programs WHERE code = 'LON'), 'Boarding Rent', true),
 ((SELECT id FROM programs WHERE code = 'LON'), 'Book Allowance', true),
-((SELECT id FROM programs WHERE code = 'STF'), 'Subsidy', false),
-((SELECT id FROM programs WHERE code = 'STF'), 'Pocket Money', false);
+((SELECT id FROM programs WHERE code = 'BRD'), 'Hostel Fee', false),
+((SELECT id FROM programs WHERE code = 'LON'), 'Medical Bill', false),
+((SELECT id FROM programs WHERE code = 'LON'), 'Internship Expense', false);
 
 
 CREATE TABLE orphanages (
@@ -153,11 +153,10 @@ CREATE TABLE user_programs (
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     program_id UUID NOT NULL REFERENCES programs(id) ON DELETE CASCADE,
     village_sector_id UUID REFERENCES village_sectors(id), -- NULL for Program Coord, set for Village Coord
-    PRIMARY KEY (user_id, program_id),
-    CONSTRAINT chk_unique_user_scope UNIQUE (user_id, COALESCE(village_sector_id, '00000000-0000-0000-0000-000000000000'))
+    PRIMARY KEY (user_id, program_id)
 );
+CREATE UNIQUE INDEX idx_unique_user_scope ON user_programs(user_id, COALESCE(village_sector_id, '00000000-0000-0000-0000-000000000000'));
 -- Application enforces: village_sector_id IS NOT NULL only when program_id = VLG
--- A village coordinator trigger ensures this constraint at the database level.
 
 CREATE TABLE role_permissions (
     role TEXT NOT NULL REFERENCES roles(name) ON DELETE RESTRICT,
@@ -178,6 +177,7 @@ CREATE TABLE students (
     gender TEXT CHECK (gender IN ('Male', 'Female')),
     dob DATE NOT NULL,
     religion TEXT CHECK (length(religion) <= 50),
+    church TEXT CHECK (length(church) <= 100),
     admission_date DATE DEFAULT CURRENT_DATE,
     status TEXT NOT NULL DEFAULT 'Active' CHECK (status IN ('Active', 'Dropped', 'Completed')),
     
@@ -235,7 +235,7 @@ DECLARE
     year_prefix BIGINT;
     seq_val BIGINT;
 BEGIN
-    year_prefix := EXTRACT(YEAR FROM CURRENT_DATE);
+    year_prefix := EXTRACT(YEAR FROM NEW.admission_date);
     IF NEW.master_id_number IS NULL THEN
         seq_val := nextval('student_master_id_seq');
         -- Using 100,000,000 as a safer multiplier to allow for massive sequence growth 
@@ -301,21 +301,6 @@ CREATE TABLE student_identifiers (
 -- ==========================================
 -- 4. SPONSORSHIP SYSTEM
 -- ==========================================
-CREATE TABLE invitations (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    sponsor_id UUID NOT NULL REFERENCES sponsors(id) ON DELETE RESTRICT,
-    email TEXT NOT NULL,
-    token TEXT NOT NULL, -- Used in the registration URL
-    role TEXT NOT NULL DEFAULT 'Sponsor' REFERENCES roles(name),
-    expires_at TIMESTAMPTZ NOT NULL,
-    claimed_at TIMESTAMPTZ, -- NULL = not yet claimed
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW(),
-    row_version INT DEFAULT 1
-);
-
-CREATE UNIQUE INDEX idx_unique_invitation_token ON invitations(token);
-
 CREATE TABLE sponsors (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     sponsor_id_code TEXT NOT NULL, -- Unique index handled below
@@ -341,6 +326,21 @@ CREATE TABLE sponsors (
 -- Support for unique constraints with soft deletes
 CREATE UNIQUE INDEX idx_unique_active_sponsor_code ON sponsors(sponsor_id_code) WHERE (deleted_at IS NULL);
 CREATE UNIQUE INDEX idx_unique_active_sponsor_email ON sponsors(email) WHERE (deleted_at IS NULL AND email IS NOT NULL);
+
+CREATE TABLE invitations (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    sponsor_id UUID NOT NULL REFERENCES sponsors(id) ON DELETE RESTRICT,
+    email TEXT NOT NULL,
+    token TEXT NOT NULL,
+    role TEXT NOT NULL DEFAULT 'Sponsor' REFERENCES roles(name),
+    expires_at TIMESTAMPTZ NOT NULL,
+    claimed_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    row_version INT DEFAULT 1
+);
+
+CREATE UNIQUE INDEX idx_unique_invitation_token ON invitations(token);
 
 CREATE TABLE sponsorships (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -452,7 +452,7 @@ CREATE TABLE reports (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     student_id UUID REFERENCES students(id) ON DELETE RESTRICT,
     year INT NOT NULL CHECK (year > 1900),
-    type TEXT NOT NULL DEFAULT 'APR' CHECK (type IN ('APR', 'Case History', 'Incident', 'Thank You', 'Birthday', 'Financial Tracking')),
+    type TEXT NOT NULL DEFAULT 'APR' CHECK (type IN ('APR', 'Case History', 'Incident', 'Thank You', 'Birthday', 'Financial Tracking', 'Monthly Subsidy Report')),
     status TEXT NOT NULL DEFAULT 'Not Started' CHECK (status IN ('Not Started', 'Draft', 'Pending', 'Approved', 'Returned', 'Complete')),
     
     narrative TEXT, -- The core content of the document (Letter body or Case Narrative)
@@ -481,11 +481,38 @@ CREATE TABLE student_history (
     row_version INT DEFAULT 1
 );
 
-CREATE TABLE payouts (
+-- ==========================================
+-- 6. LOAN SYSTEM (Higher Education)
+-- ==========================================
+CREATE TABLE loans (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    student_id UUID NOT NULL REFERENCES students(id) ON DELETE RESTRICT,
+    institution_id UUID REFERENCES educational_institutions(id),
+    status TEXT DEFAULT 'Studying' CHECK (status IN ('Studying', 'Refunding', 'Complete', 'Overdue', 'Expired')),
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    row_version INT DEFAULT 1
+);
+
+CREATE TABLE loan_transactions (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    loan_id UUID NOT NULL REFERENCES loans(id) ON DELETE RESTRICT,
+    transaction_date DATE DEFAULT CURRENT_DATE,
+    amount NUMERIC(12, 2) NOT NULL CHECK (amount > 0),
+    type TEXT NOT NULL CHECK (type IN ('repayment', 'waiver', 'adjustment')),
+    recorded_by UUID REFERENCES users(id) ON DELETE SET NULL,
+    notes TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    row_version INT DEFAULT 1
+);
+
+CREATE TABLE disbursements (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     student_id UUID NOT NULL REFERENCES students(id) ON DELETE RESTRICT,
     contribution_id UUID NOT NULL REFERENCES contributions(id) ON DELETE RESTRICT,
     payment_category_id UUID NOT NULL REFERENCES payment_categories(id) ON DELETE RESTRICT,
+    institution_id UUID REFERENCES educational_institutions(id) ON DELETE SET NULL,
     loan_id UUID REFERENCES loans(id) ON DELETE RESTRICT,
 
     subsidy_purpose TEXT,
@@ -494,7 +521,7 @@ CREATE TABLE payouts (
 
     amount NUMERIC(12, 2) NOT NULL CHECK (amount > 0), -- Amount in BDT
 
-    payout_date DATE DEFAULT CURRENT_DATE,
+    disbursement_date DATE DEFAULT CURRENT_DATE,
     recorded_by UUID REFERENCES users(id) ON DELETE SET NULL,
     status TEXT DEFAULT 'Paid' CHECK (status IN ('Paid', 'Pending', 'Cancelled')),
     notes TEXT,
@@ -502,6 +529,8 @@ CREATE TABLE payouts (
     updated_at TIMESTAMPTZ DEFAULT NOW(),
     row_version INT DEFAULT 1
 );
+
+CREATE INDEX idx_disbursements_institution_id ON disbursements(institution_id);
 
 CREATE TABLE migration_metadata (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -512,25 +541,10 @@ CREATE TABLE migration_metadata (
     migrated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Migration Staging for Bulk Imports
-CREATE TABLE migration_staging_students (
-    id BIGSERIAL PRIMARY KEY,
-    raw_data JSONB NOT NULL,
-    validation_errors TEXT[],
-    status TEXT DEFAULT 'Pending' CHECK (status IN ('Pending', 'Validated', 'Imported', 'Failed')),
-    created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
-CREATE TABLE migration_staging_sponsors (
-    id BIGSERIAL PRIMARY KEY,
-    raw_data JSONB NOT NULL,
-    validation_errors TEXT[],
-    status TEXT DEFAULT 'Pending' CHECK (status IN ('Pending', 'Validated', 'Imported', 'Failed')),
-    created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
-CREATE TABLE migration_staging_contributions (
-    id BIGSERIAL PRIMARY KEY,
+-- Sandbox Import — landing zone for raw legacy data before processing
+CREATE TABLE sandbox_imports (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    target_table TEXT NOT NULL, -- 'students', 'sponsors', 'contributions'
     raw_data JSONB NOT NULL,
     validation_errors TEXT[],
     status TEXT DEFAULT 'Pending' CHECK (status IN ('Pending', 'Validated', 'Imported', 'Failed')),
@@ -595,32 +609,6 @@ CREATE TABLE communications (
 );
 
 -- ==========================================
--- 6. LOAN SYSTEM (Higher Education)
--- ==========================================
-CREATE TABLE loans (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    student_id UUID NOT NULL REFERENCES students(id) ON DELETE RESTRICT,
-    institution_id UUID REFERENCES educational_institutions(id),
-    status TEXT DEFAULT 'Studying' CHECK (status IN ('Studying', 'Refunding', 'Complete', 'Overdue', 'Expired')),
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW(),
-    row_version INT DEFAULT 1
-);
-
-CREATE TABLE loan_transactions (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    loan_id UUID NOT NULL REFERENCES loans(id) ON DELETE RESTRICT,
-    transaction_date DATE DEFAULT CURRENT_DATE,
-    amount NUMERIC(12, 2) NOT NULL CHECK (amount > 0), -- Positive — always reduces debt (repayment, waiver, or adjustment)
-    type TEXT NOT NULL CHECK (type IN ('repayment', 'waiver', 'adjustment')),
-    recorded_by UUID REFERENCES users(id) ON DELETE SET NULL,
-    notes TEXT,
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW(),
-    row_version INT DEFAULT 1
-);
-
--- ==========================================
 -- 7. BACKUP & FINANCIAL INTEGRITY
 -- ==========================================
 CREATE TABLE backups (
@@ -639,8 +627,8 @@ CREATE TABLE backups (
 -- 8. FINANCIAL INTEGRITY TRIGGERS
 -- ==========================================
 
--- Overdraft Prevention: payouts must not exceed their source contribution
-CREATE OR REPLACE FUNCTION fn_enforce_payout_limits()
+-- Overdraft Prevention: disbursements must not exceed their source contribution
+CREATE OR REPLACE FUNCTION fn_enforce_disbursement_limits()
 RETURNS TRIGGER AS $$
 DECLARE
     v_total_used NUMERIC(12,2);
@@ -648,25 +636,25 @@ DECLARE
 BEGIN
     SELECT amount INTO v_limit FROM contributions WHERE id = NEW.contribution_id;
 
-    SELECT COALESCE(SUM(p.amount), 0) INTO v_total_used
-    FROM payouts p
-    WHERE p.contribution_id = NEW.contribution_id
-      AND (TG_OP = 'INSERT' OR p.id <> NEW.id);
+    SELECT COALESCE(SUM(d.amount), 0) INTO v_total_used
+    FROM disbursements d
+    WHERE d.contribution_id = NEW.contribution_id
+      AND (TG_OP = 'INSERT' OR d.id <> NEW.id);
 
     IF (v_total_used + NEW.amount) > v_limit THEN
-        RAISE EXCEPTION 'Payout Overdraft: Attempted to pay out %, but only % remains from contribution %.',
+        RAISE EXCEPTION 'Disbursement Overdraft: Attempted to disburse %, but only % remains from contribution %.',
             NEW.amount, (v_limit - v_total_used), NEW.contribution_id;
     END IF;
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER trg_limit_payout_overdraft
-BEFORE INSERT OR UPDATE ON payouts
-FOR EACH ROW EXECUTE FUNCTION fn_enforce_payout_limits();
+CREATE TRIGGER trg_limit_disbursement_overdraft
+BEFORE INSERT OR UPDATE ON disbursements
+FOR EACH ROW EXECUTE FUNCTION fn_enforce_disbursement_limits();
 
 -- Loan Consistency: repayable category requires loan_id; non-repayable rejects it
--- Also prevents cross-assigning debt by ensuring payout student matches loan student
+-- Also prevents cross-assigning debt by ensuring disbursement student matches loan student
 CREATE OR REPLACE FUNCTION fn_enforce_loan_consistency()
 RETURNS TRIGGER AS $$
 DECLARE
@@ -683,11 +671,11 @@ BEGIN
         RAISE EXCEPTION 'Unexpected Loan: Payment category % is not repayable but loan_id was set.', NEW.payment_category_id;
     END IF;
 
-    -- Cross-assignment check: payout student must match loan student
+    -- Cross-assignment check: disbursement student must match loan student
     IF NEW.loan_id IS NOT NULL THEN
         SELECT student_id INTO v_loan_student_id FROM loans WHERE id = NEW.loan_id;
         IF NEW.student_id != v_loan_student_id THEN
-            RAISE EXCEPTION 'Cross-Assignment Denied: Payout student % does not match loan student %.',
+            RAISE EXCEPTION 'Cross-Assignment Denied: Disbursement student % does not match loan student %.',
                 NEW.student_id, v_loan_student_id;
         END IF;
     END IF;
@@ -697,13 +685,11 @@ END;
 $$ LANGUAGE plpgsql;
 
 CREATE TRIGGER trg_ensure_loan_consistency
-BEFORE INSERT OR UPDATE ON payouts
+BEFORE INSERT OR UPDATE ON disbursements
 FOR EACH ROW EXECUTE FUNCTION fn_enforce_loan_consistency();
 
--- payouts is immutable
-CREATE TRIGGER trg_upd_communication_templates
 CREATE TABLE audit_logs (
-    id UUID,
+    id UUID DEFAULT uuid_generate_v4(),
     user_id UUID REFERENCES users(id) ON DELETE SET NULL, -- Fix: Handle user deletion
     module TEXT NOT NULL,
     action TEXT NOT NULL,
@@ -769,28 +755,28 @@ SELECT fn_create_audit_partition();
 -- ==========================================
 -- 10. VIEWS FOR REPORTING
 -- ==========================================
-CREATE VIEW view_student_payouts AS
+CREATE VIEW view_student_disbursements AS
 SELECT 
-    p.id AS payout_id,
-    p.student_id,
-    s.full_name AS student_name,
+    d.id AS disbursement_id,
+    d.student_id,
+    (s.first_name || ' ' || s.last_name) AS student_name,
     s.master_id_number,
-    p.contribution_id AS source_contribution_id,
+    d.contribution_id AS source_contribution_id,
     s.current_program_id AS program_id,
     pg.name AS program_name,
     pc.name AS payment_category,
     pc.is_repayable,
-    p.loan_id,
-    p.amount,
-    p.subsidy_purpose,
-    p.receipts_verified,
-    p.verified_amount,
-    p.payout_date,
-    p.status
-FROM payouts p
-INNER JOIN students s ON p.student_id = s.id
+    d.loan_id,
+    d.amount,
+    d.subsidy_purpose,
+    d.receipts_verified,
+    d.verified_amount,
+    d.disbursement_date,
+    d.status
+FROM disbursements d
+INNER JOIN students s ON d.student_id = s.id
 LEFT JOIN programs pg ON s.current_program_id = pg.id
-INNER JOIN payment_categories pc ON p.payment_category_id = pc.id;
+INNER JOIN payment_categories pc ON d.payment_category_id = pc.id;
 
 CREATE VIEW view_loan_balances AS
 SELECT 
@@ -810,7 +796,7 @@ SELECT
 FROM loans l
 LEFT JOIN (
     SELECT p.loan_id, SUM(p.amount) AS total_disbursed
-    FROM payouts p
+    FROM disbursements p
     INNER JOIN payment_categories pc ON p.payment_category_id = pc.id
     WHERE pc.is_repayable = true AND p.status = 'Paid'
     GROUP BY p.loan_id
@@ -851,10 +837,10 @@ CREATE INDEX idx_communications_wf_status ON communications(workflow_status);
 CREATE INDEX idx_communications_deleted ON communications(deleted_at) WHERE deleted_at IS NULL;
 CREATE INDEX idx_communications_read ON communications(sponsor_id, read_at) WHERE read_at IS NULL;
 CREATE INDEX idx_loans_student_id ON loans(student_id);
-CREATE INDEX idx_payouts_student_id ON payouts(student_id);
-CREATE INDEX idx_payouts_contribution_id ON payouts(contribution_id);
-CREATE INDEX idx_payouts_payment_category_id ON payouts(payment_category_id);
-CREATE INDEX idx_payouts_loan_id ON payouts(loan_id);
+CREATE INDEX idx_disbursements_student_id ON disbursements(student_id);
+CREATE INDEX idx_disbursements_contribution_id ON disbursements(contribution_id);
+CREATE INDEX idx_disbursements_payment_category_id ON disbursements(payment_category_id);
+CREATE INDEX idx_disbursements_loan_id ON disbursements(loan_id);
 CREATE INDEX idx_reports_student_id ON reports(student_id);
 
 CREATE TRIGGER trg_upd_programs BEFORE UPDATE ON programs FOR EACH ROW EXECUTE FUNCTION fn_update_timestamp();
@@ -865,13 +851,13 @@ CREATE TRIGGER trg_upd_students BEFORE UPDATE ON students FOR EACH ROW EXECUTE F
 CREATE TRIGGER trg_upd_student_identifiers BEFORE UPDATE ON student_identifiers FOR EACH ROW EXECUTE FUNCTION fn_update_timestamp();
 CREATE TRIGGER trg_upd_sponsors BEFORE UPDATE ON sponsors FOR EACH ROW EXECUTE FUNCTION fn_update_timestamp();
 CREATE TRIGGER trg_upd_sponsorships BEFORE UPDATE ON sponsorships FOR EACH ROW EXECUTE FUNCTION fn_update_timestamp();
--- Financial ledgers (contributions, payouts, loan_transactions) are immutable; no update trigger.
+-- Financial ledgers (contributions, disbursements, loan_transactions) are immutable; no update trigger.
 CREATE TRIGGER trg_upd_academic_records BEFORE UPDATE ON academic_records FOR EACH ROW EXECUTE FUNCTION fn_update_timestamp();
 CREATE TRIGGER trg_upd_attendance_records BEFORE UPDATE ON attendance_records FOR EACH ROW EXECUTE FUNCTION fn_update_timestamp();
 CREATE TRIGGER trg_upd_documents BEFORE UPDATE ON documents FOR EACH ROW EXECUTE FUNCTION fn_update_timestamp();
 CREATE TRIGGER trg_upd_reports BEFORE UPDATE ON reports FOR EACH ROW EXECUTE FUNCTION fn_update_timestamp();
 CREATE TRIGGER trg_upd_student_history BEFORE UPDATE ON student_history FOR EACH ROW EXECUTE FUNCTION fn_update_timestamp();
--- payouts is immutable
+-- disbursements is immutable
 CREATE TRIGGER trg_upd_communication_templates BEFORE UPDATE ON communication_templates FOR EACH ROW EXECUTE FUNCTION fn_update_timestamp();
 CREATE TRIGGER trg_upd_communications BEFORE UPDATE ON communications FOR EACH ROW EXECUTE FUNCTION fn_update_timestamp();
 CREATE TRIGGER trg_upd_loans BEFORE UPDATE ON loans FOR EACH ROW EXECUTE FUNCTION fn_update_timestamp();

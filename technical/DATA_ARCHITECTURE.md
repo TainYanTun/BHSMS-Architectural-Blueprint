@@ -61,7 +61,7 @@ When a staff member logs in and performs an action, the application automaticall
 Financial transaction tables (`CONTRIBUTIONS`, `PAYOUTS`, `LOAN_TRANSACTIONS`) are defined as **immutable**. They do not use auto-update triggers. Changes must be made via explicit reversing entries (adjustments).
 
 ### B. Overdraft Prevention
-The system uses two triggers: `fn_enforce_payout_limits` on `PAYOUTS` (locks parent `CONTRIBUTION`, enforces `SUM(payouts.amount) ≤ contribution.amount`), and `fn_enforce_loan_consistency` on `PAYOUTS` (checks `payment_category.is_repayable`). Each performs a **parent-level write lock** (`SELECT ... FOR UPDATE`) to serialize allocation attempts.
+The system uses two triggers on `PAYOUTS`: `fn_enforce_payout_limits` (locks parent `CONTRIBUTION`, enforces `SUM(payouts.amount) ≤ contribution.amount`), and `fn_enforce_loan_consistency` (checks `payment_category.is_repayable`). Each performs a **parent-level write lock** (`SELECT ... FOR UPDATE`) to serialize concurrent writes.
 
 ### C. Cascading Deletion
 All child relationships are defined with **`ON DELETE RESTRICT`** to prevent accidental orphan records and ensure financial/academic data trail integrity.

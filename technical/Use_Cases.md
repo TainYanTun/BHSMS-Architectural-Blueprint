@@ -68,7 +68,7 @@ The system operates under a strict **Role-Based Access Control (RBAC)** model de
 *   **Schema References:** [student_intake_details](file:///c:/Users/Pann/Documents/New%20folder%20(5)/Bangla_Hope_Blueprint/technical/schema.sql#L178).
 
 #### UC-05: Record Academic and Clerical Reference Records
-*   **Primary Actor:** Secretary
+*   **Primary Actor:** Secretary / Coordinator
 *   **Preconditions:** Student profile exists.
 *   **Main Flow:**
     1. The Secretary opens the student's profile and navigates to **Reference Records**.

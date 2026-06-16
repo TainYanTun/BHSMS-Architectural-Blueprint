@@ -10,7 +10,7 @@ This document defines the standardized program structure and operational logic f
 | Boarding School | `BRD` | `orphanages` | Enrollment, APR Reports | Subsidy, Pocket Money |
 | Village Schools | `VLG` | `village_sectors` | Attendance Records | Subsidy |
 | Higher Study Loan | `LON` | `educational_institutions`| Loan Agreements | Disbursements, Refunds |
-| Employee Children | `STF` | N/A | Enrollment, APR Reports | Subsidy |
+| ~~Employee Children~~ | ~~STF~~ | Removed — staff children tracked via `staff_parent_id` FK, not a separate program |
 
 ---
 

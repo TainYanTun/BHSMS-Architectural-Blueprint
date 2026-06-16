@@ -1,31 +1,40 @@
 @startuml
 skinparam conditionStyle inside
 
-|Program Coordinator / Director|
+|Director|
 start
+:Establish loan agreement;
+
+|Program Coordinator|
 repeat
-  :Record loan disbursement;
+  :Record payout;
   :Select payment category;
-  :Pay tuition, rent, books;
+  :Click submit;
 |System|
   :Deduct from loan balance;
-|Program Coordinator / Director|
+|Program Coordinator|
   :Track student progress;
 repeat while (Student studying?) is (Yes) not (No)
 
+|Director|
 :Confirm graduation or dropout;
+
+|Program Coordinator|cd
 :Inform student of repayment amount;
 
 |System|
+:Start 6-month grace period timer;
+:Wait for grace period to expire;
+:Activate repayment schedule;
 repeat
-:Track automated 6-month grace period;
 
-if (First tracking entry logged within the period?) then (No)
+if (Payment logged within 12-month deadline?) then (No)
   :Mark loan as overdue;
-  :Notify staff;
+  :Flag the student;
+
   stop
 else (Yes)
-  :Mark loan as refunding;
+  :Mark loan as repaying;
 endif
 
 |Secretary|
@@ -33,14 +42,14 @@ endif
 :Select type;
 :Click submit;
 
-
 |System|
 :Create/Update balance;
+:Log audit entry;
 if (Tracked Balance > 0?) then (Yes)
   else
   |System|
   :Mark loan as repaid;
   stop
 endif
-repeat while (Reset the period timer)
+repeat while (Tracked Balance > 0)
 @enduml

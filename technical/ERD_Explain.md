@@ -53,7 +53,7 @@ The operational heart of the application, tracking children from their initial i
   2. *BRD* (Boarding School)
   3. *VLG* (Community Day Schools)
   4. *LON* (Higher Education Loans)
-  5. *STF* (Employee Children)
+  5. *(Removed)* Employee Children was a misleading program name — staff children are tracked via `staff_parent_id` FK on students, not a separate program.
 * **`ENROLLMENTS`:** A timeline ledger registering where a child is placed, linking them to a program, an **`ORPHANAGES`** campus, or a **`VILLAGE_SECTORS`** school over time.
 * **`STUDENT_IDENTIFIERS`:** Stores historical and department-specific custom formatting codes (e.g., `#LRC-0124`) that adjust as students transfer programs.
 * **`PROGRAM_TRANSITIONS`:** Tracks the operational transitions as students age out of primary care and advance to higher tracks.

@@ -34,8 +34,7 @@ This guide provides a simple, plain-English breakdown of what every single table
 * **`STUDENT_HISTORY`**: A timeline of major life events or milestones for the student (e.g., "Moved to a new home", "Won an award").
 
 ## 6. Financial Subsidies (Regular Allowances)
-* **`PROGRAM_ALLOCATIONS`**: Splits a contribution across programs (e.g., Director allocates 60,000 BDT of Sponsor X's 100,000 BDT to LRC and 40,000 BDT to VLG).
-* **`PAYOUTS`**: Records the exact date and amount whenever a staff member hands over cash or supplies to a specific student — whether funded directly from a contribution or from a program funding pool.
+* **`PAYOUTS`**: Records the exact date and amount whenever a staff member hands over cash or supplies to a specific student — funded directly from a contribution.
 
 ## 7. Loan System (Higher Education Funding)
 * **`LOANS`**: Tracks higher education funding for older students. **This is structural funding that the student must pay back later.**

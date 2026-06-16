@@ -246,7 +246,7 @@ erDiagram
     }
 
     %% ==========================================
-    %% 3. MIGRATION LAYER
+    %% 3. SANDBOX & AUDIT
     %% ==========================================
     MIGRATION_METADATA {
         uuid id PK
@@ -257,27 +257,12 @@ erDiagram
         timestamptz migrated_at
     }
 
-    MIGRATION_STAGING_STUDENTS {
-        bigint id PK
+    SANDBOX_IMPORTS {
+        uuid id PK
+        text target_table "'students' | 'sponsors' | 'contributions'"
         jsonb raw_data
         text[] validation_errors
-        text status
-        timestamptz created_at
-    }
-
-    MIGRATION_STAGING_SPONSORS {
-        bigint id PK
-        jsonb raw_data
-        text[] validation_errors
-        text status
-        timestamptz created_at
-    }
-
-    MIGRATION_STAGING_CONTRIBUTIONS {
-        bigint id PK
-        jsonb raw_data
-        text[] validation_errors
-        text status
+        text status "Pending | Validated | Imported | Failed"
         timestamptz created_at
     }
 
@@ -425,7 +410,6 @@ erDiagram
         text status
         text narrative
         text supervisor_comments
-        uuid contribution_id FK
         uuid approved_by FK
         timestamptz approved_at
         date completion_date
@@ -446,17 +430,18 @@ erDiagram
         int row_version
     }
 
-    PAYOUTS {
+    DISBURSEMENTS {
         uuid id PK
-        uuid student_id FK "NOT NULL"
-        uuid contribution_id FK "NOT NULL"
-        uuid payment_category_id FK "NOT NULL"
-        uuid loan_id FK "NULL unless payment_category.is_repayable=true"
-        text subsidy_purpose "NULL unless audited grant requires description"
+        uuid student_id FK
+        uuid contribution_id FK
+        uuid payment_category_id FK
+        uuid institution_id FK
+        uuid loan_id FK
+        text subsidy_purpose
         boolean receipts_verified
         numeric verified_amount
         numeric amount "Amount in BDT"
-        date payout_date
+        date disbursement_date
         uuid recorded_by FK
         text status "Paid | Pending | Cancelled"
         text notes
@@ -513,7 +498,7 @@ erDiagram
     USERS ||--o{ AUDIT_LOGS : "generates"
     USERS ||--o{ LOAN_TRANSACTIONS : "records"
     USERS ||--o{ DOCUMENTS : "uploads"
-    USERS ||--o{ PAYOUTS : "records"
+    USERS ||--o{ DISBURSEMENTS : "records"
     USERS ||--o{ STUDENTS : "parent of (Staff Child)"
     USERS ||--o{ PROGRAM_TRANSITIONS : "records"
     USERS ||--o{ REPORTS : "approves"
@@ -545,7 +530,7 @@ erDiagram
     STUDENTS ||--o{ STUDENT_REFERENCES : "referred by"
     STUDENTS ||--o{ PROGRAM_TRANSITIONS : "undergoes"
     STUDENTS ||--o{ COMMUNICATIONS : "subject of"
-    STUDENTS ||--o{ PAYOUTS : "receives"
+    STUDENTS ||--o{ DISBURSEMENTS : "receives"
     STUDENTS ||--o{ LOANS : "holds"
 
     ORPHANAGES ||--o{ ENROLLMENTS : "hosts"
@@ -561,12 +546,13 @@ erDiagram
     SPONSORSHIPS ||--o{ CONTRIBUTIONS : "fulfills"
     STUDENTS ||--o{ CONTRIBUTIONS : "receives (one-time)"
 
-    CONTRIBUTIONS ||--o{ PAYOUTS : "funds"
-    PAYMENT_CATEGORIES ||--o{ PAYOUTS : "classifies"
+    CONTRIBUTIONS ||--o{ DISBURSEMENTS : "funds"
+    PAYMENT_CATEGORIES ||--o{ DISBURSEMENTS : "classifies"
 
     LOANS ||--o{ LOAN_TRANSACTIONS : "tracks"
-    LOANS ||--o{ PAYOUTS : "disburses (optional)"
+    LOANS ||--o{ DISBURSEMENTS : "disburses (optional)"
     EDUCATIONAL_INSTITUTIONS ||--o{ LOANS : "hosts"
+    EDUCATIONAL_INSTITUTIONS ||--o{ DISBURSEMENTS : "located at"
     
     COMMUNICATION_TEMPLATES ||--o{ COMMUNICATIONS : "defines"
     REPORTS ||--o{ COMMUNICATIONS : "delivered via"

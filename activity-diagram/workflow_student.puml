@@ -2,9 +2,11 @@
 |Secretary|
 start
 :Register student;
+:Enroll in program;
+
+|Secretary / Program Coordinator|
 :Record intake;
 :Add guardians;
-:Enroll in program;
 
 |School Coordinator / Program Coordinator|
   repeat

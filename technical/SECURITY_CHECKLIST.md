@@ -81,8 +81,7 @@ This document lists security considerations for the Bangla Hope SMS. Use it duri
 
 | # | Check | Blueprint Reference |
 |---|---|---|
-| 7.1 | Anti-overdraft on allocations | `schema.sql` → `fn_enforce_allocation_limits()` with `SELECT ... FOR UPDATE` |
-| 7.2 | Anti-overdraft on payouts | `schema.sql` → `fn_enforce_payout_limits()` with `SELECT ... FOR UPDATE` |
+| 7.1 | Anti-overdraft on payouts | `schema.sql` → `fn_enforce_payout_limits()` with `SELECT ... FOR UPDATE` |
 | 7.3 | Financial approval workflow | Not designed — define who approves large subsidies / loan disbursements |
 | 7.4 | Two-person rule for financial operations | Not designed — separate initiator and approver roles |
 
@@ -108,8 +107,8 @@ This document lists security considerations for the Bangla Hope SMS. Use it duri
 | 9.3 | SSH key-only authentication | `/etc/ssh/sshd_config` → disable `PasswordAuthentication` |
 | 9.4 | OS and package auto-updates | `unattended-upgrades` (Ubuntu) or equivalent |
 | 9.5 | PostgreSQL bound to localhost | `postgresql.conf` → `listen_addresses = 'localhost'` |
-| 9.6 | Regular backup schedule | `schema.sql` → `backups` table. Implement cron for `pg_dump` |
-| 9.7 | Off-site backup storage | Admin manually downloads backup to local computer and saves a copy to a separate disk on the hardware server |
+| 9.6 | Automatic backup schedule (GFS) | Automated GFS rotation via cron: daily → 7 days, weekly → 4 weeks, monthly → 12 months. Logged in `backups` table. Admin may also trigger on-demand. |
+| 9.7 | Off-site backup replication | All GFS tiers replicated to AWS S3 for off-site disaster recovery, in addition to local secondary disk storage |
 
 ---
 
